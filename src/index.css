@@ -1,0 +1,143 @@
+:root {
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  color: #111827;
+  background: #f3f4f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+#root {
+  height: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.auth-page,
+.dashboard-page {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: 32px 20px;
+}
+
+.auth-panel,
+.dashboard-page section {
+  width: min(100%, 420px);
+}
+
+.auth-panel h1,
+.dashboard-page h1 {
+  margin: 0 0 24px;
+  font-size: 32px;
+}
+
+.auth-form {
+  display: grid;
+  gap: 18px;
+}
+
+.auth-provider-group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.auth-provider-group p,
+.auth-provider-group legend,
+.auth-field span {
+  display: block;
+  margin-bottom: 8px;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.auth-provider-group p {
+  margin-top: 0;
+}
+
+.auth-provider-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.auth-provider-options button,
+.auth-submit,
+.auth-field input {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+}
+
+.auth-provider-options button,
+.auth-submit {
+  min-height: 44px;
+  cursor: pointer;
+  background: #ffffff;
+  color: #111827;
+}
+
+.auth-submit {
+  border-color: #111827;
+  background: #111827;
+  color: #ffffff;
+}
+
+.auth-provider-options button:hover:not(:disabled) {
+  border-color: #111827;
+}
+
+.auth-field input {
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.auth-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.auth-provider-options button:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.auth-error {
+  margin: 0;
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.auth-status {
+  margin: 0;
+  color: #4b5563;
+  font-size: 14px;
+}
+
+.auth-link {
+  display: inline-flex;
+  margin-top: 16px;
+  color: #111827;
+  font-weight: 600;
+}

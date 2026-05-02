@@ -1,0 +1,50 @@
+.app-shell-background {
+  --app-shell-width: 393px;
+  --app-shell-bg: #ffffff;
+  --app-page-bg: #f3f4f6;
+
+  height: 100svh;
+  display: flex;
+  justify-content: center;
+  background: var(--app-page-bg);
+  padding: 24px;
+  overflow: hidden;
+}
+
+.app-shell-frame {
+  width: min(100%, var(--app-shell-width));
+  height: calc(100svh - 48px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: var(--app-shell-bg);
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 28px;
+  box-shadow: 0 24px 80px rgba(17, 24, 39, 0.16);
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.app-shell-frame::-webkit-scrollbar {
+  display: none;
+}
+
+.app-shell-frame > * {
+  min-height: 100%;
+}
+
+@media (max-width: 480px) {
+  .app-shell-background {
+    padding: 0;
+    background: var(--app-shell-bg);
+  }
+
+  .app-shell-frame {
+    width: 100%;
+    height: 100svh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
