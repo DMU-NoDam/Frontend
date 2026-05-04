@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useLogin } from '@/features/auth/hooks/use-login'
 import { OAUTH_PROVIDERS } from '@/features/auth/types/auth-types'
 import type { OAuthProvider } from '@/features/auth/types/auth-types'
@@ -9,13 +9,19 @@ const isOAuthProvider = (value: string | null): value is OAuthProvider => {
 }
 
 export function OAuthCallbackPage() {
+  const { provider: pathProvider } = useParams()
   const [searchParams] = useSearchParams()
   const hasRequestedLogin = useRef(false)
   const { mutate: login, isPending, isError } = useLogin()
 
   const provider = useMemo(() => {
+    const routeProvider = pathProvider ?? null
     const queryProvider = searchParams.get('provider')
     const storedProvider = sessionStorage.getItem('oauth_provider')
+
+    if (isOAuthProvider(routeProvider)) {
+      return routeProvider
+    }
 
     if (isOAuthProvider(queryProvider)) {
       return queryProvider
@@ -26,7 +32,7 @@ export function OAuthCallbackPage() {
     }
 
     return null
-  }, [searchParams])
+  }, [pathProvider, searchParams])
 
   const code = searchParams.get('code')
   const canLogin = provider !== null && code !== null

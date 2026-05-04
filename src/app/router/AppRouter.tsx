@@ -23,6 +23,10 @@ const router = createBrowserRouter([
         element: <OAuthCallbackPage />,
       },
       {
+        path: '/oauth/callback/:provider',
+        element: <OAuthCallbackPage />,
+      },
+      {
         element: <ProtectedRoute />,
         children: [
           {
