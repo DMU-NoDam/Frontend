@@ -105,7 +105,6 @@ export function TripCreatePage() {
           <CityStep
             control={control}
             setValue={setValue}
-            getValues={getValues}
             onNext={() => goNext(STEP_FIELDS[2])}
             onBack={goBack}
           />
