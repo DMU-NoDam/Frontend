@@ -44,7 +44,15 @@ export function HotelStep({ watch, setValue, getValues, onNext, onBack }: Props)
         <PlaceSearch
           placeholder="숙소 검색"
           selected={hotel}
-          types={['lodging']}
+          types={[
+            'hotel',
+            'hostel',
+            'guest_house',
+            'motel',
+            'resort_hotel',
+            // 'inn',
+            // 'bed_and_breakfast',
+          ]}
           countryCode={COUNTRY_CODES[country] ?? undefined}
           onAdd={handleAdd}
           onRemove={handleRemove}
