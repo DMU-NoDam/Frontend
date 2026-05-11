@@ -11,7 +11,13 @@ export const useLogin = () => {
     mutationFn: authApi.login,
     onSuccess: (session) => {
       login(session)
-      navigate('/dashboard')
+      const redirect = sessionStorage.getItem('pending_redirect')
+      if (redirect) {
+        sessionStorage.removeItem('pending_redirect')
+        navigate(redirect)
+      } else {
+        navigate('/dashboard')
+      }
     },
   })
 }
