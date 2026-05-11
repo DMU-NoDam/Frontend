@@ -1,0 +1,311 @@
+.step {
+  display: grid;
+  gap: 32px;
+  padding: 0 24px 40px;
+  width: 100%;
+}
+
+.step-header {
+  display: grid;
+  gap: 8px;
+}
+
+.step-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.step-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.25;
+}
+
+.step-subtitle {
+  margin: 0;
+  font-size: 15px;
+  color: #6b7280;
+}
+
+.step-body {
+  display: grid;
+  gap: 16px;
+}
+
+.step-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.step-next {
+  width: 100%;
+  min-height: 52px;
+  background: #111827;
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.step-next:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.step-next:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.step-back {
+  width: 100%;
+  min-height: 44px;
+  background: none;
+  color: #6b7280;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.step-skip {
+  width: 100%;
+  min-height: 44px;
+  background: none;
+  color: #9ca3af;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.step-error {
+  margin: 0;
+  font-size: 13px;
+  color: #dc2626;
+}
+
+/* Card grid (budget / style steps) */
+.step-card-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.step-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.step-card:hover {
+  border-color: #9ca3af;
+}
+
+.step-card--selected {
+  border-color: #111827;
+  background: #f9fafb;
+}
+
+.step-card-emoji {
+  font-size: 24px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.step-card-text {
+  display: grid;
+  gap: 2px;
+}
+
+.step-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.step-card-desc {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Country grid */
+.country-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.country-btn {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 16px 8px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.country-btn:hover {
+  border-color: #9ca3af;
+}
+
+.country-btn--selected {
+  border-color: #111827;
+  background: #f9fafb;
+  font-weight: 700;
+  color: #111827;
+}
+
+.country-btn-flag {
+  font-size: 28px;
+  line-height: 1;
+}
+
+/* Person count */
+.person-count {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.person-count-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1.5px solid #d1d5db;
+  background: #ffffff;
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #111827;
+  transition: border-color 0.15s ease;
+}
+
+.person-count-btn:hover:not(:disabled) {
+  border-color: #111827;
+}
+
+.person-count-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.person-count-value {
+  font-size: 40px;
+  font-weight: 700;
+  color: #111827;
+  min-width: 64px;
+  text-align: center;
+}
+
+/* Flight step */
+.flight-section {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.flight-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.flight-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.flight-input {
+  flex: 1;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 15px;
+  text-transform: uppercase;
+  transition: border-color 0.15s ease;
+}
+
+.flight-input:focus {
+  outline: none;
+  border-color: #111827;
+}
+
+.flight-search-btn {
+  min-width: 60px;
+  min-height: 44px;
+  padding: 0 14px;
+  background: #111827;
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.flight-search-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.flight-result-card {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  background: #f9fafb;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.flight-result-row {
+  display: flex;
+  gap: 6px;
+}
+
+.flight-result-label {
+  color: #9ca3af;
+  min-width: 60px;
+}
+
+.flight-error {
+  font-size: 13px;
+  color: #dc2626;
+}
+
+.flight-loading {
+  font-size: 13px;
+  color: #6b7280;
+}

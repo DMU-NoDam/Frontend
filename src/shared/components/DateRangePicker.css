@@ -1,0 +1,106 @@
+.drp {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+}
+
+.drp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.drp-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.drp-nav {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.drp-nav:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.drp-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+}
+
+.drp-weekday {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 4px 0;
+}
+
+.drp-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.drp-empty {
+  display: block;
+}
+
+.drp-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 400;
+  color: #374151;
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.1s ease;
+  position: relative;
+  z-index: 0;
+}
+
+.drp-day:hover {
+  background: #f3f4f6;
+}
+
+.drp-day--today {
+  font-weight: 700;
+  color: #111827;
+}
+
+.drp-day--start,
+.drp-day--end {
+  background: #111827 !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.drp-day--range {
+  background: #e5e7eb;
+  border-radius: 0;
+}
+
+.drp-summary {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
