@@ -36,7 +36,7 @@ const router = createBrowserRouter([
             element: <DashboardPage />,
           },
           {
-            path: '/trips',
+            path: '/triplist',
             element: <TripListPage />,
           },
         ],
