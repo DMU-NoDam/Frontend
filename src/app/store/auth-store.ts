@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { AuthSession, AuthUser } from '@/features/auth/types/auth-types'
+import type { AuthSession, AuthTokens, AuthUser } from '@/features/auth/types/auth-types'
 
 type AuthState = {
   accessToken: string | null
@@ -7,6 +7,7 @@ type AuthState = {
   user: AuthUser | null
   isAuthenticated: boolean
   login: (payload: AuthSession) => void
+  setTokens: (tokens: AuthTokens) => void
   logout: () => void
 }
 
@@ -23,6 +24,9 @@ export const useAuthStore = create<AuthState>((set) => ({
       user,
       isAuthenticated: true,
     }),
+
+  setTokens: ({ accessToken, refreshToken }) =>
+    set({ accessToken, refreshToken }),
 
   logout: () =>
     set({

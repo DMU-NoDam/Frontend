@@ -9,9 +9,12 @@ export type AuthUser = {
   oauthUser: boolean
 }
 
-export type AuthSession = {
+export type AuthTokens = {
   accessToken: string
   refreshToken: string
+}
+
+export type AuthSession = AuthTokens & {
   user: AuthUser
 }
 
@@ -23,4 +26,13 @@ export type OAuthLoginRequest = {
 export type OAuthLoginResponse = {
   message: string
   body: AuthSession
+}
+
+export type TokenRefreshRequest = {
+  token: string
+}
+
+export type TokenRefreshResponse = {
+  message: string
+  body: AuthTokens
 }
