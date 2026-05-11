@@ -1,0 +1,162 @@
+/* ============================================================
+   DashboardPage — Home Screen
+   ============================================================ */
+
+.home-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffd6e3;
+}
+
+/* ── Header badge ─────────────────────────────────────────── */
+
+.home-header {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 12px 10px;
+  position: relative;
+  z-index: 10;
+}
+
+.home-header__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2024;
+  white-space: nowrap;
+}
+
+/* ── Feed: TravelHero + bottom sheet 컨테이너 ─────────────── */
+
+.home-feed {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(
+    160deg,
+    #ff4d8f 0%,
+    #ff80b0 35%,
+    #ffb3cc 68%,
+    #ffd6e3 100%
+  );
+}
+
+/* TravelHero — 헤더와 시트 사이를 채우는 flex 영역 */
+.home-map {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+
+}
+
+/* ── Trips bottom sheet ───────────────────────────────────── */
+
+.home-trips {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 20px 20px 0 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.08);
+
+}
+
+/* ── Handle button ────────────────────────────────────────── */
+
+.home-trips__handle-btn {
+  flex-shrink: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 12px 0 8px;
+  background: none;
+  border: none;
+  cursor: grab;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.home-trips__handle-btn:active {
+  cursor: grabbing;
+}
+
+.home-trips__handle {
+  width: 40px;
+  height: 4px;
+  background: #e8e9f1;
+  border-radius: 8px;
+  transition: background 0.2s ease;
+}
+
+.home-trips__handle-btn:hover .home-trips__handle,
+.home-trips__handle-btn:active .home-trips__handle {
+  background: #c5c6cc;
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+
+.home-trips__empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 40px 16px;
+}
+
+.home-trips__empty-title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.6;
+  color: #1f2024;
+  text-align: center;
+  margin: 0;
+}
+
+.home-trips__make-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #2f3036;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 48px;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.home-trips__make-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.home-trips__make-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.home-trips__make-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
