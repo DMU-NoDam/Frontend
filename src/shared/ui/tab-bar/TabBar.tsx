@@ -13,7 +13,7 @@ type Tab = {
 
 const TABS: Tab[] = [
   { path: '/dashboard', label: '홈', Icon: RiHomeFill },
-  { path: '/trips', label: '여행', Icon: LuPlane },
+  { path: '/triplist', label: '여행', Icon: LuPlane },
   { path: '/mypage', label: '마이', Icon: LuUser },
 ]
 
