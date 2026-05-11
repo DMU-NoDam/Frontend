@@ -79,6 +79,11 @@
   background: #f3f4f6;
 }
 
+.drp-day--disabled {
+  color: #d1d5db;
+  cursor: not-allowed;
+}
+
 .drp-day--today {
   font-weight: 700;
   color: #111827;

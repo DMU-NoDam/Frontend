@@ -4,7 +4,7 @@ import type { TripCreateFormValues } from '@/features/trip/types/trip-types'
 import './steps.css'
 
 const MIN = 1
-const MAX = 20
+const MAX = 6
 
 type Props = {
   control: Control<TripCreateFormValues>

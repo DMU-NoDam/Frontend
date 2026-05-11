@@ -46,6 +46,11 @@ export type TripCreateResponse = {
   body: unknown
 }
 
+export type PlaceSelection = {
+  id: string
+  name: string
+}
+
 export type TripCreateFormValues = {
   uuid: string
   country: string
@@ -55,8 +60,8 @@ export type TripCreateFormValues = {
   personCount: number
   scheduleType?: ScheduleType
   priceType?: PriceType
-  hotel: string[]
+  hotel: PlaceSelection[]
   departFlight?: DepartFlightInfo
   arriveFlight?: ArriveFlightInfo
-  selectedPlace: string[]
+  selectedPlace: PlaceSelection[]
 }

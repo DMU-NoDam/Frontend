@@ -17,8 +17,8 @@ export function mapFormToRequest(values: TripCreateFormValues): TripCreateReques
       endDate: values.endDate,
     },
     region: values.region,
-    selectedPlace: values.selectedPlace,
-    hotel: values.hotel,
+    selectedPlace: values.selectedPlace.map((p) => p.id),
+    hotel: values.hotel.map((p) => p.id),
     departFlight: values.departFlight,
     arriveFlight: values.arriveFlight,
   }

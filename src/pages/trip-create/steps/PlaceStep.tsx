@@ -4,6 +4,11 @@ import type { PlaceItem } from '@/shared/components/PlaceSearch'
 import type { TripCreateFormValues } from '@/features/trip/types/trip-types'
 import './steps.css'
 
+const COUNTRY_CODES: Record<string, string> = {
+  JP: 'jp', US: 'us', FR: 'fr', IT: 'it', ES: 'es', TH: 'th',
+  VN: 'vn', TW: 'tw', GB: 'gb', DE: 'de', AU: 'au', SG: 'sg',
+}
+
 type Props = {
   watch: UseFormWatch<TripCreateFormValues>
   setValue: UseFormSetValue<TripCreateFormValues>
@@ -16,25 +21,15 @@ export function PlaceStep({ watch, setValue, getValues, onNext, onBack }: Props)
   const selectedPlace = watch('selectedPlace')
   const country = watch('country')
 
-  const COUNTRY_CODES: Record<string, string> = {
-    JP: 'jp', US: 'us', FR: 'fr', IT: 'it', ES: 'es', TH: 'th',
-    VN: 'vn', TW: 'tw', GB: 'gb', DE: 'de', AU: 'au', SG: 'sg',
-  }
-
-  const selectedItems: PlaceItem[] = selectedPlace.map((id) => ({ id, name: id }))
-
   const handleAdd = (item: PlaceItem) => {
     const current = getValues('selectedPlace')
-    if (!current.includes(item.id)) {
-      setValue('selectedPlace', [...current, item.id])
+    if (!current.find((p) => p.id === item.id)) {
+      setValue('selectedPlace', [...current, { id: item.id, name: item.name }])
     }
   }
 
   const handleRemove = (id: string) => {
-    setValue(
-      'selectedPlace',
-      getValues('selectedPlace').filter((p) => p !== id),
-    )
+    setValue('selectedPlace', getValues('selectedPlace').filter((p) => p.id !== id))
   }
 
   return (
@@ -48,7 +43,7 @@ export function PlaceStep({ watch, setValue, getValues, onNext, onBack }: Props)
       <div className="step-body">
         <PlaceSearch
           placeholder="장소 검색"
-          selected={selectedItems}
+          selected={selectedPlace}
           countryCode={COUNTRY_CODES[country] ?? undefined}
           onAdd={handleAdd}
           onRemove={handleRemove}

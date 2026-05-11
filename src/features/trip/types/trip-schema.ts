@@ -10,10 +10,10 @@ export const tripFormSchema = z
       .max(2, '도시는 최대 2개까지 선택할 수 있어요'),
     startDate: z.string().min(1, '출발일을 선택해 주세요'),
     endDate: z.string().min(1, '귀국일을 선택해 주세요'),
-    personCount: z.number().min(1, '인원은 1명 이상이어야 해요'),
+    personCount: z.number().min(1, '인원은 1명 이상이어야 해요').max(6, '인원은 최대 6명이에요'),
     scheduleType: z.enum(['TIGHT', 'NORMAL', 'LOOSE']).optional(),
     priceType: z.enum(['CHEEP', 'NORMAL', 'LUXURY']).optional(),
-    hotel: z.array(z.string()),
+    hotel: z.array(z.object({ id: z.string(), name: z.string() })),
     departFlight: z
       .object({
         departureAirport: z.string(),
@@ -26,7 +26,7 @@ export const tripFormSchema = z
         arrivalTime: z.string(),
       })
       .optional(),
-    selectedPlace: z.array(z.string()),
+    selectedPlace: z.array(z.object({ id: z.string(), name: z.string() })),
   })
   .refine((v) => !v.startDate || !v.endDate || v.endDate >= v.startDate, {
     message: '귀국일은 출발일 이후여야 해요',

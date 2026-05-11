@@ -55,7 +55,12 @@ export function DateRangePicker({ startDate, endDate, onChange }: Props) {
     }
   }
 
+  const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate())
+
+  const isPast = (day: number) => toDateStr(viewYear, viewMonth, day) < todayStr
+
   const handleDayClick = (day: number) => {
+    if (isPast(day)) return
     const dateStr = toDateStr(viewYear, viewMonth, day)
 
     if (selection === 'idle') {
@@ -80,12 +85,16 @@ export function DateRangePicker({ startDate, endDate, onChange }: Props) {
 
     const classes: string[] = ['drp-day']
 
+    if (dateStr < todayStr) {
+      classes.push('drp-day--disabled')
+      return classes.join(' ')
+    }
+
     if (dateStr === effectiveStart) classes.push('drp-day--start')
     if (dateStr === effectiveEnd) classes.push('drp-day--end')
     if (effectiveStart && effectiveEnd && dateStr > effectiveStart && dateStr < effectiveEnd)
       classes.push('drp-day--range')
 
-    const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate())
     if (dateStr === todayStr) classes.push('drp-day--today')
 
     return classes.join(' ')

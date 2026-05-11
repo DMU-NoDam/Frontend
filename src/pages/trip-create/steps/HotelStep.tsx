@@ -4,6 +4,11 @@ import type { PlaceItem } from '@/shared/components/PlaceSearch'
 import type { TripCreateFormValues } from '@/features/trip/types/trip-types'
 import './steps.css'
 
+const COUNTRY_CODES: Record<string, string> = {
+  JP: 'jp', US: 'us', FR: 'fr', IT: 'it', ES: 'es', TH: 'th',
+  VN: 'vn', TW: 'tw', GB: 'gb', DE: 'de', AU: 'au', SG: 'sg',
+}
+
 type Props = {
   watch: UseFormWatch<TripCreateFormValues>
   setValue: UseFormSetValue<TripCreateFormValues>
@@ -16,25 +21,15 @@ export function HotelStep({ watch, setValue, getValues, onNext, onBack }: Props)
   const hotel = watch('hotel')
   const country = watch('country')
 
-  const COUNTRY_CODES: Record<string, string> = {
-    JP: 'jp', US: 'us', FR: 'fr', IT: 'it', ES: 'es', TH: 'th',
-    VN: 'vn', TW: 'tw', GB: 'gb', DE: 'de', AU: 'au', SG: 'sg',
-  }
-
-  const selectedItems: PlaceItem[] = hotel.map((id) => ({ id, name: id }))
-
   const handleAdd = (item: PlaceItem) => {
     const current = getValues('hotel')
-    if (!current.includes(item.id)) {
-      setValue('hotel', [...current, item.id])
+    if (!current.find((h) => h.id === item.id)) {
+      setValue('hotel', [...current, { id: item.id, name: item.name }])
     }
   }
 
   const handleRemove = (id: string) => {
-    setValue(
-      'hotel',
-      getValues('hotel').filter((h) => h !== id),
-    )
+    setValue('hotel', getValues('hotel').filter((h) => h.id !== id))
   }
 
   return (
@@ -48,7 +43,7 @@ export function HotelStep({ watch, setValue, getValues, onNext, onBack }: Props)
       <div className="step-body">
         <PlaceSearch
           placeholder="숙소 검색"
-          selected={selectedItems}
+          selected={hotel}
           types={['lodging']}
           countryCode={COUNTRY_CODES[country] ?? undefined}
           onAdd={handleAdd}
