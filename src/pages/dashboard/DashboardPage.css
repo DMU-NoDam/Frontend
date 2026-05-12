@@ -44,10 +44,10 @@
   overflow: hidden;
   background: linear-gradient(
     160deg,
-    #ff4d8f 0%,
-    #ff80b0 35%,
-    #ffb3cc 68%,
-    #ffd6e3 100%
+    #ffb3cc 0%,
+    #ffd0e0 35%,
+    #ffe4ee 68%,
+    #fff0f5 100%
   );
 }
 
