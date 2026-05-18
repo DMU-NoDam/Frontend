@@ -1,14 +1,18 @@
+import { getCitiesByCountry } from '../data/cities'
 import type { TripCreateFormValues, TripCreateRequest } from '../types/trip-types'
 
-export function buildTripName(region: string[]): string {
-  if (region.length === 1) return region[0]
-  return `${region[0]}과 ${region[1]}`
+export function buildTripName(region: string[], country: string): string {
+  const cities = getCitiesByCountry(country)
+  const names = region.map((id) => cities.find((city) => city.id === id)?.name ?? id)
+
+  if (names.length === 1) return names[0]
+  return `${names[0]}과 ${names[1]}`
 }
 
 export function mapFormToRequest(values: TripCreateFormValues): TripCreateRequest {
   return {
     trip: {
-      name: buildTripName(values.region),
+      name: buildTripName(values.region, values.country),
       uuid: values.uuid,
       personCount: values.personCount,
       scheduleType: values.scheduleType,

@@ -14,13 +14,11 @@ export type FlightApiResponse = {
   body: FlightApiBody
 }
 
-export type DepartFlightInfo = {
+export type FlightInfo = {
+  flightIata: string
   departureAirport: string
-  departureTime: string
-}
-
-export type ArriveFlightInfo = {
   arrivalAirport: string
+  departureTime: string
   arrivalTime: string
 }
 
@@ -37,18 +35,27 @@ export type TripCreateRequest = {
   region: string[]
   selectedPlace: string[]
   hotel: string[]
-  departFlight?: DepartFlightInfo
-  arriveFlight?: ArriveFlightInfo
+  departFlight?: FlightInfo
+  arriveFlight?: FlightInfo
 }
 
 export type TripCreateResponse = {
   message: string
-  body: unknown
+  body: { tripId: string }
+}
+
+export type TripStatusResponse = {
+  message: string
+  body: { isPlanning: boolean }
 }
 
 export type PlaceSelection = {
   id: string
   name: string
+  location?: {
+    lat: number
+    lng: number
+  }
 }
 
 export type TripCreateFormValues = {
@@ -61,7 +68,7 @@ export type TripCreateFormValues = {
   scheduleType?: ScheduleType
   priceType?: PriceType
   hotel: PlaceSelection[]
-  departFlight?: DepartFlightInfo
-  arriveFlight?: ArriveFlightInfo
+  departFlight?: FlightInfo
+  arriveFlight?: FlightInfo
   selectedPlace: PlaceSelection[]
 }
