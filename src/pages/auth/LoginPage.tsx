@@ -5,6 +5,7 @@ import { SiNaver } from 'react-icons/si'
 import arubiIcon from '@/assets/Arubi-icon.png'
 import arubiTextIcon from '@/assets/Arubi-text-icon.png'
 import { authApi, useMockAuth } from '@/features/auth/api/auth-api'
+import { testAuthApi } from '@/features/auth/api/test-auth-api'
 import { useLogin } from '@/features/auth/hooks/use-login'
 import { OAUTH_PROVIDERS } from '@/features/auth/types/auth-types'
 import type { OAuthProvider } from '@/features/auth/types/auth-types'
@@ -24,6 +25,14 @@ const providerIcons: Record<OAuthProvider, ReactNode> = {
 
 export function LoginPage() {
   const { mutate: login, isPending, isError } = useLogin()
+  const {
+    mutate: loginWithTestUser,
+    isPending: isTestLoginPending,
+    isError: isTestLoginError,
+  } = useLogin({
+    mutationFn: testAuthApi.login,
+  })
+  const isLoginPending = isPending || isTestLoginPending
 
   const handleOAuthLogin = (provider: OAuthProvider) => {
     sessionStorage.setItem('oauth_provider', provider)
@@ -59,7 +68,7 @@ export function LoginPage() {
                 type="button"
                 className={`login-provider-button login-provider-button--${provider}`}
                 onClick={() => handleOAuthLogin(provider)}
-                disabled={isPending}
+                disabled={isLoginPending}
               >
                 <span className="login-provider-icon" aria-hidden="true">
                   {providerIcons[provider]}
@@ -67,15 +76,29 @@ export function LoginPage() {
                 <span>{providerLabels[provider]}</span>
               </button>
             ))}
+
+            {testAuthApi.enabled && (
+              <button
+                type="button"
+                className="login-provider-button login-provider-button--test"
+                onClick={() => loginWithTestUser()}
+                disabled={isLoginPending}
+              >
+                <span className="login-provider-icon" aria-hidden="true">
+                  DEV
+                </span>
+                <span>Test user login</span>
+              </button>
+            )}
           </div>
 
-          {isError && (
+          {(isError || isTestLoginError) && (
             <p className="login-message login-message--error">
               {'\uB85C\uADF8\uC778\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694.'}
             </p>
           )}
 
-          {isPending && (
+          {isLoginPending && (
             <p className="login-message">
               {'\uB85C\uADF8\uC778 \uCC98\uB9AC \uC911\uC785\uB2C8\uB2E4...'}
             </p>

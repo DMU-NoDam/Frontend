@@ -100,6 +100,17 @@
   font-weight: 500;
 }
 
+.login-provider-button--test {
+  border-color: #64748b;
+  background: #111827;
+  color: #ffffff;
+}
+
+.login-provider-button--test .login-provider-icon {
+  font-size: 11px;
+  font-weight: 800;
+}
+
 .login-provider-icon {
   justify-self: center;
   display: inline-grid;

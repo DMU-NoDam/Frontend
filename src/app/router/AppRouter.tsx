@@ -6,6 +6,7 @@ import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { LandingPage } from '@/pages/landing/LandingPage'
 import { TripCreatePage } from '@/pages/trip-create/TripCreatePage'
+import { TripSelectPage } from '@/pages/trip-select/TripSelectPage'
 
 const router = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
       {
         path: '/trip/create',
         element: <TripCreatePage />,
+      },
+      {
+        path: '/trip/select/:tripId',
+        element: <TripSelectPage />,
       },
       {
         element: <ProtectedRoute />,

@@ -3,6 +3,7 @@ import type { InternalAxiosRequestConfig } from 'axios'
 import type { AuthTokens, TokenRefreshResponse } from '@/features/auth/types/auth-types'
 import { useAuthStore } from '@/app/store/auth-store'
 import { mockTokenRefresh } from '@/mocks/auth'
+import { testAuthApi } from '@/features/auth/api/test-auth-api'
 
 const useMockAuth = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 
@@ -51,9 +52,9 @@ apiClient.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    const { refreshToken, setTokens, logout } = useAuthStore.getState()
+    const { authMode, refreshToken, setTokens, logout } = useAuthStore.getState()
 
-    if (!refreshToken) {
+    if (authMode !== 'test' && !refreshToken) {
       logout()
       return Promise.reject(error)
     }
@@ -74,8 +75,10 @@ apiClient.interceptors.response.use(
     try {
       let newTokens: AuthTokens
 
-      if (useMockAuth) {
-        newTokens = await mockTokenRefresh(refreshToken)
+      if (authMode === 'test') {
+        newTokens = await testAuthApi.refresh()
+      } else if (useMockAuth) {
+        newTokens = await mockTokenRefresh(refreshToken!)
       } else {
         const { data } = await refreshClient.post<TokenRefreshResponse>(
           '/user/public/token-refresh',
