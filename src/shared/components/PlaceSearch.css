@@ -17,7 +17,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #111827;
+  background: #FF6F9F;
   color: #ffffff;
   border-radius: 999px;
   font-size: 14px;
@@ -27,7 +27,7 @@
 .place-search-chip-remove {
   background: none;
   border: none;
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -36,43 +36,61 @@
   align-items: center;
 }
 
-.place-search-chip-remove:hover {
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  .place-search-chip-remove:hover {
+    color: #ffffff;
+  }
 }
 
 .place-search-input-wrap {
   position: relative;
 }
 
+.place-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
 .place-search-input {
   width: 100%;
-  min-height: 48px;
-  padding: 0 16px;
-  border: 1.5px solid #d1d5db;
-  border-radius: 12px;
+  min-height: 52px;
+  padding: 0 20px 0 46px;
+  border: 1.5px solid #FF6F9F;
+  border-radius: 999px;
   font-size: 16px;
   background: #ffffff;
-  transition: border-color 0.15s ease;
+  color: #111827;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  box-sizing: border-box;
+}
+
+.place-search-input::placeholder {
+  color: #c4c4c6;
 }
 
 .place-search-input:focus {
   outline: none;
-  border-color: #111827;
+  border-color: #FF6F9F;
+  box-shadow: 0 0 0 3px rgba(255, 111, 159, 0.12);
 }
 
 .place-search-dropdown {
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   left: 0;
   right: 0;
   list-style: none;
   margin: 0;
   padding: 4px 0;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  z-index: 10;
+  border: 1px solid #ebebeb;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  z-index: 30;
   max-height: 240px;
   overflow-y: auto;
 }
@@ -85,8 +103,10 @@
   transition: background 0.1s ease;
 }
 
-.place-search-option:hover {
-  background: #f3f4f6;
+@media (hover: hover) and (pointer: fine) {
+  .place-search-option:hover {
+    background: #fdf2f6;
+  }
 }
 
 .place-search-option-name {
@@ -97,5 +117,25 @@
 
 .place-search-option-desc {
   font-size: 12px;
-  color: #6b7280;
+  color: #9ca3af;
+}
+
+.place-search-input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.place-search-status {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  padding: 10px 16px;
+  background: #ffffff;
+  border: 1px solid #ebebeb;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  font-size: 14px;
+  color: #9ca3af;
+  z-index: 30;
 }

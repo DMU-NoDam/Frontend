@@ -1,11 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
+import { FaMagnifyingGlass } from 'react-icons/fa6'
 import { usePlacesAutocomplete } from '@/shared/hooks/use-places-autocomplete'
-import type { PlacePrediction } from '@/shared/hooks/use-places-autocomplete'
+import type {
+  PlacePrediction,
+  PlacesSessionToken,
+} from '@/shared/hooks/use-places-autocomplete'
 import './PlaceSearch.css'
 
 export type PlaceItem = {
   id: string
   name: string
+  location?: {
+    lat: number
+    lng: number
+  }
 }
 
 type Props = {
@@ -16,6 +24,8 @@ type Props = {
   countryCode?: string
   onAdd: (item: PlaceItem) => void
   onRemove: (id: string) => void
+  onLocationError?: (message: string) => void
+  onLocationErrorClear?: () => void
 }
 
 export function PlaceSearch({
@@ -26,26 +36,53 @@ export function PlaceSearch({
   countryCode,
   onAdd,
   onRemove,
+  onLocationError,
+  onLocationErrorClear,
 }: Props) {
   const [input, setInput] = useState('')
   const [predictions, setPredictions] = useState<PlacePrediction[]>([])
   const [open, setOpen] = useState(false)
+  const [isSearching, setIsSearching] = useState(false)
+  const [searchError, setSearchError] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { isReady, getPredictions } = usePlacesAutocomplete()
+  const sessionTokenRef = useRef<PlacesSessionToken | null>(null)
+  const requestIdRef = useRef(0)
+  const {
+    isReady,
+    getPredictions,
+    createSessionToken,
+    getPlaceLocation,
+  } = usePlacesAutocomplete()
   const isMaxReached = maxItems !== undefined && selected.length >= maxItems
 
-  // Derive display predictions — avoids synchronous setState inside effect
-  const visiblePredictions = input.trim() && !isMaxReached ? predictions : []
-  const isDropdownOpen = open && visiblePredictions.length > 0
+  const hasInput = input.trim().length > 0
 
   useEffect(() => {
-    if (!input.trim() || isMaxReached) return
+    if (!hasInput || isMaxReached || !isReady) return
 
     if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    const currentId = ++requestIdRef.current
+
     debounceRef.current = setTimeout(async () => {
-      const results = await getPredictions(input, { types, countryCode })
-      setPredictions(results)
-      setOpen(results.length > 0)
+      sessionTokenRef.current ??= createSessionToken()
+      try {
+        const results = await getPredictions(input, {
+          types,
+          countryCode,
+          sessionToken: sessionTokenRef.current,
+        })
+        if (currentId !== requestIdRef.current) return
+        setPredictions(results)
+        setOpen(true)
+        setIsSearching(false)
+      } catch {
+        if (currentId !== requestIdRef.current) return
+        setPredictions([])
+        setSearchError(true)
+        setOpen(false)
+        setIsSearching(false)
+      }
     }, 300)
 
     return () => {
@@ -53,14 +90,39 @@ export function PlaceSearch({
     }
   // getPredictions reads from a stable ref; types/countryCode are stable props from parent
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, isMaxReached])
+  }, [input, isMaxReached, isReady])
 
-  const handleSelect = (prediction: PlacePrediction) => {
-    onAdd({ id: prediction.placeId, name: prediction.name })
-    setInput('')
-    setPredictions([])
+  const handleSelect = async (prediction: PlacePrediction) => {
     setOpen(false)
+    setPredictions([])
+    setInput('')
+    sessionTokenRef.current = null
+
+    const location = await getPlaceLocation(prediction)
+
+    if (!location) {
+      onLocationError?.('위치 정보를 찾을 수 없어요')
+      return
+    }
+
+    onLocationErrorClear?.()
+    onAdd({
+      id: prediction.placeId,
+      name: prediction.name,
+      location,
+    })
   }
+
+  const handleBlur = () => {
+    setTimeout(() => {
+      setOpen(false)
+      sessionTokenRef.current = null
+    }, 150)
+  }
+
+  const showDropdown = open && predictions.length > 0 && !isSearching && !searchError
+  const showEmpty = hasInput && !isMaxReached && !isSearching && !searchError && predictions.length === 0
+  const showStatus = hasInput && !isMaxReached && (isSearching || searchError || showEmpty)
 
   return (
     <div className="place-search">
@@ -84,20 +146,39 @@ export function PlaceSearch({
 
       {!isMaxReached && (
         <div className="place-search-input-wrap">
+          <FaMagnifyingGlass
+            className="place-search-icon"
+            size={15}
+            color="#FF6F9F"
+            aria-hidden="true"
+          />
           <input
             type="text"
             className="place-search-input"
-            placeholder={isReady ? placeholder : `${placeholder} (API 키 필요)`}
+            placeholder={placeholder}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onBlur={() => setTimeout(() => setOpen(false), 150)}
-            onFocus={() => visiblePredictions.length > 0 && setOpen(true)}
+            disabled={!isReady}
+            onChange={(e) => {
+              const val = e.target.value
+              setInput(val)
+              if (!val.trim()) {
+                setPredictions([])
+                setOpen(false)
+                setIsSearching(false)
+                setSearchError(false)
+              } else if (isReady && !isMaxReached) {
+                setIsSearching(true)
+                setSearchError(false)
+              }
+            }}
+            onBlur={handleBlur}
+            onFocus={() => predictions.length > 0 && setOpen(true)}
             aria-autocomplete="list"
-            aria-expanded={isDropdownOpen}
+            aria-expanded={showDropdown}
           />
-          {isDropdownOpen && (
+          {showDropdown && (
             <ul className="place-search-dropdown" role="listbox">
-              {visiblePredictions.map((p) => (
+              {predictions.map((p) => (
                 <li
                   key={p.placeId}
                   role="option"
@@ -110,6 +191,13 @@ export function PlaceSearch({
                 </li>
               ))}
             </ul>
+          )}
+          {showStatus && (
+            <div className="place-search-status" role="status" aria-live="polite">
+              {isSearching && '찾는 중...'}
+              {!isSearching && searchError && '장소 검색에 실패했어요'}
+              {showEmpty && '검색 결과가 없어요'}
+            </div>
           )}
         </div>
       )}

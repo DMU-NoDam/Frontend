@@ -1,9 +1,31 @@
 import { useEffect, useRef, useState } from 'react'
+import { loadGoogleMapsScript } from '@/shared/lib/google-maps-loader'
 
 export type PlacePrediction = {
   placeId: string
   name: string
   description: string
+  placePrediction?: GooglePlacePrediction
+}
+
+export type PlaceLocation = {
+  lat: number
+  lng: number
+}
+
+export type PlacesSessionToken = unknown
+
+type GooglePlaceInstance = {
+  location?: { lat(): number; lng(): number }
+  fetchFields(opts: { fields: string[] }): Promise<unknown>
+}
+
+type GooglePlacePrediction = {
+  placeId: string
+  mainText?: { text: string }
+  secondaryText?: { text: string }
+  text: { text: string }
+  toPlace(): GooglePlaceInstance
 }
 
 type GoogleAutocompleteService = {
@@ -12,58 +34,28 @@ type GoogleAutocompleteService = {
       input: string
       includedPrimaryTypes?: string[]
       includedRegionCodes?: string[]
+      sessionToken?: PlacesSessionToken
     },
   ) => Promise<{
     suggestions: Array<{
-      placePrediction?: {
-        placeId: string
-        mainText?: { text: string }
-        secondaryText?: { text: string }
-        text: { text: string }
-      }
+      placePrediction?: GooglePlacePrediction
     }>
   }>
 }
 
 type GooglePlacesLibrary = {
   AutocompleteSuggestion: GoogleAutocompleteService
+  AutocompleteSessionToken: new () => PlacesSessionToken
 }
 
-declare global {
-  interface Window {
-    google?: {
-      maps: {
-        importLibrary: (library: 'places') => Promise<GooglePlacesLibrary>
-      }
-    }
-  }
-}
+const MAX_AUTOCOMPLETE_TYPES = 5
 
-let scriptLoaded = false
-let scriptLoading = false
 let placesLibraryPromise: Promise<GooglePlacesLibrary> | null = null
-const loadCallbacks: Array<() => void> = []
-
-function loadGoogleMapsScript(apiKey: string) {
-  if (scriptLoaded || scriptLoading) return
-  scriptLoading = true
-
-  const script = document.createElement('script')
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&loading=async`
-  script.async = true
-  script.onload = () => {
-    scriptLoaded = true
-    scriptLoading = false
-    loadCallbacks.forEach((cb) => cb())
-    loadCallbacks.length = 0
-  }
-  document.head.appendChild(script)
-}
 
 function getPlacesLibrary() {
   if (!window.google?.maps?.importLibrary) return null
 
-  placesLibraryPromise ??= window.google.maps.importLibrary('places')
+  placesLibraryPromise ??= window.google.maps.importLibrary('places') as Promise<GooglePlacesLibrary>
   return placesLibraryPromise
 }
 
@@ -90,62 +82,126 @@ function waitForPlacesLibrary() {
   })
 }
 
+function chunkTypes(types: string[]) {
+  const chunks: string[][] = []
+
+  for (let i = 0; i < types.length; i += MAX_AUTOCOMPLETE_TYPES) {
+    chunks.push(types.slice(i, i + MAX_AUTOCOMPLETE_TYPES))
+  }
+
+  return chunks
+}
+
+function mapSuggestions(
+  suggestions: Array<{
+    placePrediction?: GooglePlacePrediction
+  }>,
+) {
+  return suggestions.flatMap((suggestion) => {
+    const prediction = suggestion.placePrediction
+    if (!prediction) return []
+
+    return {
+      placeId: prediction.placeId,
+      name: prediction.mainText?.text ?? prediction.text.text,
+      description:
+        prediction.secondaryText?.text ?? prediction.text.text,
+      placePrediction: prediction,
+    }
+  })
+}
+
 export function usePlacesAutocomplete() {
   const [isReady, setIsReady] = useState(false)
   const serviceRef = useRef<GoogleAutocompleteService | null>(null)
+  const placesLibraryRef = useRef<GooglePlacesLibrary | null>(null)
 
   useEffect(() => {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY
-    if (!apiKey) return
+    let cancelled = false
 
     const init = async () => {
+      await loadGoogleMapsScript().catch(() => undefined)
+      if (cancelled) return
+
       const placesLibrary = await waitForPlacesLibrary()
-      if (!placesLibrary) return
+      if (!placesLibrary || cancelled) return
 
       const { AutocompleteSuggestion } = placesLibrary
 
+      placesLibraryRef.current = placesLibrary
       serviceRef.current = AutocompleteSuggestion
       setIsReady(true)
     }
 
-    if (scriptLoaded) {
-      init()
-      return
-    }
+    init()
 
-    loadCallbacks.push(init)
-    loadGoogleMapsScript(apiKey)
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const getPredictions = (
     input: string,
-    options?: { types?: string[]; countryCode?: string },
+    options?: { types?: string[]; countryCode?: string; sessionToken?: PlacesSessionToken },
   ): Promise<PlacePrediction[]> => {
     if (!serviceRef.current || !input.trim()) return Promise.resolve([])
 
-    return serviceRef.current
-      .fetchAutocompleteSuggestions({
-        input,
-        includedPrimaryTypes: options?.types,
-        includedRegionCodes: options?.countryCode
-          ? [options.countryCode.toUpperCase()]
-          : undefined,
-      })
-      .then(({ suggestions }) =>
-        suggestions.flatMap((suggestion) => {
-          const prediction = suggestion.placePrediction
-          if (!prediction) return []
+    const typeGroups = options?.types?.length
+      ? chunkTypes(options.types)
+      : [undefined]
 
-          return {
-            placeId: prediction.placeId,
-            name: prediction.mainText?.text ?? prediction.text.text,
-            description:
-              prediction.secondaryText?.text ?? prediction.text.text,
-          }
+    return Promise.all(
+      typeGroups.map((types) =>
+        serviceRef.current!.fetchAutocompleteSuggestions({
+          input,
+          includedPrimaryTypes: types,
+          includedRegionCodes: options?.countryCode
+            ? [options.countryCode.toUpperCase()]
+            : undefined,
+          sessionToken: options?.sessionToken,
         }),
-      )
-      .catch(() => [])
+      ),
+    )
+      .then((responses) => {
+        const uniquePredictions = new Map<string, PlacePrediction>()
+
+        responses
+          .flatMap(({ suggestions }) => mapSuggestions(suggestions))
+          .forEach((prediction) => {
+            if (!uniquePredictions.has(prediction.placeId)) {
+              uniquePredictions.set(prediction.placeId, prediction)
+            }
+          })
+
+        return Array.from(uniquePredictions.values())
+      })
   }
 
-  return { isReady, getPredictions }
+  const createSessionToken = (): PlacesSessionToken | null => {
+    if (!placesLibraryRef.current) return null
+    return new placesLibraryRef.current.AutocompleteSessionToken()
+  }
+
+  const getPlaceLocation = async (
+    prediction: PlacePrediction,
+  ): Promise<PlaceLocation | undefined> => {
+    if (!prediction.placePrediction) return undefined
+
+    const place = prediction.placePrediction.toPlace()
+
+    try {
+      await place.fetchFields({ fields: ['location'] })
+    } catch {
+      return undefined
+    }
+
+    if (!place.location) return undefined
+
+    return {
+      lat: place.location.lat(),
+      lng: place.location.lng(),
+    }
+  }
+
+  return { isReady, getPredictions, createSessionToken, getPlaceLocation }
 }

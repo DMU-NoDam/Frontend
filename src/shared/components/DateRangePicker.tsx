@@ -7,11 +7,12 @@ type Props = {
   onChange: (startDate: string, endDate: string) => void
 }
 
-const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토']
+const WEEK_DAYS = ['월', '화', '수', '목', '금', '토', '일']
 const MONTH_NAMES = [
   '1월', '2월', '3월', '4월', '5월', '6월',
   '7월', '8월', '9월', '10월', '11월', '12월',
 ]
+const DAY_SHORT = ['일', '월', '화', '수', '목', '금', '토']
 
 function toDateStr(year: number, month: number, day: number): string {
   return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
@@ -21,8 +22,24 @@ function getDaysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate()
 }
 
+function addDays(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  date.setDate(date.getDate() + days)
+  return toDateStr(date.getFullYear(), date.getMonth(), date.getDate())
+}
+
+// Monday-first: Monday=0 … Sunday=6
 function getFirstDayOfWeek(year: number, month: number): number {
-  return new Date(year, month, 1).getDay()
+  const day = new Date(year, month, 1).getDay()
+  return (day + 6) % 7
+}
+
+function formatDateDisplay(dateStr: string): string {
+  if (!dateStr) return ''
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const dayName = DAY_SHORT[new Date(y, m - 1, d).getDay()]
+  return `${m}.${String(d).padStart(2, '0')} (${dayName})`
 }
 
 type SelectionState = 'idle' | 'start-picked'
@@ -38,21 +55,13 @@ export function DateRangePicker({ startDate, endDate, onChange }: Props) {
   const firstDayOfWeek = getFirstDayOfWeek(viewYear, viewMonth)
 
   const prevMonth = () => {
-    if (viewMonth === 0) {
-      setViewMonth(11)
-      setViewYear((y) => y - 1)
-    } else {
-      setViewMonth((m) => m - 1)
-    }
+    if (viewMonth === 0) { setViewMonth(11); setViewYear((y) => y - 1) }
+    else { setViewMonth((m) => m - 1) }
   }
 
   const nextMonth = () => {
-    if (viewMonth === 11) {
-      setViewMonth(0)
-      setViewYear((y) => y + 1)
-    } else {
-      setViewMonth((m) => m + 1)
-    }
+    if (viewMonth === 11) { setViewMonth(0); setViewYear((y) => y + 1) }
+    else { setViewMonth((m) => m + 1) }
   }
 
   const todayStr = toDateStr(today.getFullYear(), today.getMonth(), today.getDate())
@@ -68,11 +77,10 @@ export function DateRangePicker({ startDate, endDate, onChange }: Props) {
       setSelection('start-picked')
       onChange(dateStr, '')
     } else {
-      if (dateStr < pendingStart) {
-        onChange(dateStr, pendingStart)
-      } else {
-        onChange(pendingStart, dateStr)
-      }
+      const rawStart = dateStr < pendingStart ? dateStr : pendingStart
+      const rawEnd = dateStr < pendingStart ? pendingStart : dateStr
+      const maxEnd = addDays(rawStart, 6)
+      onChange(rawStart, rawEnd > maxEnd ? maxEnd : rawEnd)
       setSelection('idle')
       setPendingStart('')
     }
@@ -90,12 +98,17 @@ export function DateRangePicker({ startDate, endDate, onChange }: Props) {
       return classes.join(' ')
     }
 
-    if (dateStr === effectiveStart) classes.push('drp-day--start')
-    if (dateStr === effectiveEnd) classes.push('drp-day--end')
-    if (effectiveStart && effectiveEnd && dateStr > effectiveStart && dateStr < effectiveEnd)
-      classes.push('drp-day--range')
+    if (effectiveStart && !effectiveEnd && dateStr === effectiveStart) {
+      classes.push('drp-day--start-only')
+    } else {
+      if (dateStr === effectiveStart) classes.push('drp-day--start')
+      if (dateStr === effectiveEnd) classes.push('drp-day--end')
+      if (effectiveStart && effectiveEnd && dateStr > effectiveStart && dateStr < effectiveEnd)
+        classes.push('drp-day--range')
+    }
 
-    if (dateStr === todayStr) classes.push('drp-day--today')
+    if (dateStr === todayStr && dateStr !== effectiveStart && dateStr !== effectiveEnd)
+      classes.push('drp-day--today')
 
     return classes.join(' ')
   }
@@ -108,22 +121,17 @@ export function DateRangePicker({ startDate, endDate, onChange }: Props) {
   return (
     <div className="drp">
       <div className="drp-header">
-        <button type="button" className="drp-nav" onClick={prevMonth} aria-label="이전 달">
-          ‹
-        </button>
-        <span className="drp-title">
-          {viewYear}년 {MONTH_NAMES[viewMonth]}
-        </span>
-        <button type="button" className="drp-nav" onClick={nextMonth} aria-label="다음 달">
-          ›
-        </button>
+        <div className="drp-nav-group">
+          <button type="button" className="drp-nav" onClick={prevMonth} aria-label="이전 달">‹</button>
+          <span className="drp-title">{viewYear}년 {MONTH_NAMES[viewMonth]}</span>
+          <button type="button" className="drp-nav" onClick={nextMonth} aria-label="다음 달">›</button>
+        </div>
+        <span className="drp-hint">최대 7일 선택</span>
       </div>
 
       <div className="drp-weekdays" aria-hidden="true">
         {WEEK_DAYS.map((d) => (
-          <span key={d} className="drp-weekday">
-            {d}
-          </span>
+          <span key={d} className="drp-weekday">{d}</span>
         ))}
       </div>
 
@@ -150,11 +158,14 @@ export function DateRangePicker({ startDate, endDate, onChange }: Props) {
         )}
       </div>
 
-      {(startDate || endDate) && (
-        <p className="drp-summary">
-          {startDate || '?'} → {endDate || '?'}
-        </p>
-      )}
+      <div className="drp-dates">
+        <div className={`drp-date-box${startDate ? ' drp-date-box--filled' : ''}`}>
+          <span>{startDate ? formatDateDisplay(startDate) : '출발일'}</span>
+        </div>
+        <div className={`drp-date-box${endDate ? ' drp-date-box--filled' : ''}`}>
+          <span>{endDate ? formatDateDisplay(endDate) : '도착일'}</span>
+        </div>
+      </div>
     </div>
   )
 }
