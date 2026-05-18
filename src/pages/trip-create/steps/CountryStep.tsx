@@ -27,8 +27,8 @@ export function CountryStep({ control, onNext }: Props) {
   return (
     <div className="step">
       <div className="step-header">
-        <span className="step-label">Step 1</span>
-        <h2 className="step-title">어느 나라로 떠나고 싶으세요?</h2>
+        <h2 className="step-title">어떤 나라로 떠나볼까요?</h2>
+        <p className="step-subtitle">여행할 나라를 고르면 도시를 이어서 선택할 수 있어요!</p>
       </div>
 
       <Controller
@@ -45,9 +45,6 @@ export function CountryStep({ control, onNext }: Props) {
                   onClick={() => field.onChange(c.code)}
                   aria-pressed={field.value === c.code}
                 >
-                  <span className="country-btn-flag" aria-hidden="true">
-                    {c.flag}
-                  </span>
                   {c.name}
                 </button>
               ))}
@@ -62,11 +59,7 @@ export function CountryStep({ control, onNext }: Props) {
       />
 
       <div className="step-actions">
-        <button
-          type="button"
-          className="step-next"
-          onClick={onNext}
-        >
+        <button type="button" className="step-next" onClick={onNext}>
           다음
         </button>
       </div>

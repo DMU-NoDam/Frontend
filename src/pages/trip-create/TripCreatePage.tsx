@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { motion } from 'framer-motion'
+import { LuSparkle } from 'react-icons/lu'
+import { PiStarFourBold } from 'react-icons/pi'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/app/store/auth-store'
 import { useCreateTrip } from '@/features/trip/hooks/use-create-trip'
+import { useTripPlanningStatus } from '@/features/trip/hooks/use-trip-planning-status'
 import { mapFormToRequest } from '@/features/trip/api/trip-mapper'
 import { tripFormSchema } from '@/features/trip/types/trip-schema'
 import type { TripCreateFormValues } from '@/features/trip/types/trip-types'
@@ -21,6 +25,7 @@ import './TripCreatePage.css'
 const TOTAL_STEPS = 9
 const PENDING_KEY = 'trip_form_pending'
 const REDIRECT_KEY = 'pending_redirect'
+const SKIPPABLE_STEPS = new Set([5, 6, 7, 8])
 
 const STEP_FIELDS: Partial<Record<number, (keyof TripCreateFormValues)[]>> = {
   1: ['country'],
@@ -29,41 +34,137 @@ const STEP_FIELDS: Partial<Record<number, (keyof TripCreateFormValues)[]>> = {
   4: ['personCount'],
 }
 
-function readPending(): Partial<TripCreateFormValues> | null {
+const sparkleFloat = {
+  y: [0, -8, 0],
+  rotate: [-2, 3, -2],
+}
+
+const sparklePulse = {
+  scale: [0.92, 1.08, 0.92],
+  opacity: [0.72, 1, 0.72],
+}
+
+type PendingReadResult =
+  | { ok: true; values: Partial<TripCreateFormValues> }
+  | { ok: false; hadData: boolean }
+
+function readPending(): PendingReadResult {
   const raw = sessionStorage.getItem(PENDING_KEY)
-  if (!raw) return null
+  if (!raw) return { ok: true, values: {} }
+
+  sessionStorage.removeItem(PENDING_KEY)
+
+  let parsed: unknown
   try {
-    sessionStorage.removeItem(PENDING_KEY)
-    return JSON.parse(raw) as Partial<TripCreateFormValues>
+    parsed = JSON.parse(raw)
   } catch {
-    return null
+    return { ok: false, hadData: true }
   }
+
+  const result = tripFormSchema.safeParse(parsed)
+  if (!result.success) return { ok: false, hadData: true }
+
+  return { ok: true, values: result.data }
+}
+
+function createUuid(): string {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID()
+  }
+
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+    const random = Math.floor(Math.random() * 16)
+    const value = char === 'x' ? random : (random & 0x3) | 0x8
+    return value.toString(16)
+  })
+}
+
+function PlanningSparkle() {
+  return (
+    <motion.div
+      className="trip-create-planning-sparkles"
+      aria-hidden="true"
+      animate={sparkleFloat}
+      transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      <motion.span
+        className="trip-create-planning-sparkle trip-create-planning-sparkle--main"
+        animate={sparklePulse}
+        transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        <LuSparkle />
+      </motion.span>
+
+      {['left', 'right'].map((position, index) => (
+        <motion.span
+          key={position}
+          className={`trip-create-planning-sparkle trip-create-planning-sparkle--${position}`}
+          animate={sparklePulse}
+          transition={{
+            duration: 1.55,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: index === 0 ? 0.25 : 0.55,
+          }}
+        >
+          <PiStarFourBold />
+        </motion.span>
+      ))}
+    </motion.div>
+  )
 }
 
 export function TripCreatePage() {
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
-  // Read and clear pending values once on mount via lazy initializer
-  const [pending] = useState<Partial<TripCreateFormValues> | null>(readPending)
-  const [step, setStep] = useState(pending ? TOTAL_STEPS : 1)
+  const [pendingResult] = useState<PendingReadResult>(readPending)
+  const pendingValues = pendingResult.ok ? pendingResult.values : {}
+  const hasPendingData = pendingResult.ok && Object.keys(pendingValues).length > 0
+
+  const [step, setStep] = useState(hasPendingData ? TOTAL_STEPS : 1)
+  const [toast, setToast] = useState(!pendingResult.ok && pendingResult.hadData)
+
+  // polling state
+  const [tripId, setTripId] = useState<string | null>(null)
+  const [pollingStartedAt, setPollingStartedAt] = useState<number | null>(null)
 
   const { control, setValue, getValues, watch, trigger, handleSubmit } =
     useForm<TripCreateFormValues>({
       resolver: zodResolver(tripFormSchema),
-      defaultValues: pending ?? {
-        uuid: crypto.randomUUID(),
-        country: '',
-        region: [],
-        startDate: '',
-        endDate: '',
-        personCount: 1,
-        hotel: [],
-        selectedPlace: [],
-      },
+      defaultValues: hasPendingData
+        ? (pendingValues as TripCreateFormValues)
+        : {
+            uuid: createUuid(),
+            country: '',
+            region: [],
+            startDate: '',
+            endDate: '',
+            personCount: 1,
+            hotel: [],
+            selectedPlace: [],
+          },
     })
 
-  const { mutate, isPending, isError } = useCreateTrip()
+  const { mutate, isPending: isCreating, isError: isCreateError } = useCreateTrip()
+  const { status: planningStatus, isError: isPollError } = useTripPlanningStatus(tripId, pollingStartedAt)
+
+  // toast auto-dismiss
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  useEffect(() => {
+    if (!toast) return
+    toastTimerRef.current = setTimeout(() => setToast(false), 4000)
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
+    }
+  }, [toast])
+
+  // navigate when polling done
+  useEffect(() => {
+    if (tripId && planningStatus === 'done') {
+      navigate(`/trip/select/${tripId}`)
+    }
+  }, [tripId, planningStatus, navigate])
 
   const goNext = async (fields?: (keyof TripCreateFormValues)[]) => {
     if (fields) {
@@ -71,6 +172,21 @@ export function TripCreatePage() {
       if (!valid) return
     }
     setStep((s) => s + 1)
+  }
+
+  const clearStepValues = (targetStep: number) => {
+    if (targetStep === 5) setValue('hotel', [])
+    if (targetStep === 6) {
+      setValue('departFlight', undefined)
+      setValue('arriveFlight', undefined)
+    }
+    if (targetStep === 7) setValue('selectedPlace', [])
+    if (targetStep === 8) setValue('priceType', undefined)
+  }
+
+  const goSkip = () => {
+    clearStepValues(step)
+    void goNext()
   }
 
   const goBack = () => setStep((s) => s - 1)
@@ -82,12 +198,92 @@ export function TripCreatePage() {
       navigate('/login')
       return
     }
-    mutate(mapFormToRequest(values))
+
+    mutate(mapFormToRequest(values), {
+      onSuccess: (res) => {
+        const id = res.body.tripId
+        if (!id) return
+        setTripId(id)
+        setPollingStartedAt(Date.now())
+      },
+    })
+  }
+
+  // Show full-screen overlay when POST is pending or polling is in progress
+  const isPolling = tripId !== null && planningStatus === 'pending'
+  const showPlanningOverlay = isCreating || isPolling
+  const showPlanningFailure = (isCreateError || isPollError || planningStatus === 'timeout') && !isCreating
+
+  if (showPlanningOverlay) {
+    return (
+      <main className="trip-create-page trip-create-planning" aria-live="polite">
+        <motion.div
+          className="trip-create-planning-content"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+        >
+          <PlanningSparkle />
+          <motion.h1
+            className="trip-create-planning-title"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: 'easeOut', delay: 0.12 }}
+          >
+            <span>AI가 완벽한 일정을</span>
+            <span>마법처럼 짜고 있어요</span>
+          </motion.h1>
+        </motion.div>
+      </main>
+    )
+  }
+
+  if (showPlanningFailure) {
+    return (
+      <main className="trip-create-page trip-create-planning">
+        <p className="trip-create-planning-text trip-create-planning-error">AI 일정 생성 실패</p>
+      </main>
+    )
   }
 
   return (
     <main className="trip-create-page">
-      <div className="trip-create-progress" aria-label={`${TOTAL_STEPS}단계 중 ${step}단계`}>
+      {toast && (
+        <div className="trip-create-toast" role="alert">
+          이전 작성 내용을 불러오지 못했어요. 처음부터 다시 작성해 주세요.
+        </div>
+      )}
+
+      <header className="trip-create-header">
+        <button
+          type="button"
+          className={`trip-create-back${step === 1 ? ' trip-create-back--hidden' : ''}`}
+          onClick={goBack}
+          disabled={isCreating}
+          aria-label="이전 단계"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+
+        <span className="trip-create-step-counter" aria-label={`${TOTAL_STEPS}단계 중 ${step}단계`}>
+          <span className="trip-create-step-current">{step}</span>
+          <span className="trip-create-step-total">/{TOTAL_STEPS}</span>
+        </span>
+
+        <button
+          type="button"
+          className={`trip-create-skip${!SKIPPABLE_STEPS.has(step) ? ' trip-create-skip--hidden' : ''}`}
+          onClick={goSkip}
+          disabled={!SKIPPABLE_STEPS.has(step) || isCreating}
+          aria-hidden={!SKIPPABLE_STEPS.has(step)}
+        >
+          건너뛰기
+        </button>
+      </header>
+
+      <div className="trip-create-progress">
         <div
           className="trip-create-progress-bar"
           style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
@@ -106,7 +302,6 @@ export function TripCreatePage() {
             control={control}
             setValue={setValue}
             onNext={() => goNext(STEP_FIELDS[2])}
-            onBack={goBack}
           />
         )}
         {step === 3 && (
@@ -114,14 +309,12 @@ export function TripCreatePage() {
             watch={watch}
             setValue={setValue}
             onNext={() => goNext(STEP_FIELDS[3])}
-            onBack={goBack}
           />
         )}
         {step === 4 && (
           <PersonStep
             control={control}
             onNext={() => goNext(STEP_FIELDS[4])}
-            onBack={goBack}
           />
         )}
         {step === 5 && (
@@ -130,14 +323,13 @@ export function TripCreatePage() {
             setValue={setValue}
             getValues={getValues}
             onNext={() => goNext()}
-            onBack={goBack}
           />
         )}
         {step === 6 && (
           <FlightStep
+            watch={watch}
             setValue={setValue}
             onNext={() => goNext()}
-            onBack={goBack}
           />
         )}
         {step === 7 && (
@@ -146,23 +338,20 @@ export function TripCreatePage() {
             setValue={setValue}
             getValues={getValues}
             onNext={() => goNext()}
-            onBack={goBack}
           />
         )}
         {step === 8 && (
           <BudgetStep
             control={control}
             onNext={() => goNext()}
-            onBack={goBack}
           />
         )}
         {step === 9 && (
           <StyleStep
             control={control}
             onSubmit={handleSubmit(onSubmit)}
-            onBack={goBack}
-            isPending={isPending}
-            isError={isError}
+            isPending={isCreating}
+            isError={isCreateError}
           />
         )}
       </div>

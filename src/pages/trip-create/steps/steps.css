@@ -1,7 +1,10 @@
+/* ── Step container ── */
 .step {
-  display: grid;
-  gap: 32px;
-  padding: 0 24px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-height: 100%;
+  padding: 44px 20px 0;
   width: 100%;
 }
 
@@ -10,42 +13,42 @@
   gap: 8px;
 }
 
-.step-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
 .step-title {
   margin: 0;
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
   color: #111827;
-  line-height: 1.25;
+  line-height: 1.3;
 }
 
 .step-subtitle {
   margin: 0;
-  font-size: 15px;
-  color: #6b7280;
+  font-size: 14px;
+  color: #9ca3af;
+  line-height: 1.5;
 }
 
 .step-body {
   display: grid;
-  gap: 16px;
+  gap: 14px;
+  flex: 1 0 auto;
+  align-content: start;
 }
 
+/* ── Fixed bottom action bar ── */
 .step-actions {
-  display: grid;
-  gap: 10px;
+  position: sticky;
+  bottom: 0;
+  margin: 0 -20px;
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: #ffffff;
+  z-index: 20;
 }
 
 .step-next {
   width: 100%;
   min-height: 52px;
-  background: #111827;
+  background: #1c1c1e;
   color: #ffffff;
   border: none;
   border-radius: 14px;
@@ -61,28 +64,19 @@
 
 .step-next:disabled {
   cursor: not-allowed;
-  opacity: 0.45;
+  opacity: 0.4;
 }
 
-.step-back {
-  width: 100%;
-  min-height: 44px;
-  background: none;
-  color: #6b7280;
-  border: none;
-  font-size: 15px;
-  cursor: pointer;
-}
-
+/* Inline text link — used for "다시 입력" in FlightSection */
 .step-skip {
-  width: 100%;
-  min-height: 44px;
   background: none;
-  color: #9ca3af;
   border: none;
-  font-size: 14px;
+  color: #FF6F9F;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  text-decoration: underline;
+  padding: 8px 0px;
+  text-decoration: none;
 }
 
 .step-error {
@@ -91,7 +85,7 @@
   color: #dc2626;
 }
 
-/* Card grid (budget / style steps) */
+/* ── Card grid (budget / style) ── */
 .step-card-grid {
   display: grid;
   gap: 10px;
@@ -102,7 +96,7 @@
   align-items: flex-start;
   gap: 14px;
   padding: 16px 18px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid #ebebeb;
   border-radius: 14px;
   background: #ffffff;
   cursor: pointer;
@@ -112,13 +106,16 @@
     background 0.15s ease;
 }
 
-.step-card:hover {
-  border-color: #9ca3af;
+@media (hover: hover) and (pointer: fine) {
+  .step-card:hover:not(.step-card--selected) {
+    border-color: #FFB3CE;
+    box-shadow: 0 2px 10px rgba(255, 111, 159, 0.18);
+  }
 }
 
 .step-card--selected {
-  border-color: #111827;
-  background: #f9fafb;
+  border-color: #FF6F9F;
+  background: #FFF0F5;
 }
 
 .step-card-emoji {
@@ -140,10 +137,10 @@
 
 .step-card-desc {
   font-size: 13px;
-  color: #6b7280;
+  color: #9ca3af;
 }
 
-/* Country grid */
+/* ── Country grid ── */
 .country-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -155,7 +152,7 @@
   place-items: center;
   gap: 6px;
   padding: 16px 8px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid #ebebeb;
   border-radius: 14px;
   background: #ffffff;
   cursor: pointer;
@@ -167,15 +164,18 @@
     background 0.15s ease;
 }
 
-.country-btn:hover {
-  border-color: #9ca3af;
+@media (hover: hover) and (pointer: fine) {
+  .country-btn:hover:not(.country-btn--selected) {
+    border-color: #FFB3CE;
+    box-shadow: 0 2px 10px rgba(255, 111, 159, 0.18);
+  }
 }
 
 .country-btn--selected {
-  border-color: #111827;
-  background: #f9fafb;
+  border-color: #FF6F9F;
+  background: #FFF0F5;
   font-weight: 700;
-  color: #111827;
+  color: #FF6F9F;
 }
 
 .country-btn-flag {
@@ -183,7 +183,7 @@
   line-height: 1;
 }
 
-/* Selected chips (city step) */
+/* ── Selected chips (city step) ── */
 .step-chips {
   list-style: none;
   margin: 0;
@@ -198,7 +198,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #111827;
+  background: #FF6F9F;
   color: #ffffff;
   border-radius: 999px;
   font-size: 14px;
@@ -208,7 +208,7 @@
 .step-chip-remove {
   background: none;
   border: none;
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -221,30 +221,35 @@
   color: #ffffff;
 }
 
-/* City tabs */
+/* ── City tabs ── */
 .city-tabs {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  align-items: flex-start;
 }
 
 .city-tab {
   padding: 6px 14px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid #ebebeb;
   border-radius: 999px;
   background: #ffffff;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 500;
   color: #374151;
   cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
   transition:
     border-color 0.15s ease,
     background 0.15s ease,
     color 0.15s ease;
 }
 
-.city-tab:hover {
-  border-color: #9ca3af;
+@media (hover: hover) and (pointer: fine) {
+  .city-tab:hover:not(.city-tab--active) {
+    border-color: #d1d5db;
+  }
 }
 
 .city-tab--active {
@@ -253,51 +258,7 @@
   color: #ffffff;
 }
 
-/* City step */
-.city-region-hint {
-  margin: 0;
-  font-size: 13px;
-  color: #6b7280;
-  padding: 10px 14px;
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-}
-
-.city-search-input {
-  width: 100%;
-  min-height: 44px;
-  padding: 0 16px;
-  border: 1.5px solid #d1d5db;
-  border-radius: 12px;
-  font-size: 15px;
-  background: #ffffff;
-  transition: border-color 0.15s ease;
-}
-
-.city-search-input:focus {
-  outline: none;
-  border-color: #111827;
-}
-
-.city-search {
-  display: grid;
-  gap: 20px;
-}
-
-.city-region-group {
-  display: grid;
-  gap: 8px;
-}
-
-.city-region-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
+/* ── City grid ── */
 .city-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -308,7 +269,7 @@
   display: grid;
   gap: 2px;
   padding: 12px 14px;
-  border: 1.5px solid #e5e7eb;
+  border: 1.5px solid #ebebeb;
   border-radius: 12px;
   background: #ffffff;
   cursor: pointer;
@@ -318,13 +279,16 @@
     background 0.15s ease;
 }
 
-.city-btn:hover:not(:disabled) {
-  border-color: #9ca3af;
+@media (hover: hover) and (pointer: fine) {
+  .city-btn:hover:not(:disabled):not(.city-btn--selected) {
+    border-color: #FFB3CE;
+    box-shadow: 0 2px 10px rgba(255, 111, 159, 0.18);
+  }
 }
 
 .city-btn--selected {
-  border-color: #111827;
-  background: #f9fafb;
+  border-color: #FF6F9F;
+  background: #FFF0F5;
 }
 
 .city-btn:disabled {
@@ -343,32 +307,52 @@
   color: #9ca3af;
 }
 
-/* Person count */
-.person-count {
+/* ── Person count row card ── */
+.person-row-card {
   display: flex;
   align-items: center;
-  gap: 24px;
-  justify-content: center;
-  padding: 16px 0;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: #ffffff;
+  border: 1.5px solid #ebebeb;
+  border-radius: 14px;
+}
+
+.person-row-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.person-row-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
 }
 
 .person-count-btn {
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 1.5px solid #d1d5db;
   background: #ffffff;
-  font-size: 22px;
+  font-size: 18px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #111827;
+  color: #374151;
   transition: border-color 0.15s ease;
 }
 
-.person-count-btn:hover:not(:disabled) {
-  border-color: #111827;
+@media (hover: hover) and (pointer: fine) {
+  .person-count-btn:hover:not(:disabled) {
+    border-color: #FF6F9F;
+    color: #FF6F9F;
+  }
 }
 
 .person-count-btn:disabled {
@@ -377,74 +361,81 @@
 }
 
 .person-count-value {
-  font-size: 40px;
+  font-size: 20px;
   font-weight: 700;
   color: #111827;
-  min-width: 64px;
+  min-width: 24px;
   text-align: center;
 }
 
-/* Flight step */
+/* ── Flight step ── */
 .flight-section {
   display: grid;
-  gap: 12px;
-  padding: 16px;
-  border: 1.5px solid #e5e7eb;
+  gap: 4px;
+  padding: 8px 20px;
   border-radius: 14px;
-  background: #ffffff;
+  background: #f7f7f8;
 }
 
 .flight-section-title {
   font-size: 14px;
   font-weight: 600;
-  color: #374151;
+  color: #9ca3af;
+  letter-spacing: 0.02em;
 }
 
 .flight-input-row {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
 .flight-input {
   flex: 1;
-  min-height: 44px;
-  padding: 0 14px;
-  border: 1.5px solid #d1d5db;
-  border-radius: 10px;
-  font-size: 15px;
+  min-height: 36px;
+  padding: 16px 0px;
+  border: none;
+  background: transparent;
+  font-size: 17px;
+  font-weight: 500;
+  color: #111827;
   text-transform: uppercase;
-  transition: border-color 0.15s ease;
+}
+
+.flight-input::placeholder {
+  color: #c4c4c6;
+  font-weight: 400;
+  text-transform: none;
 }
 
 .flight-input:focus {
   outline: none;
-  border-color: #111827;
 }
 
 .flight-search-btn {
-  min-width: 60px;
-  min-height: 44px;
-  padding: 0 14px;
-  background: #111827;
+  min-height: 36px;
+  padding: 0 16px;
+  background: #FF6F9F;
   color: #ffffff;
   border: none;
-  border-radius: 10px;
-  font-size: 14px;
+  border-radius: 999px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .flight-search-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .flight-result-card {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   padding: 12px 14px;
-  background: #f9fafb;
+  background: #ffffff;
   border-radius: 10px;
   font-size: 13px;
   color: #374151;
@@ -452,12 +443,13 @@
 
 .flight-result-row {
   display: flex;
-  gap: 6px;
+  gap: 8px;
 }
 
 .flight-result-label {
   color: #9ca3af;
-  min-width: 60px;
+  min-width: 32px;
+  font-size: 12px;
 }
 
 .flight-error {
@@ -467,5 +459,11 @@
 
 .flight-loading {
   font-size: 13px;
-  color: #6b7280;
+  color: #9ca3af;
+}
+
+.map-location-error {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #dc2626;
 }

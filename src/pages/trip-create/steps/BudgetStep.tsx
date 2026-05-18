@@ -12,15 +12,14 @@ const OPTIONS: { value: PriceType; emoji: string; title: string; desc: string }[
 type Props = {
   control: Control<TripCreateFormValues>
   onNext: () => void
-  onBack: () => void
 }
 
-export function BudgetStep({ control, onNext, onBack }: Props) {
+export function BudgetStep({ control, onNext }: Props) {
   return (
     <div className="step">
       <div className="step-header">
-        <span className="step-label">Step 8</span>
         <h2 className="step-title">여행 예산은 어느 정도인가요?</h2>
+        <p className="step-subtitle">예산에 맞춰 식사, 장소를 조절해드릴게요!</p>
       </div>
 
       <Controller
@@ -56,12 +55,6 @@ export function BudgetStep({ control, onNext, onBack }: Props) {
       <div className="step-actions">
         <button type="button" className="step-next" onClick={onNext}>
           다음
-        </button>
-        <button type="button" className="step-skip" onClick={onNext}>
-          건너뛰기
-        </button>
-        <button type="button" className="step-back" onClick={onBack}>
-          이전
         </button>
       </div>
     </div>

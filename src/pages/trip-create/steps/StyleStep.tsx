@@ -12,17 +12,16 @@ const OPTIONS: { value: ScheduleType; emoji: string; title: string; desc: string
 type Props = {
   control: Control<TripCreateFormValues>
   onSubmit: () => void
-  onBack: () => void
   isPending: boolean
   isError: boolean
 }
 
-export function StyleStep({ control, onSubmit, onBack, isPending, isError }: Props) {
+export function StyleStep({ control, onSubmit, isPending, isError }: Props) {
   return (
     <div className="step">
       <div className="step-header">
-        <span className="step-label">Step 9</span>
         <h2 className="step-title">어떤 스타일로 여행하고 싶으세요?</h2>
+        <p className="step-subtitle">원하는 여행 템포를 고르면 일정의 여유와 동선을 맞춰드릴게요!</p>
       </div>
 
       <Controller
@@ -68,12 +67,6 @@ export function StyleStep({ control, onSubmit, onBack, isPending, isError }: Pro
           disabled={isPending}
         >
           {isPending ? '생성 중...' : '여행 일정 만들기'}
-        </button>
-        <button type="button" className="step-skip" onClick={onSubmit} disabled={isPending}>
-          건너뛰기
-        </button>
-        <button type="button" className="step-back" onClick={onBack} disabled={isPending}>
-          이전
         </button>
       </div>
     </div>
