@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
+import type { PanInfo } from 'framer-motion'
 import { useMemo, useState } from 'react'
 import { LuSparkles } from 'react-icons/lu'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -24,6 +25,7 @@ const slideVariants = {
 }
 
 const slideTransition = { duration: 0.22, ease: 'easeInOut' } as const
+const SWIPE_THRESHOLD = 70
 
 function StatItem({ label, value }: { label: string; value: string }) {
   return (
@@ -110,8 +112,20 @@ export function TripSelectPage() {
   const selectedCard = cards[selectedIndex]
 
   const goTo = (newIndex: number) => {
+    if (newIndex < 0 || newIndex >= cards.length || newIndex === selectedIndex) return
     setDirection(newIndex > selectedIndex ? 1 : -1)
     setSelectedIndex(newIndex)
+  }
+
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x <= -SWIPE_THRESHOLD) {
+      goTo(selectedIndex + 1)
+      return
+    }
+
+    if (info.offset.x >= SWIPE_THRESHOLD) {
+      goTo(selectedIndex - 1)
+    }
   }
 
   const handleConfirm = () => {
@@ -170,6 +184,10 @@ export function TripSelectPage() {
               exit="exit"
               transition={slideTransition}
               className="card-slide"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.18}
+              onDragEnd={handleDragEnd}
             >
               <ThemeCard
                 card={selectedCard}
