@@ -5,6 +5,7 @@ export type AuthProvider = OAuthProvider | 'test'
 export type AuthMode = 'oauth' | 'test'
 
 export type AuthUser = {
+  id?: number
   email: string
   name: string
   provider: AuthProvider
@@ -40,10 +41,7 @@ export type TokenRefreshResponse = {
   body: AuthTokens
 }
 
-export type TestUserRequest = {
-  id: number
-  role: 'USER'
-}
+export type TestUserRequest = { role: 'USER' } | { id: number }
 
 export type TestUserResponse = {
   message: string

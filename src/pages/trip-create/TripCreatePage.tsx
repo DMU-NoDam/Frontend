@@ -201,7 +201,7 @@ export function TripCreatePage() {
 
     mutate(mapFormToRequest(values), {
       onSuccess: (res) => {
-        const id = res.body.tripId
+        const id = String(res.body.id)
         if (!id) return
         setTripId(id)
         setPollingStartedAt(Date.now())

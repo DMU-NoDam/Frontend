@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { FcGoogle } from 'react-icons/fc'
 import { RiKakaoTalkFill } from 'react-icons/ri'
 import { SiNaver } from 'react-icons/si'
+import { useAuthStore } from '@/app/store/auth-store'
 import arubiIcon from '@/assets/Arubi-icon.png'
 import arubiTextIcon from '@/assets/Arubi-text-icon.png'
 import { authApi, useMockAuth } from '@/features/auth/api/auth-api'
@@ -24,6 +26,9 @@ const providerIcons: Record<OAuthProvider, ReactNode> = {
 }
 
 export function LoginPage() {
+  const authMode = useAuthStore((state) => state.authMode)
+  const userId = useAuthStore((state) => state.user?.id)
+  const setTokens = useAuthStore((state) => state.setTokens)
   const { mutate: login, isPending, isError } = useLogin()
   const {
     mutate: loginWithTestUser,
@@ -32,7 +37,18 @@ export function LoginPage() {
   } = useLogin({
     mutationFn: testAuthApi.login,
   })
-  const isLoginPending = isPending || isTestLoginPending
+  const {
+    mutate: refreshTestUser,
+    isPending: isTestRefreshPending,
+    isError: isTestRefreshError,
+    isSuccess: isTestRefreshSuccess,
+  } = useMutation({
+    mutationFn: testAuthApi.refresh,
+    onSuccess: setTokens,
+  })
+  const canRefreshTestUser =
+    testAuthApi.refreshEnabled && authMode === 'test' && userId !== undefined
+  const isLoginPending = isPending || isTestLoginPending || isTestRefreshPending
 
   const handleOAuthLogin = (provider: OAuthProvider) => {
     sessionStorage.setItem('oauth_provider', provider)
@@ -90,11 +106,31 @@ export function LoginPage() {
                 <span>Test user login</span>
               </button>
             )}
+
+            {canRefreshTestUser && (
+              <button
+                type="button"
+                className="login-provider-button login-provider-button--test-refresh"
+                onClick={() => refreshTestUser()}
+                disabled={isLoginPending}
+              >
+                <span className="login-provider-icon" aria-hidden="true">
+                  DEV
+                </span>
+                <span>Refresh test token</span>
+              </button>
+            )}
           </div>
 
-          {(isError || isTestLoginError) && (
+          {(isError || isTestLoginError || isTestRefreshError) && (
             <p className="login-message login-message--error">
               {'\uB85C\uADF8\uC778\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694.'}
+            </p>
+          )}
+
+          {isTestRefreshSuccess && (
+            <p className="login-message">
+              Test token refreshed.
             </p>
           )}
 

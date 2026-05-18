@@ -1,6 +1,6 @@
 import type { FlightApiBody, TripCreateRequest, TripCreateResponse, TripStatusResponse } from '@/features/trip/types/trip-types'
 
-const MOCK_TRIP_ID = 'mock-trip-id-001'
+const MOCK_TRIP_ID = 1
 const MOCK_PLANNING_DURATION_MS = Number(import.meta.env.VITE_MOCK_TRIP_PLANNING_MS ?? 8000)
 const mockTripPlanningStartedAt = new Map<string, number>()
 
@@ -8,11 +8,11 @@ export const mockCreateTrip = async (
   request: TripCreateRequest,
 ): Promise<TripCreateResponse> => {
   void request
-  mockTripPlanningStartedAt.set(MOCK_TRIP_ID, Date.now())
+  mockTripPlanningStartedAt.set(String(MOCK_TRIP_ID), Date.now())
 
   return Promise.resolve({
     message: 'success',
-    body: { tripId: MOCK_TRIP_ID },
+    body: { id: MOCK_TRIP_ID },
   })
 }
 

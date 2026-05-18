@@ -41,7 +41,7 @@ export type TripCreateRequest = {
 
 export type TripCreateResponse = {
   message: string
-  body: { tripId: string }
+  body: { id: number }
 }
 
 export type TripStatusResponse = {

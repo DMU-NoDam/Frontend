@@ -106,7 +106,14 @@
   color: #ffffff;
 }
 
-.login-provider-button--test .login-provider-icon {
+.login-provider-button--test-refresh {
+  border-color: #64748b;
+  background: #334155;
+  color: #ffffff;
+}
+
+.login-provider-button--test .login-provider-icon,
+.login-provider-button--test-refresh .login-provider-icon {
   font-size: 11px;
   font-weight: 800;
 }
