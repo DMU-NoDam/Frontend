@@ -1,0 +1,63 @@
+.travel-hero {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 루트 SVG — 전체 영역을 덮는 절대 레이어 */
+.travel-hero__svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* 여행지 칩 — glassmorphism (밝은 핑크 배경용) */
+.travel-hero__chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #be185d;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(190, 24, 93, 0.12);
+}
+
+/* 위치 핀 컨테이너 */
+.travel-hero__pin {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 핀 주변 파동 링 */
+.travel-hero__pin-ring {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+}
+
+/* 별 — 흰 원형 점 */
+.travel-hero__star {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* 비행기 컨테이너 */
+.travel-hero__plane {
+  position: absolute;
+  pointer-events: none;
+}
