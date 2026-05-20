@@ -116,13 +116,13 @@ export function MyPage() {
       {/* ── 여행 통계 카드 ── */}
       <section className="my-stats" aria-label="여행 통계">
         <div className="my-stats__row">
-          <div className="my-stats__card my-stats__card--past">
-            <span className="my-stats__card-value">{pastTrips.length}</span>
-            <span className="my-stats__card-label">다녀온 여행</span>
-          </div>
           <div className="my-stats__card my-stats__card--upcoming">
             <span className="my-stats__card-value">{upcoming.length}</span>
             <span className="my-stats__card-label">예정된 여행</span>
+          </div>
+          <div className="my-stats__card my-stats__card--past">
+            <span className="my-stats__card-value">{pastTrips.length}</span>
+            <span className="my-stats__card-label">다녀온 여행</span>
           </div>
         </div>
 
