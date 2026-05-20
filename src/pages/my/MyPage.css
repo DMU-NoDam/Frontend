@@ -7,7 +7,20 @@
   display: flex;
   flex-direction: column;
   background: #f7f7f8;
+  overflow: hidden;
+}
+
+.my-page__scroll {
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.my-page__scroll::-webkit-scrollbar {
+  display: none;
 }
 
 /* ── Profile ──────────────────────────────────────────────── */
@@ -197,9 +210,9 @@
   z-index: 300;
   margin: auto;
   width: calc(100% - 8px);
-  max-width: 620px;
+  max-width: min(620px, var(--app-shell-width, 393px));
   height: fit-content;
-  max-height: 92vh;
+  max-height: 88vh;
   display: flex;
   flex-direction: column;
   border-radius: 4px 14px 14px 4px;
@@ -257,7 +270,8 @@
   display: flex;
   flex-direction: row;
   position: relative;
-  min-height: 580px;
+  min-height: min(580px, 52vh);
+  overflow-y: auto;
 }
 
 .passport-page {
@@ -266,8 +280,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-evenly;
-  padding: 28px 12px;
-  gap: 16px;
+  padding: 16px 8px;
+  gap: 12px;
   /* 여권 속지 가로선 패턴 */
   background-image: repeating-linear-gradient(
     0deg, transparent, transparent 23px,
@@ -304,9 +318,9 @@
 }
 
 .passport-stamp__img {
-  height: 210px;
+  height: min(210px, 18vh);
   width: auto;
-  max-width: 260px;
+  max-width: 100%;
   object-fit: contain;
   filter: grayscale(1) opacity(0.25);
   transition: filter 0.3s ease;
@@ -428,6 +442,7 @@
 
 .my-spacer {
   flex: 1;
+  min-height: 24px;
 }
 
 

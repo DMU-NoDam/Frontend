@@ -59,9 +59,9 @@ export function ProfileEditSheet({ open, onClose }: Props) {
           />
           <motion.div
             className="pes-sheet"
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
+            initial={{ y: '100%', x: '-50%' }}
+            animate={{ y: 0,      x: '-50%' }}
+            exit={{ y: '100%',    x: '-50%' }}
             transition={{ type: 'spring', stiffness: 320, damping: 32 }}
           >
             {/* 핸들 */}
