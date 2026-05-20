@@ -112,6 +112,7 @@ export function MyPage() {
 
   return (
     <main className="my-page">
+      <div className="my-page__scroll">
       {/* ── 프로필 ── */}
       <section className="my-profile">
         <div className="my-profile__info">
@@ -187,12 +188,13 @@ export function MyPage() {
           </button>
         ))}
       </nav>
-
-      <div className="my-spacer" />
-      <div className="my-bottom-actions">
-        <button type="button" className="my-logout" onClick={handleLogout}>LOGOUT</button>
-        <button type="button" className="my-withdraw" onClick={() => setWithdrawOpen(true)}>회원 탈퇴</button>
+        <div className="my-spacer" />
+        <div className="my-bottom-actions">
+          <button type="button" className="my-logout" onClick={handleLogout}>LOGOUT</button>
+          <button type="button" className="my-withdraw" onClick={() => setWithdrawOpen(true)}>회원 탈퇴</button>
+        </div>
       </div>
+
       <TabBar />
 
       <PrivacyPolicyModal open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
