@@ -1,13 +1,20 @@
 import { useAuthStore } from '@/app/store/auth-store'
+import { mockCreateTrip, mockGetTripStatus } from '@/mocks/trip'
 import { mockGetTrips } from '@/mocks/trips'
 import { apiClient } from '@/shared/api/client'
-import type { Trip, TripListResponse } from '../types/trip-types'
+import type {
+  Trip,
+  TripCreateRequest,
+  TripCreateResponse,
+  TripListResponse,
+  TripStatusResponse,
+} from '../types/trip-types'
 
-// API 준비 전까지 mock 사용. VITE_USE_MOCK_TRIPS=false 로 실 API로 전환
-const useMock = import.meta.env.VITE_USE_MOCK_TRIPS !== 'false'
+const useMockTrips = import.meta.env.VITE_USE_MOCK_TRIPS !== 'false'
+const useMockTrip = import.meta.env.VITE_USE_MOCK_TRIP === 'true'
 
 const getTrips = async (): Promise<Trip[]> => {
-  if (useMock) return mockGetTrips()
+  if (useMockTrips) return mockGetTrips()
 
   const token = useAuthStore.getState().accessToken
   const { data } = await apiClient.get<TripListResponse>('/trip/api', {
@@ -16,4 +23,26 @@ const getTrips = async (): Promise<Trip[]> => {
   return data.body
 }
 
-export const tripApi = { getTrips }
+const createTrip = async (request: TripCreateRequest): Promise<TripCreateResponse> => {
+  if (useMockTrip) {
+    return mockCreateTrip(request)
+  }
+
+  const { data } = await apiClient.post<TripCreateResponse>('/trip/api', request)
+  return data
+}
+
+const getTripStatus = async (tripId: string): Promise<TripStatusResponse> => {
+  if (useMockTrip) {
+    return mockGetTripStatus(tripId)
+  }
+
+  const { data } = await apiClient.get<TripStatusResponse>(`/trip/api/${tripId}`)
+  return data
+}
+
+export const tripApi = {
+  getTrips,
+  createTrip,
+  getTripStatus,
+}

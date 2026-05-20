@@ -1,0 +1,469 @@
+/* ── Step container ── */
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-height: 100%;
+  padding: 44px 20px 0;
+  width: 100%;
+}
+
+.step-header {
+  display: grid;
+  gap: 8px;
+}
+
+.step-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.3;
+}
+
+.step-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+.step-body {
+  display: grid;
+  gap: 14px;
+  flex: 1 0 auto;
+  align-content: start;
+}
+
+/* ── Fixed bottom action bar ── */
+.step-actions {
+  position: sticky;
+  bottom: 0;
+  margin: 0 -20px;
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: #ffffff;
+  z-index: 20;
+}
+
+.step-next {
+  width: 100%;
+  min-height: 52px;
+  background: #1c1c1e;
+  color: #ffffff;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.step-next:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.step-next:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* Inline text link — used for "다시 입력" in FlightSection */
+.step-skip {
+  background: none;
+  border: none;
+  color: #FF6F9F;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 0px;
+  text-decoration: none;
+}
+
+.step-error {
+  margin: 0;
+  font-size: 13px;
+  color: #dc2626;
+}
+
+/* ── Card grid (budget / style) ── */
+.step-card-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.step-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1.5px solid #ebebeb;
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .step-card:hover:not(.step-card--selected) {
+    border-color: #FFB3CE;
+    box-shadow: 0 2px 10px rgba(255, 111, 159, 0.18);
+  }
+}
+
+.step-card--selected {
+  border-color: #FF6F9F;
+  background: #FFF0F5;
+}
+
+.step-card-emoji {
+  font-size: 24px;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
+.step-card-text {
+  display: grid;
+  gap: 2px;
+}
+
+.step-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.step-card-desc {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* ── Country grid ── */
+.country-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.country-btn {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 16px 8px;
+  border: 1.5px solid #ebebeb;
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .country-btn:hover:not(.country-btn--selected) {
+    border-color: #FFB3CE;
+    box-shadow: 0 2px 10px rgba(255, 111, 159, 0.18);
+  }
+}
+
+.country-btn--selected {
+  border-color: #FF6F9F;
+  background: #FFF0F5;
+  font-weight: 700;
+  color: #FF6F9F;
+}
+
+.country-btn-flag {
+  font-size: 28px;
+  line-height: 1;
+}
+
+/* ── Selected chips (city step) ── */
+.step-chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.step-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: #FF6F9F;
+  color: #ffffff;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.step-chip-remove {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.step-chip-remove:hover {
+  color: #ffffff;
+}
+
+/* ── City tabs ── */
+.city-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.city-tab {
+  padding: 6px 14px;
+  border: 1.5px solid #ebebeb;
+  border-radius: 999px;
+  background: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  flex-shrink: 0;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .city-tab:hover:not(.city-tab--active) {
+    border-color: #d1d5db;
+  }
+}
+
+.city-tab--active {
+  border-color: #111827;
+  background: #111827;
+  color: #ffffff;
+}
+
+/* ── City grid ── */
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.city-btn {
+  display: grid;
+  gap: 2px;
+  padding: 12px 14px;
+  border: 1.5px solid #ebebeb;
+  border-radius: 12px;
+  background: #ffffff;
+  cursor: pointer;
+  text-align: left;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .city-btn:hover:not(:disabled):not(.city-btn--selected) {
+    border-color: #FFB3CE;
+    box-shadow: 0 2px 10px rgba(255, 111, 159, 0.18);
+  }
+}
+
+.city-btn--selected {
+  border-color: #FF6F9F;
+  background: #FFF0F5;
+}
+
+.city-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.city-btn-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.city-btn-sub {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+/* ── Person count row card ── */
+.person-row-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: #ffffff;
+  border: 1.5px solid #ebebeb;
+  border-radius: 14px;
+}
+
+.person-row-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.person-row-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.person-count-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid #d1d5db;
+  background: #ffffff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  transition: border-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .person-count-btn:hover:not(:disabled) {
+    border-color: #FF6F9F;
+    color: #FF6F9F;
+  }
+}
+
+.person-count-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.person-count-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ── Flight step ── */
+.flight-section {
+  display: grid;
+  gap: 4px;
+  padding: 8px 20px;
+  border-radius: 14px;
+  background: #f7f7f8;
+}
+
+.flight-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #9ca3af;
+  letter-spacing: 0.02em;
+}
+
+.flight-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.flight-input {
+  flex: 1;
+  min-height: 36px;
+  padding: 16px 0px;
+  border: none;
+  background: transparent;
+  font-size: 17px;
+  font-weight: 500;
+  color: #111827;
+  text-transform: uppercase;
+}
+
+.flight-input::placeholder {
+  color: #c4c4c6;
+  font-weight: 400;
+  text-transform: none;
+}
+
+.flight-input:focus {
+  outline: none;
+}
+
+.flight-search-btn {
+  min-height: 36px;
+  padding: 0 16px;
+  background: #FF6F9F;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.flight-search-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.flight-result-card {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border-radius: 10px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.flight-result-row {
+  display: flex;
+  gap: 8px;
+}
+
+.flight-result-label {
+  color: #9ca3af;
+  min-width: 32px;
+  font-size: 12px;
+}
+
+.flight-error {
+  font-size: 13px;
+  color: #dc2626;
+}
+
+.flight-loading {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.map-location-error {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #dc2626;
+}
