@@ -11,6 +11,7 @@ type AuthState = {
   isAuthenticated: boolean
   login: (payload: AuthSession) => void
   setTokens: (tokens: AuthTokens) => void
+  updateUser: (partial: Partial<AuthUser>) => void
   logout: () => void
 }
 
@@ -34,6 +35,9 @@ export const useAuthStore = create<AuthState>()(
 
       setTokens: ({ accessToken, refreshToken }) =>
         set({ accessToken, refreshToken }),
+
+      updateUser: (partial) =>
+        set((s) => ({ user: s.user ? { ...s.user, ...partial } : s.user })),
 
       logout: () =>
         set({

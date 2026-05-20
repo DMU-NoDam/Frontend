@@ -7,6 +7,7 @@ import { useTrips } from '@/features/trip/hooks/use-trips'
 import { useAuthStore } from '@/app/store/auth-store'
 import { apiClient } from '@/shared/api/client'
 import { PrivacyPolicyModal } from './privacy-policy/PrivacyPolicyModal'
+import { ProfileEditSheet } from './profile-edit/ProfileEditSheet'
 import googleLoginImg from '@/assets/Social-Login/google_login.png'
 import kakaoLoginImg from '@/assets/Social-Login/kakao_login.png'
 import naverLoginImg from '@/assets/Social-Login/naver_login.png'
@@ -76,6 +77,7 @@ export function MyPage() {
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
   const [privacyOpen, setPrivacyOpen] = useState(false)
+  const [profileEditOpen, setProfileEditOpen] = useState(false)
 
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
@@ -125,9 +127,14 @@ export function MyPage() {
             <span className="my-profile__email">{user?.email ?? ''}</span>
           </div>
         </div>
-        <div className="my-profile__avatar" aria-hidden="true">
+        <button
+          type="button"
+          className="my-profile__avatar"
+          onClick={() => setProfileEditOpen(true)}
+          aria-label="프로필 편집"
+        >
           <LuUser className="my-profile__avatar-icon" />
-        </div>
+        </button>
       </section>
 
       {/* ── 여행 통계 카드 ── */}
@@ -189,6 +196,7 @@ export function MyPage() {
       <TabBar />
 
       <PrivacyPolicyModal open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
+      <ProfileEditSheet open={profileEditOpen} onClose={() => setProfileEditOpen(false)} />
 
       {/* ── 회원 탈퇴 확인 모달 ── */}
       <AnimatePresence>
