@@ -1,10 +1,12 @@
-import { mockLogin } from '@/mocks/auth'
-import { apiClient } from '@/shared/api/client'
+import { mockLogin, mockTokenRefresh } from '@/mocks/auth'
+import { apiClient, refreshClient } from '@/shared/api/client'
 import type {
   AuthSession,
+  AuthTokens,
   OAuthLoginRequest,
   OAuthLoginResponse,
   OAuthProvider,
+  TokenRefreshResponse,
 } from '../types/auth-types'
 
 export const useMockAuth = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
@@ -33,7 +35,21 @@ const login = async ({
   return data.body
 }
 
+const tokenRefresh = async (refreshToken: string): Promise<AuthTokens> => {
+  if (useMockAuth) {
+    return mockTokenRefresh(refreshToken)
+  }
+
+  const { data } = await refreshClient.post<TokenRefreshResponse>(
+    '/user/public/token-refresh',
+    { token: refreshToken },
+  )
+
+  return data.body
+}
+
 export const authApi = {
   getOAuthStartUrl,
   login,
+  tokenRefresh,
 }
