@@ -5,6 +5,7 @@ import { LoginPage } from '@/pages/auth/LoginPage'
 import { OAuthCallbackPage } from '@/pages/auth/OAuthCallbackPage'
 import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { LandingPage } from '@/pages/landing/LandingPage'
+import { TripListPage } from '@/pages/trip-list/Trip-listPage'
 import { TripCreatePage } from '@/pages/trip-create/TripCreatePage'
 import { TripDetailPage } from '@/pages/trip-detail/TripDetailPage'
 import { TripSelectPage } from '@/pages/trip-select/TripSelectPage'
@@ -47,6 +48,10 @@ const router = createBrowserRouter([
           {
             path: '/dashboard',
             element: <DashboardPage />,
+          },
+          {
+            path: '/triplist',
+            element: <TripListPage />,
           },
         ],
       },
