@@ -7,6 +7,9 @@ import { useTrips } from '@/features/trip/hooks/use-trips'
 import { useAuthStore } from '@/app/store/auth-store'
 import { apiClient } from '@/shared/api/client'
 import { PrivacyPolicyModal } from './privacy-policy/PrivacyPolicyModal'
+import googleLoginImg from '@/assets/Social-Login/google_login.png'
+import kakaoLoginImg from '@/assets/Social-Login/kakao_login.png'
+import naverLoginImg from '@/assets/Social-Login/naver_login.png'
 import stampJP from '@/assets/Trip-Stamp/Japan_Stamp.png'
 import stampUS from '@/assets/Trip-Stamp/USA_Stamp.png'
 import stampFR from '@/assets/Trip-Stamp/France_Stamp.png'
@@ -20,6 +23,13 @@ import stampDE from '@/assets/Trip-Stamp/Germany_Stamp.png'
 import stampAU from '@/assets/Trip-Stamp/Australia_Stamp.png'
 import stampSG from '@/assets/Trip-Stamp/Singapore_Stamp.png'
 import './MyPage.css'
+
+const PROVIDER_IMG: Record<string, string> = {
+  google: googleLoginImg,
+  kakao:  kakaoLoginImg,
+  naver:  naverLoginImg,
+  test:   naverLoginImg, // 테스트 계정 미리보기용 fallback
+}
 
 // stamp rotation per position index [left-top, left-bottom, right-top, right-bottom]
 const ROTATIONS = [-8, 5, 3, -7]
@@ -69,6 +79,7 @@ export function MyPage() {
 
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
+  const user = useAuthStore((s) => s.user)
 
   const today = new Date().toISOString().slice(0, 10)
   const pastTrips   = trips.filter((t) => t.endDate < today)
@@ -102,10 +113,16 @@ export function MyPage() {
       {/* ── 프로필 ── */}
       <section className="my-profile">
         <div className="my-profile__info">
-          <h1 className="my-profile__name">김여행</h1>
+          <h1 className="my-profile__name">{user?.name ?? '여행자'}</h1>
           <div className="my-profile__email-row">
-            <span className="my-profile__provider" aria-label="네이버 계정">N</span>
-            <span className="my-profile__email">alsehgus113@naver.com</span>
+            {user?.provider && PROVIDER_IMG[user.provider] && (
+              <img
+                src={PROVIDER_IMG[user.provider]}
+                alt={user.provider}
+                className="my-profile__provider-img"
+              />
+            )}
+            <span className="my-profile__email">{user?.email ?? ''}</span>
           </div>
         </div>
         <div className="my-profile__avatar" aria-hidden="true">

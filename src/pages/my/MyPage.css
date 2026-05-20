@@ -41,17 +41,11 @@
   gap: 8px;
 }
 
-.my-profile__provider {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+.my-profile__provider-img {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  background: #03c75a;
-  color: #ffffff;
-  font-size: 11px;
-  font-weight: 800;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
