@@ -1,0 +1,101 @@
+/* ── Trip Card ──────────────────────────────────────────────── */
+
+.trip-card {
+  width: 100%;
+  height: 160px;
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* gradient presets — assigned by data-variant */
+.trip-card[data-variant="0"] { background: linear-gradient(160deg, #0d1b4b 0%, #1565c0 55%, #283593 100%); }
+.trip-card[data-variant="1"] { background: linear-gradient(160deg, #1a0030 0%, #6a1b9a 55%, #1565c0 100%); }
+.trip-card[data-variant="2"] { background: linear-gradient(160deg, #002620 0%, #00695c 55%, #00897b 100%); }
+.trip-card[data-variant="3"] { background: linear-gradient(160deg, #1b2400 0%, #33691e 55%, #1565c0 100%); }
+.trip-card[data-variant="4"] { background: linear-gradient(160deg, #1a1000 0%, #e65100 40%, #4a148c 100%); }
+
+/* 다녀온 여행 — 회색 배경 */
+.trip-card--past {
+  background: linear-gradient(160deg, #3a3d47 0%, #6b6e7a 55%, #4a4d58 100%);
+}
+
+.trip-card--past .trip-card__dday {
+  background: #8f9098;
+}
+
+.trip-card__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 20%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+  pointer-events: none;
+}
+
+.trip-card__dday {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #ff6f9f;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  border-radius: 20px;
+  padding: 6px 11px;
+  white-space: nowrap;
+  z-index: 1;
+}
+
+.trip-card__body {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1;
+}
+
+.trip-card__title-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.trip-card__site {
+  font-size: 24px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.trip-card__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1;
+}
+
+.trip-card__meta {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.trip-card__meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 8px;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+}

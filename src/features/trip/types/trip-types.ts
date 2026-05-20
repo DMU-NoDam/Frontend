@@ -1,5 +1,25 @@
 export type ScheduleType = 'TIGHT' | 'NORMAL' | 'LOOSE'
 export type PriceType = 'CHEEP' | 'NORMAL' | 'LUXURY'
+export type TransportType = 'PUBLIC' | 'PRIVATE'
+export type PersonType = 'FRIEND' | 'FAMILY' | 'COUPLE' | 'SOLO'
+
+export type Trip = {
+  id: number
+  name: string
+  personCount: number
+  site: string
+  scheduleType: ScheduleType
+  transportType: TransportType
+  personType: PersonType
+  startDate: string
+  endDate: string
+  price: number
+}
+
+export type TripListResponse = {
+  message: string
+  body: Trip[]
+}
 
 export type FlightApiBody = {
   flightIata: string
