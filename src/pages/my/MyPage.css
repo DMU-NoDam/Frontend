@@ -379,7 +379,7 @@
 .my-menu {
   display: flex;
   flex-direction: column;
-  margin: 8px 0;
+  margin: 8px 0 0;
 }
 
 .my-menu__item {
@@ -436,19 +436,20 @@
   flex: 1;
 }
 
+
 .my-bottom-actions {
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
   gap: 20px;
-  padding: 16px 24px;
+  padding: 12px 24px 32px;
 }
 
 .my-logout {
   background: none;
   border: none;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.08em;
   color: #c5c6cc;
@@ -463,7 +464,7 @@
 .my-withdraw {
   background: none;
   border: none;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
   color: #e0e0e0;
   cursor: pointer;
