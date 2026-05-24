@@ -52,8 +52,6 @@ function readPending(): PendingReadResult {
   const raw = sessionStorage.getItem(PENDING_KEY)
   if (!raw) return { ok: true, values: {} }
 
-  sessionStorage.removeItem(PENDING_KEY)
-
   let parsed: unknown
   try {
     parsed = JSON.parse(raw)
@@ -124,6 +122,7 @@ export function TripCreatePage() {
 
   const [step, setStep] = useState(hasPendingData ? TOTAL_STEPS : 1)
   const [toast, setToast] = useState(!pendingResult.ok && pendingResult.hadData)
+  const [freshUuid] = useState(createUuid)
 
   // polling state
   const [tripId, setTripId] = useState<string | null>(null)
@@ -135,7 +134,7 @@ export function TripCreatePage() {
       defaultValues: hasPendingData
         ? (pendingValues as TripCreateFormValues)
         : {
-            uuid: createUuid(),
+            uuid: freshUuid,
             country: '',
             region: [],
             startDate: '',
@@ -162,7 +161,7 @@ export function TripCreatePage() {
   // navigate when polling done
   useEffect(() => {
     if (tripId && planningStatus === 'done') {
-      navigate(`/trip/select/${tripId}`)
+      navigate(`/trips/${tripId}/select`)
     }
   }, [tripId, planningStatus, navigate])
 
@@ -194,13 +193,14 @@ export function TripCreatePage() {
   const onSubmit = (values: TripCreateFormValues) => {
     if (!isAuthenticated) {
       sessionStorage.setItem(PENDING_KEY, JSON.stringify(values))
-      sessionStorage.setItem(REDIRECT_KEY, '/trip/create')
+      sessionStorage.setItem(REDIRECT_KEY, '/trips/create')
       navigate('/login')
       return
     }
 
     mutate(mapFormToRequest(values), {
       onSuccess: (res) => {
+        sessionStorage.removeItem(PENDING_KEY)
         const id = String(res.body.id)
         if (!id) return
         setTripId(id)
