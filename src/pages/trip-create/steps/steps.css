@@ -75,7 +75,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  padding: 8px 0px;
+  padding: 16px 0px;
   text-decoration: none;
 }
 
@@ -377,11 +377,19 @@
   background: #f7f7f8;
 }
 
+.flight-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .flight-section-title {
   font-size: 14px;
   font-weight: 600;
   color: #9ca3af;
   letter-spacing: 0.02em;
+  margin: 0;
 }
 
 .flight-input-row {
@@ -453,8 +461,10 @@
 }
 
 .flight-error {
+  margin: 0;
   font-size: 13px;
   color: #dc2626;
+  text-align: right;
 }
 
 .flight-loading {

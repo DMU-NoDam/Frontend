@@ -1,3 +1,4 @@
+import { mockGetPlans } from '@/mocks/plans'
 import { apiClient } from '@/shared/api/client'
 import type {
   PlanListResponse,
@@ -5,7 +6,12 @@ import type {
   TripThemeType,
 } from '../types/plan-types'
 
+const useMockPlans = import.meta.env.VITE_USE_MOCK_TRIPS !== 'false'
+
 const getPlans = async (tripId: string): Promise<PlanListResponse> => {
+  if (useMockPlans) {
+    return mockGetPlans(tripId)
+  }
   const { data } = await apiClient.get<PlanListResponse>(`/plan/api/${tripId}`)
   return data
 }
