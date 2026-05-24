@@ -26,6 +26,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Create .env file
+        run: echo "${{ secrets.ENV }}" > .env
+
       - name: Build
         run: npm run build
 
