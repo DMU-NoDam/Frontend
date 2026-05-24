@@ -57,5 +57,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
+            sudo rm -rf /var/www/html/dist
+            sudo mv /home/ubuntu/dist /var/www/html/dist
+            sudo chmod -R 755 /var/www/html/dist
             sudo nginx -t && sudo systemctl reload nginx
             echo "=== Deploy complete ==="
