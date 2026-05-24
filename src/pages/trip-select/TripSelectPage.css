@@ -177,12 +177,9 @@
   line-height: 1.6;
 }
 
-/* Buttons — same row, detail smaller */
+/* Buttons */
 .card-actions {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 12px;
 }
 
 .btn-primary {
@@ -206,24 +203,6 @@
 .btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-
-.btn-secondary {
-  flex-shrink: 0;
-  padding: 14px 14px;
-  background: #f3f4f6;
-  color: #6b7280;
-  font-size: 13px;
-  font-weight: 500;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: background 0.15s;
-  white-space: nowrap;
-}
-
-.btn-secondary:hover {
-  background: #e5e7eb;
 }
 
 /* Dot navigation */
