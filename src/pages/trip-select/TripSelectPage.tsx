@@ -79,9 +79,6 @@ function ThemeCard({
       </div>
 
       <div className="card-actions">
-        <button type="button" className="btn-secondary">
-          상세 보기
-        </button>
         <button
           type="button"
           className="btn-primary"
@@ -135,7 +132,7 @@ export function TripSelectPage() {
       { tripId, theme: selectedCard.theme },
       {
         onSuccess: ({ body }) => {
-          navigate(`/trip/${body.id}`, {
+          navigate(`/trips/${body.id}/detail`, {
             state: { tripName: body.name },
           })
         },

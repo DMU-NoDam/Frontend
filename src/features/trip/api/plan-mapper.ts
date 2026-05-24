@@ -51,8 +51,8 @@ const getTransports = (plans: PlacePlan[]): Transport[] =>
 const getAverageMoveMinutes = (plans: PlacePlan[]) => {
   const transports = getTransports(plans)
   if (transports.length === 0) return 0
-  const total = transports.reduce((sum, t) => sum + t.takeTime, 0)
-  return Math.round(total / transports.length)
+  const totalSeconds = transports.reduce((sum, t) => sum + t.takeTime, 0)
+  return Math.round(totalSeconds / transports.length / 60)
 }
 
 const getTotalDistanceMeters = (plans: PlacePlan[]) =>

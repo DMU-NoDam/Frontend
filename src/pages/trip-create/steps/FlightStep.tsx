@@ -62,7 +62,14 @@ function FlightSection({
 
   return (
     <div className="flight-section">
-      <p className="flight-section-title">{title}</p>
+      <div className="flight-section-header">
+        <p className="flight-section-title">{title}</p>
+        {isError && (
+          <p className="flight-error" role="alert">
+            항공편을 찾을 수 없어요.
+          </p>
+        )}
+      </div>
 
       {shouldShowInput ? (
         <div className="flight-input-row">
@@ -88,12 +95,11 @@ function FlightSection({
         <>
           {isFetching && <p className="flight-loading">조회 중...</p>}
           {isError && (
-            <p className="flight-error">
-              항공편을 찾을 수 없어요.{' '}
+            <div>
               <button type="button" className="step-skip" onClick={onClear}>
                 다시 입력
               </button>
-            </p>
+            </div>
           )}
           {data && (
             <>

@@ -1,26 +1,26 @@
-import { useAuthStore } from '@/app/store/auth-store'
 import { mockCreateTrip, mockGetTripStatus } from '@/mocks/trip'
 import { mockGetTrips } from '@/mocks/trips'
 import { apiClient } from '@/shared/api/client'
+import { mapTripSummary } from './trip-summary-mapper'
 import type {
-  Trip,
   TripCreateRequest,
   TripCreateResponse,
   TripListResponse,
+  TripSummary,
   TripStatusResponse,
 } from '../types/trip-types'
 
 const useMockTrips = import.meta.env.VITE_USE_MOCK_TRIPS !== 'false'
 const useMockTrip = import.meta.env.VITE_USE_MOCK_TRIP === 'true'
 
-const getTrips = async (): Promise<Trip[]> => {
-  if (useMockTrips) return mockGetTrips()
+const getTrips = async (): Promise<TripSummary[]> => {
+  if (useMockTrips) {
+    const data = await mockGetTrips()
+    return data.map(mapTripSummary)
+  }
 
-  const token = useAuthStore.getState().accessToken
-  const { data } = await apiClient.get<TripListResponse>('/trip/api', {
-    headers: { Authorization: `Bearer ${token}` },
-  })
-  return data.body
+  const { data } = await apiClient.get<TripListResponse>('/trip/api')
+  return data.body.map(mapTripSummary)
 }
 
 const createTrip = async (request: TripCreateRequest): Promise<TripCreateResponse> => {

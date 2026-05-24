@@ -1,24 +1,31 @@
 export type ScheduleType = 'TIGHT' | 'NORMAL' | 'LOOSE'
 export type PriceType = 'CHEEP' | 'NORMAL' | 'LUXURY'
+export type TripThemeType = 'FOOD' | 'HEALING' | 'LANDMARK' | 'ACTIVITY'
 export type TransportType = 'PUBLIC' | 'PRIVATE'
 export type PersonType = 'FRIEND' | 'FAMILY' | 'COUPLE' | 'SOLO'
 
-export type Trip = {
+export type TripSummaryApiItem = {
   id: number
   name: string
   personCount: number
-  site: string
   scheduleType: ScheduleType
-  transportType: TransportType
-  personType: PersonType
+  tripThemeType: TripThemeType | null
+  priceType: PriceType
   startDate: string
   endDate: string
-  price: number
+  isPlanning: boolean
+  fixed: boolean
 }
+
+export type TripSummary = Omit<TripSummaryApiItem, 'id'> & {
+  id: string
+}
+
+export type Trip = TripSummary
 
 export type TripListResponse = {
   message: string
-  body: Trip[]
+  body: TripSummaryApiItem[]
 }
 
 export type FlightApiBody = {
@@ -54,7 +61,7 @@ export type TripCreateRequest = {
   }
   region: string[]
   selectedPlace: string[]
-  hotel: string[]
+  hotel?: string
   departFlight?: FlightInfo
   arriveFlight?: FlightInfo
 }

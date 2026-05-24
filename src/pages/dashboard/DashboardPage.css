@@ -1,7 +1,3 @@
-/* ============================================================
-   DashboardPage — Home Screen
-   ============================================================ */
-
 .home-page {
   height: 100%;
   display: flex;
@@ -14,8 +10,6 @@
     #fff0f5 100%
   );
 }
-
-/* ── Header badge ─────────────────────────────────────────── */
 
 .home-header {
   flex-shrink: 0;
@@ -39,8 +33,6 @@
   white-space: nowrap;
 }
 
-/* ── Feed: TravelHero + bottom sheet 컨테이너 ─────────────── */
-
 .home-feed {
   flex: 1;
   min-height: 0;
@@ -50,16 +42,12 @@
   overflow: hidden;
 }
 
-/* TravelHero — 헤더와 시트 사이를 채우는 flex 영역 */
 .home-map {
   flex: 1;
   min-height: 0;
   position: relative;
   overflow: hidden;
-
 }
-
-/* ── Trips bottom sheet ───────────────────────────────────── */
 
 .home-trips {
   width: 100%;
@@ -70,8 +58,6 @@
   overflow: hidden;
   box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.08);
 }
-
-/* ── Handle button ────────────────────────────────────────── */
 
 .home-trips__handle-btn {
   flex-shrink: 0;
@@ -103,8 +89,6 @@
   background: #c5c6cc;
 }
 
-/* ── Empty state ──────────────────────────────────────────── */
-
 .home-trips__empty {
   flex: 1;
   min-height: 0;
@@ -119,7 +103,6 @@
   cursor: grabbing;
 }
 
-/* 제목+버튼 영역: flex:1 로 남은 공간 점유 → popular를 아래로 밀어냄 */
 .home-trips__hero {
   flex: 1;
   display: flex;
@@ -176,7 +159,22 @@
   flex-shrink: 0;
 }
 
-/* ── Popular destinations ─────────────────────────────────── */
+.home-trips__login-btn {
+  background: none;
+  border: 1.5px solid #c5c6cc;
+  border-radius: 12px;
+  padding: 12px 48px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #71727a;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.home-trips__login-btn:hover {
+  border-color: #8f90a6;
+  color: #1f2024;
+}
 
 .home-trips__popular {
   display: flex;
@@ -249,7 +247,171 @@
   line-height: 1;
 }
 
-/* ── WebView overlay ──────────────────────────────────────── */
+/* ── Dashboard map placeholder (active trip) ──────────────── */
+
+.home-map-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(160deg, #a8c8fa 0%, #c3d9fd 50%, #d8e8ff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.home-map-placeholder__emoji {
+  font-size: 52px;
+  line-height: 1;
+}
+
+.home-map-placeholder__name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #3a5a8a;
+}
+
+.home-map-placeholder__badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #4a90d9;
+  border-radius: 12px;
+  padding: 4px 12px;
+}
+
+/* ── Trip preview card (upcoming fixed trip) ──────────────── */
+
+.home-trip-preview {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(160deg, #ffb3cc 0%, #ffd0e0 50%, #ffe4ee 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  cursor: pointer;
+  padding: 24px;
+  text-align: center;
+}
+
+.home-trip-preview__dday {
+  font-size: 28px;
+  font-weight: 800;
+  color: #ff5f9a;
+  line-height: 1;
+}
+
+.home-trip-preview__name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1f2024;
+}
+
+.home-trip-preview__meta {
+  font-size: 13px;
+  color: #71727a;
+}
+
+.home-trip-preview__cta {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ff5f9a;
+  margin-top: 8px;
+}
+
+/* ── Today schedule (active trip sheet) ───────────────────── */
+
+.home-trips__today {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 16px 20px;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+}
+
+.home-trips__today:active {
+  cursor: grabbing;
+}
+
+.home-trips__today-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f2024;
+  margin: 0 0 4px;
+  flex-shrink: 0;
+}
+
+.home-today__status {
+  font-size: 13px;
+  color: #8f9098;
+  text-align: center;
+  margin: auto 0;
+}
+
+.home-today__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  flex: 1;
+  min-height: 0;
+}
+
+.home-today__list::-webkit-scrollbar {
+  display: none;
+}
+
+.home-today__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #f7f8fc;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.home-today__num {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ff5f9a;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-today__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.home-today__place {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2024;
+}
+
+.home-today__time {
+  font-size: 11px;
+  color: #8f9098;
+}
 
 .webview-overlay {
   position: fixed;
@@ -333,3 +495,4 @@
 
 .webview-open-btn:hover {
   opacity: 0.85;
+}

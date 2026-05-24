@@ -1,9 +1,9 @@
 import clsx from 'clsx'
 import { LuMoon, LuUsers } from 'react-icons/lu'
-import type { Trip } from '../types/trip-types'
+import type { TripSummary } from '../types/trip-types'
 import './TripCard.css'
 
-type Props = { trip: Trip; isPast?: boolean }
+type Props = { trip: TripSummary; isPast?: boolean }
 
 function calcDday(startDate: string): string {
   const today = new Date()
@@ -32,7 +32,9 @@ const VARIANT_COUNT = 5
 export function TripCard({ trip, isPast = false }: Props) {
   const badge = isPast ? formatEndDate(trip.endDate) : calcDday(trip.startDate)
   const duration = calcDuration(trip.startDate, trip.endDate)
-  const variant = trip.id % VARIANT_COUNT
+  const numericId = Number.parseInt(trip.id, 10)
+  const variant = (Number.isNaN(numericId) ? 0 : numericId) % VARIANT_COUNT
+  const status = trip.isPlanning ? '생성 중' : trip.fixed ? '확정' : '확정 전'
 
   return (
     <article
@@ -41,11 +43,21 @@ export function TripCard({ trip, isPast = false }: Props) {
       aria-label={trip.name}
     >
       <div className="trip-card__overlay" aria-hidden="true" />
-      <span className="trip-card__dday">{badge}</span>
+      <div className="trip-card__badges">
+        <span
+          className={clsx(
+            'trip-card__status',
+            trip.isPlanning && 'trip-card__status--planning',
+            !trip.isPlanning && !trip.fixed && 'trip-card__status--draft',
+          )}
+        >
+          {status}
+        </span>
+        <span className="trip-card__dday">{badge}</span>
+      </div>
       <div className="trip-card__body">
         <div className="trip-card__title-row">
-          <span className="trip-card__site">{trip.site}</span>
-          <span className="trip-card__name">{trip.name}</span>
+          <span className="trip-card__site">{trip.name}</span>
         </div>
         <div className="trip-card__meta">
           <span className="trip-card__meta-item">
