@@ -1,14 +1,13 @@
-import type { PriceType, ScheduleType } from './trip-types'
+import type { PriceType, ScheduleType, TripThemeType } from './trip-types'
+export type { TripThemeType } from './trip-types'
 
-export type TripThemeType = 'FOOD' | 'HEALING' | 'LANDMARK' | 'ACTIVITY'
-
-export type LocalTime = {
-  hour: number
-  minute: number
-  second: number
-  nano: number
+// lon/lat as the backend sends them (lon, not lng)
+export type LatLon = {
+  lat: number
+  lon: number
 }
 
+// kept for Google Maps usage elsewhere
 export type LatLng = {
   lat: number
   lng: number
@@ -24,13 +23,13 @@ export type TransitInfo = {
 }
 
 export type RouteStep = {
-  start: LatLng
-  end: LatLng
-  polyline: LatLng[]
+  start: LatLon
+  end: LatLon
+  polyline: LatLon[]
   distanceMeters: number
   durationSeconds: number
   travelMode: string
-  transitInfo?: TransitInfo
+  transitInfo: TransitInfo | null
 }
 
 export type RouteInfo = {
@@ -41,23 +40,44 @@ export type RouteInfo = {
 
 export type Transport = {
   id: number
-  startTime: LocalTime
-  endTime: LocalTime
-  takeTime: number
+  startTime: string
+  endTime: string
+  takeTime: number          // seconds
   totalDistanceMeters: number
   fromPlacePlanId: number
   toPlacePlanId: number
-  routeInfo?: RouteInfo
+  routeInfo: RouteInfo | null
+}
+
+export type PlaceType =
+  | 'SIGHT'
+  | 'RESTAURANT'
+  | 'HOTEL'
+  | 'CAFE'
+  | 'SHOPPING'
+  | 'ACTIVITY'
+  | 'CULTURE'
+
+export type PlaceInfo = {
+  id: number
+  regionId: number
+  placeType: PlaceType
+  googleId: string
+  name: string
+  address: string
+  priceType: PriceType
+  lon: number
+  lat: number
 }
 
 export type PlacePlan = {
   id: number
   date: string
-  startTime: LocalTime
-  endTime: LocalTime
-  placeId: number
-  departureTransport?: Transport
-  arrivalTransport?: Transport
+  startTime: string         // "HH:mm:ss" — sorting only, not displayed
+  endTime: string           // "HH:mm:ss"
+  placeInfo: PlaceInfo
+  departureTransport: Transport | null
+  arrivalTransport: Transport | null
 }
 
 export type PlanListBody = Record<TripThemeType, PlacePlan[]>

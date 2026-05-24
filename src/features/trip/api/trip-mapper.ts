@@ -10,7 +10,7 @@ export function buildTripName(region: string[], country: string): string {
 }
 
 export function mapFormToRequest(values: TripCreateFormValues): TripCreateRequest {
-  return {
+  const request: TripCreateRequest = {
     trip: {
       name: buildTripName(values.region, values.country),
       uuid: values.uuid,
@@ -22,8 +22,13 @@ export function mapFormToRequest(values: TripCreateFormValues): TripCreateReques
     },
     region: values.region,
     selectedPlace: values.selectedPlace.map((p) => p.id),
-    hotel: values.hotel.map((p) => p.id),
     departFlight: values.departFlight,
     arriveFlight: values.arriveFlight,
   }
+
+  if (values.hotel[0]) {
+    request.hotel = values.hotel[0].id
+  }
+
+  return request
 }
