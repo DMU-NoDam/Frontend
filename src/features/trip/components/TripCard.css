@@ -22,7 +22,8 @@
   background: linear-gradient(160deg, #3a3d47 0%, #6b6e7a 55%, #4a4d58 100%);
 }
 
-.trip-card--past .trip-card__dday {
+.trip-card--past .trip-card__dday,
+.trip-card--past .trip-card__status {
   background: #8f9098;
 }
 
@@ -37,10 +38,18 @@
   pointer-events: none;
 }
 
-.trip-card__dday {
+.trip-card__badges {
   position: absolute;
   top: 12px;
   right: 12px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  z-index: 1;
+}
+
+.trip-card__dday,
+.trip-card__status {
   background: #ff6f9f;
   color: #ffffff;
   font-size: 10px;
@@ -49,7 +58,19 @@
   border-radius: 20px;
   padding: 6px 11px;
   white-space: nowrap;
-  z-index: 1;
+}
+
+.trip-card__status {
+  background: rgba(255, 255, 255, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+}
+
+.trip-card__status--planning {
+  background: #111827;
+}
+
+.trip-card__status--draft {
+  background: #f59e0b;
 }
 
 .trip-card__body {
