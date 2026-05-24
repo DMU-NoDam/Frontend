@@ -50,12 +50,12 @@ const router = createBrowserRouter([
             element: <TripSelectPage />,
           },
           {
-            path: '/trips/:tripId/planning',
-            element: <TripPlanningPage />,
-          },
-          {
             path: '/trips/:tripId/detail',
             element: <TripDetailPage />,
+          },
+          {
+            path: '/trips/:tripId/planning',
+            element: <TripPlanningPage />,
           },
         ],
       },
