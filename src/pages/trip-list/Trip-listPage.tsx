@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import { TripCard } from '@/features/trip/components/TripCard'
 import { useTrips } from '@/features/trip/hooks/use-trips'
@@ -26,7 +27,8 @@ function isUpcoming(endDate: string): boolean {
 
 export function TripListPage() {
   const [tab, setTab] = useState<TabType>('upcoming')
-  const { data: trips = [], isLoading } = useTrips()
+  const navigate = useNavigate()
+  const { data: trips = [], isLoading, isError } = useTrips()
 
   const filtered = trips.filter((t) =>
     tab === 'upcoming' ? isUpcoming(t.endDate) : !isUpcoming(t.endDate),
@@ -63,10 +65,18 @@ export function TripListPage() {
               <div key={i} className="trip-list-page__skeleton-card" />
             ))}
           </div>
+        ) : isError ? (
+          <div className="trip-list-page__empty trip-list-page__error" role="alert">
+            <span>여행 목록을 불러오지 못했어요.</span>
+            <span>잠시 후 다시 시도해주세요.</span>
+          </div>
         ) : filtered.length === 0 ? (
           <div className="trip-list-page__empty">
-            <span>여행이 없어요</span>
-            <span>새로운 여행을 만들어보세요 ✈️</span>
+            <span>
+              {tab === 'upcoming'
+                ? '새로운 여행을 만들어보세요 ✈️'
+                : '아직 다녀온 여행이 없어요✈️'}
+            </span>
           </div>
         ) : (
           <motion.div
@@ -78,7 +88,19 @@ export function TripListPage() {
           >
             {filtered.map((trip) => (
               <motion.div key={trip.id} variants={itemVariants}>
-                <TripCard trip={trip} isPast={tab === 'past'} />
+                <button
+                  type="button"
+                  className="trip-list-page__card-button"
+                  onClick={() =>
+                    navigate(
+                      trip.isPlanning
+                        ? `/trips/${trip.id}/planning`
+                        : `/trips/${trip.id}/detail`,
+                    )
+                  }
+                >
+                  <TripCard trip={trip} isPast={tab === 'past'} />
+                </button>
               </motion.div>
             ))}
           </motion.div>
