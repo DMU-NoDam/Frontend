@@ -106,6 +106,15 @@ export function TripDetailPage() {
     trip?.tripThemeType ? tripId : undefined,
   )
 
+  const handleBack = () => {
+    if (trip?.tripThemeType) {
+      navigate('/trips')
+      return
+    }
+
+    navigate(-1)
+  }
+
   const selectedPlans: PlacePlan[] = useMemo(() => {
     if (!trip?.tripThemeType || !plans?.body) return []
     return plans.body[trip.tripThemeType] ?? []
@@ -153,7 +162,7 @@ export function TripDetailPage() {
         <button
           type="button"
           className="detail-header__back"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           aria-label="뒤로 가기"
         >
           <LuArrowLeft className="detail-header__back-icon" aria-hidden="true" />

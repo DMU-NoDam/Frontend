@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { LuSparkle } from 'react-icons/lu'
 import { PiStarFourBold } from 'react-icons/pi'
@@ -127,6 +128,7 @@ export function TripCreatePage() {
   // polling state
   const [tripId, setTripId] = useState<string | null>(null)
   const [pollingStartedAt, setPollingStartedAt] = useState<number | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   const { control, setValue, getValues, watch, trigger, handleSubmit } =
     useForm<TripCreateFormValues>({
@@ -145,7 +147,8 @@ export function TripCreatePage() {
           },
     })
 
-  const { mutate, isPending: isCreating, isError: isCreateError } = useCreateTrip()
+  const queryClient = useQueryClient()
+  const { mutate, isPending: isCreating, isError: isCreateError, reset: resetMutation } = useCreateTrip()
   const { status: planningStatus, isError: isPollError } = useTripPlanningStatus(tripId, pollingStartedAt)
 
   // toast auto-dismiss
@@ -164,6 +167,14 @@ export function TripCreatePage() {
       navigate(`/trips/${tripId}/select`)
     }
   }, [tripId, planningStatus, navigate])
+
+  // navigate to dashboard after second failure
+  const showPlanningFailureRaw = (isCreateError || isPollError || planningStatus === 'timeout' || planningStatus === 'failed') && !isCreating
+  useEffect(() => {
+    if (showPlanningFailureRaw && retryCount >= 1) {
+      navigate('/trips')
+    }
+  }, [showPlanningFailureRaw, retryCount, navigate])
 
   const goNext = async (fields?: (keyof TripCreateFormValues)[]) => {
     if (fields) {
@@ -209,10 +220,27 @@ export function TripCreatePage() {
     })
   }
 
+  const handleRetry = () => {
+    setRetryCount((c) => c + 1)
+    resetMutation()
+    setTripId(null)
+    setPollingStartedAt(null)
+    queryClient.removeQueries({ queryKey: ['trip-status'] })
+    const values = getValues()
+    mutate(mapFormToRequest(values), {
+      onSuccess: (res) => {
+        const id = String(res.body.id)
+        if (!id) return
+        setTripId(id)
+        setPollingStartedAt(Date.now())
+      },
+    })
+  }
+
   // Show full-screen overlay when POST is pending or polling is in progress
   const isPolling = tripId !== null && planningStatus === 'pending'
   const showPlanningOverlay = isCreating || isPolling
-  const showPlanningFailure = (isCreateError || isPollError || planningStatus === 'timeout') && !isCreating
+  const showPlanningFailure = showPlanningFailureRaw && retryCount < 1
 
   if (showPlanningOverlay) {
     return (
@@ -241,7 +269,12 @@ export function TripCreatePage() {
   if (showPlanningFailure) {
     return (
       <main className="trip-create-page trip-create-planning">
-        <p className="trip-create-planning-text trip-create-planning-error">AI 일정 생성 실패</p>
+        <div className="trip-create-planning-failure">
+          <p className="trip-create-planning-text trip-create-planning-error">AI 일정 생성이 실패했어요</p>
+          <button type="button" className="trip-create-planning-retry-btn" onClick={handleRetry}>
+            재생성 하기
+          </button>
+        </div>
       </main>
     )
   }

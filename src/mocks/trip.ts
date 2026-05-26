@@ -20,11 +20,13 @@ export const mockGetTripStatus = async (
   tripId: string,
 ): Promise<TripStatusResponse> => {
   const startedAt = mockTripPlanningStartedAt.get(tripId) ?? Date.now()
-  const isPlanning = Date.now() - startedAt < MOCK_PLANNING_DURATION_MS
+  const stillPlanning = Date.now() - startedAt < MOCK_PLANNING_DURATION_MS
 
   return Promise.resolve({
     message: 'success',
-    body: { isPlanning },
+    body: stillPlanning
+      ? { allCompleted: false, planning: true }
+      : { allCompleted: true, planning: false },
   })
 }
 
