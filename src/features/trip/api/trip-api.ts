@@ -41,8 +41,15 @@ const getTripStatus = async (tripId: string): Promise<TripStatusResponse> => {
   return data
 }
 
+const updateTripFixed = async (tripId: string, fixed: boolean): Promise<void> => {
+  await apiClient.patch(`/trip/api/${tripId}/fixed`, fixed, {
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
 export const tripApi = {
   getTrips,
   createTrip,
   getTripStatus,
+  updateTripFixed,
 }
