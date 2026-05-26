@@ -76,7 +76,7 @@ export function MyPage() {
   const pastTrips   = trips.filter((t) => t.endDate < today)
   const upcoming    = trips.filter((t) => t.startDate > today)
   const earnedCodes = new Set(
-    pastTrips.map((t) => siteToCode(t.site)).filter(Boolean) as string[]
+    pastTrips.map((t) => siteToCode(t.name)).filter(Boolean) as string[]
   )
 
   function openPassport() { setPage(0); setPassportOpen(true) }
