@@ -18,6 +18,7 @@ export const useLogin = (options?: LoginMutationOptions) => {
     mutationFn: options?.mutationFn ?? ((request) => authApi.login(request as OAuthLoginRequest)),
     onSuccess: (session) => {
       login(session)
+      sessionStorage.removeItem('oauth_provider')
       const redirect = sessionStorage.getItem('pending_redirect')
       if (redirect) {
         sessionStorage.removeItem('pending_redirect')

@@ -47,25 +47,19 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'arubi-auth-session',
       storage: createJSONStorage(() => sessionStorage),
-      partialize: (state) => {
-        if (state.authMode !== 'test') {
-          return {
-            accessToken: null,
-            refreshToken: null,
-            user: null,
-            authMode: null,
-            isAuthenticated: false,
-          }
-        }
-
-        return {
-          accessToken: state.accessToken,
-          refreshToken: state.refreshToken,
-          user: state.user,
-          authMode: state.authMode,
-          isAuthenticated: state.isAuthenticated,
-        }
-      },
+      // SECURITY NOTE: refreshToken is stored in sessionStorage (accessible to JS).
+      // XSS on this origin can read it. sessionStorage limits exposure to the current
+      // tab session (unlike localStorage which persists across sessions).
+      // Long-term fix: backend should issue refreshToken as HttpOnly Secure SameSite
+      // cookie so JS cannot access it at all. Until then, this is the least-bad
+      // client-side option for OAuth session survival across page reloads.
+      partialize: (state) => ({
+        accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
+        user: state.user,
+        authMode: state.authMode,
+        isAuthenticated: state.isAuthenticated,
+      }),
     },
   ),
 )
