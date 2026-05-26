@@ -1,6 +1,7 @@
-import { useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { animate, motion, useMotionValue, useTransform } from 'framer-motion'
+import { motion, useTransform } from 'framer-motion'
+import type { MotionValue } from 'framer-motion'
 import { LuArrowLeft, LuExternalLink, LuSparkles } from 'react-icons/lu'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { useTripPlans } from '@/features/trip/hooks/use-trip-plans'
@@ -9,15 +10,21 @@ import {
   getNextFixedTrip,
   isTripActive,
 } from '@/features/trip/lib/trip-date'
-import type { PlacePlan } from '@/features/trip/types/plan-types'
+import {
+  TripMapSheet,
+  MapPlaceholder,
+  SHEET_SNAP_MID,
+  SHEET_EXPANDED,
+} from '@/features/trip/components/TripMapSheet'
+import { TripScheduleView } from '@/features/trip/components/TripScheduleView'
 import type { TripSummary } from '@/features/trip/types/trip-types'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import { TravelHero } from './TravelHero'
 import './DashboardPage.css'
 
-const COLLAPSED = 60
-const EXPANDED = 100
-const SNAP_MID = (COLLAPSED + EXPANDED) / 2
+function getTodayString(): string {
+  return new Date().toISOString().split('T')[0]
+}
 
 const DESTINATIONS = [
   {
@@ -50,87 +57,101 @@ const DESTINATIONS = [
   },
 ]
 
-function getTodayString(): string {
-  return new Date().toISOString().split('T')[0]
-}
-
-function sortByStartTime(plans: PlacePlan[]): PlacePlan[] {
-  return [...plans].sort((a, b) => a.startTime.localeCompare(b.startTime))
-}
-
 // ── Sub-components ───────────────────────────────────────────
 
-function DashboardMapPlaceholder({ trip }: { trip: TripSummary }) {
+function DashboardScheduleContent({
+  tripId,
+  themeType,
+  initialDate,
+}: {
+  tripId: string
+  themeType: TripSummary['tripThemeType']
+  initialDate?: string
+}) {
+  const { data: plans, isLoading, isError } = useTripPlans(tripId)
+
+  if (!themeType) return <p className="home-schedule__status">선택된 일정이 없어요.</p>
+  if (isLoading)  return <p className="home-schedule__status">일정을 불러오는 중...</p>
+  if (isError)    return <p className="home-schedule__status">일정을 불러오지 못했어요.</p>
+
   return (
-    <div className="home-map-placeholder" aria-label="지도 영역">
-      <span className="home-map-placeholder__emoji" aria-hidden="true">
-        🗺️
-      </span>
-      <span className="home-map-placeholder__name">{trip.name}</span>
-      <span className="home-map-placeholder__badge">여행 중</span>
+    <TripScheduleView
+      plans={plans?.body?.[themeType] ?? []}
+      initialDate={initialDate}
+      emptyMessage="일정이 없습니다."
+    />
+  )
+}
+
+function ScheduleSheetContent({
+  fixedTrip,
+  activeTrip,
+}: {
+  fixedTrip: TripSummary
+  activeTrip: TripSummary | undefined
+}) {
+  return (
+    <div className="home-schedule">
+      <h2 className="home-schedule__title">
+        {activeTrip ? '오늘 일정' : '여행 일정'}
+      </h2>
+      <DashboardScheduleContent
+        tripId={fixedTrip.id}
+        themeType={fixedTrip.tripThemeType}
+        initialDate={activeTrip ? getTodayString() : undefined}
+      />
     </div>
   )
 }
 
-function TripPreviewCard({
-  trip,
-  onClick,
+function EmptySheetContent({
+  motionHeight,
+  onCreateTrip,
+  onOpenDest,
 }: {
-  trip: TripSummary
-  onClick: () => void
+  motionHeight: MotionValue<number>
+  onCreateTrip: () => void
+  onOpenDest: (url: string) => void
 }) {
-  const dday = getDdayLabel(trip.startDate)
-  const nights = Math.round(
-    (new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) /
-      (1000 * 60 * 60 * 24),
-  )
+  const popularMaxHeight = useTransform(motionHeight, [SHEET_SNAP_MID, SHEET_EXPANDED], ['0px', '200px'])
+  const popularOpacity   = useTransform(motionHeight, [SHEET_SNAP_MID, SHEET_EXPANDED], [0, 1])
+
   return (
-    <button type="button" className="home-trip-preview" onClick={onClick} aria-label={trip.name}>
-      <div className="home-trip-preview__dday">{dday}</div>
-      <div className="home-trip-preview__name">{trip.name}</div>
-      <div className="home-trip-preview__meta">
-        {nights}박{nights + 1}일 · {trip.personCount}명
+    <div className="home-trips__empty">
+      <div className="home-trips__hero">
+        <h2 className="home-trips__empty-title">
+          AI 여행 플랜을
+          <br />
+          시작하기
+        </h2>
+        <button type="button" className="home-trips__make-btn" onClick={onCreateTrip}>
+          <LuSparkles className="home-trips__make-icon" aria-hidden="true" />
+          나만의 일정 만들기
+        </button>
       </div>
-      <div className="home-trip-preview__cta">일정 보기 →</div>
-    </button>
-  )
-}
 
-function TodayScheduleContent({
-  tripId,
-  themeType,
-}: {
-  tripId: string
-  themeType: TripSummary['tripThemeType']
-}) {
-  const { data: plans, isLoading, isError } = useTripPlans(tripId)
-
-  const todayPlans = useMemo<PlacePlan[]>(() => {
-    if (!plans?.body || !themeType) return []
-    const all = plans.body[themeType] ?? []
-    const today = getTodayString()
-    return sortByStartTime(all.filter((p) => p.date === today))
-  }, [plans, themeType])
-
-  if (isLoading) return <p className="home-today__status">일정 불러오는 중...</p>
-  if (isError) return <p className="home-today__status">일정을 불러오지 못했어요.</p>
-  if (todayPlans.length === 0)
-    return <p className="home-today__status">오늘 일정이 없어요.</p>
-
-  return (
-    <ul className="home-today__list" aria-label="오늘 일정">
-      {todayPlans.map((plan, i) => (
-        <li key={plan.id} className="home-today__item">
-          <span className="home-today__num" aria-hidden="true">
-            {i + 1}
-          </span>
-          <div className="home-today__info">
-            <span className="home-today__place">{plan.placeInfo.name}</span>
-            <span className="home-today__time">{plan.placeInfo.address}</span>
-          </div>
-        </li>
-      ))}
-    </ul>
+      <motion.section
+        className="home-trips__popular"
+        style={{ maxHeight: popularMaxHeight, opacity: popularOpacity }}
+      >
+        <h3 className="home-trips__popular-title">인기 여행지</h3>
+        <div className="home-trips__popular-list">
+          {DESTINATIONS.map(({ emoji, city, country, color, url }) => (
+            <button
+              key={city}
+              type="button"
+              className="home-trips__dest-card"
+              style={{ background: color }}
+              onClick={() => onOpenDest(url)}
+            >
+              <span className="home-trips__dest-emoji">{emoji}</span>
+              <span className="home-trips__dest-city">{city}</span>
+              <span className="home-trips__dest-country">{country}</span>
+            </button>
+          ))}
+        </div>
+      </motion.section>
+    </div>
   )
 }
 
@@ -139,8 +160,7 @@ function TodayScheduleContent({
 export function UserDashboard() {
   const navigate = useNavigate()
   const { data: trips = [], isLoading: isTripsLoading } = useTrips()
-  const [isExpanded, setIsExpanded] = useState(false)
-  const [webViewUrl, setWebViewUrl] = useState<string | null>(null)
+  const [webViewUrl, setWebViewUrl]       = useState<string | null>(null)
   const [iframeBlocked, setIframeBlocked] = useState(false)
 
   const activeTrip = useMemo(
@@ -151,6 +171,7 @@ export function UserDashboard() {
     () => (activeTrip ? undefined : getNextFixedTrip(trips)),
     [activeTrip, trips],
   )
+  const fixedTrip = activeTrip ?? upcomingTrip
 
   const headerMessage = isTripsLoading
     ? '여행 일정을 확인하고 있어요'
@@ -162,51 +183,7 @@ export function UserDashboard() {
     ? '여행을 계획해보세요'
     : '일정을 확정해주세요'
 
-  const height = useMotionValue(COLLAPSED)
-  const heightPct = useTransform(height, (v) => `${v}%`)
-  const popularMaxHeight = useTransform(height, [SNAP_MID, EXPANDED], ['0px', '200px'])
-  const popularOpacity = useTransform(height, [SNAP_MID, EXPANDED], [0, 1])
-
-  const isDragging = useRef(false)
-  const startY = useRef(0)
-  const startH = useRef(COLLAPSED)
-
-  function startDrag(e: React.PointerEvent<HTMLElement>) {
-    e.currentTarget.setPointerCapture(e.pointerId)
-    isDragging.current = true
-    startY.current = e.clientY
-    startH.current = height.get()
-  }
-
-  function onPointerDown(e: React.PointerEvent<HTMLButtonElement>) {
-    startDrag(e)
-  }
-
-  function onEmptyPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    if ((e.target as HTMLElement).closest('button')) return
-    startDrag(e)
-  }
-
-  function onPointerMove(e: React.PointerEvent<HTMLElement>) {
-    if (!isDragging.current) return
-    const feed = e.currentTarget.closest('.home-feed') as HTMLElement | null
-    const feedH = feed?.clientHeight ?? 500
-    const dy = startY.current - e.clientY
-    const delta = (dy / feedH) * 100
-    const next = Math.max(COLLAPSED, Math.min(EXPANDED, startH.current + delta))
-    height.set(next)
-  }
-
-  function onPointerUp() {
-    if (!isDragging.current) return
-    isDragging.current = false
-    const target = height.get() >= SNAP_MID ? EXPANDED : COLLAPSED
-    setIsExpanded(target === EXPANDED)
-    animate(height, target, { type: 'spring', stiffness: 280, damping: 50 })
-  }
-
-  function openDest(url: string | null) {
-    if (!url) return
+  function openDest(url: string) {
     setIframeBlocked(false)
     setWebViewUrl(url)
   }
@@ -219,114 +196,28 @@ export function UserDashboard() {
 
   return (
     <main className="home-page">
-      <header className="home-header">
-        <span className="home-header__badge">✈️ {headerMessage}</span>
-      </header>
-
-      <div className="home-feed">
-        <div className="home-map">
-          {activeTrip ? (
-            <DashboardMapPlaceholder trip={activeTrip} />
-          ) : upcomingTrip ? (
-            <TripPreviewCard
-              trip={upcomingTrip}
-              onClick={() => navigate(`/trips/${upcomingTrip.id}/detail`)}
+      <TripMapSheet
+        mapContent={fixedTrip ? <MapPlaceholder /> : <TravelHero />}
+        overlay={
+          <div className="home-map-overlay">
+            <span className="home-header__badge">✈️ {headerMessage}</span>
+          </div>
+        }
+        sheetContent={(motionHeight) =>
+          fixedTrip ? (
+            <ScheduleSheetContent
+              fixedTrip={fixedTrip}
+              activeTrip={activeTrip}
             />
           ) : (
-            <TravelHero />
-          )}
-        </div>
-
-        <motion.section
-          className="home-trips"
-          aria-label="내 여행"
-          style={{ height: heightPct }}
-        >
-          <button
-            type="button"
-            className="home-trips__handle-btn"
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerUp}
-            aria-expanded={isExpanded}
-            aria-label={isExpanded ? '여행 목록 접기' : '여행 목록 펼치기'}
-          >
-            <div className="home-trips__handle" aria-hidden="true" />
-          </button>
-
-          {activeTrip ? (
-            <div
-              className="home-trips__today"
-              onPointerDown={onEmptyPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onPointerCancel={onPointerUp}
-            >
-              <h2 className="home-trips__today-title">오늘 일정</h2>
-              <TodayScheduleContent
-                tripId={activeTrip.id}
-                themeType={activeTrip.tripThemeType}
-              />
-              <button
-                type="button"
-                className="home-trips__make-btn"
-                style={{ marginTop: 'auto' }}
-                onClick={() => navigate('/trips/create')}
-              >
-                <LuSparkles className="home-trips__make-icon" aria-hidden="true" />
-                나만의 일정 만들기
-              </button>
-            </div>
-          ) : (
-            <div
-              className="home-trips__empty"
-              onPointerDown={onEmptyPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={onPointerUp}
-              onPointerCancel={onPointerUp}
-            >
-              <div className="home-trips__hero">
-                <h2 className="home-trips__empty-title">
-                  AI 여행 플랜을
-                  <br />
-                  시작하기
-                </h2>
-                <button
-                  type="button"
-                  className="home-trips__make-btn"
-                  onClick={() => navigate('/trips/create')}
-                >
-                  <LuSparkles className="home-trips__make-icon" aria-hidden="true" />
-                  나만의 일정 만들기
-                </button>
-              </div>
-
-              <motion.section
-                className="home-trips__popular"
-                style={{ maxHeight: popularMaxHeight, opacity: popularOpacity }}
-              >
-                <h3 className="home-trips__popular-title">인기 여행지</h3>
-                <div className="home-trips__popular-list">
-                  {DESTINATIONS.map(({ emoji, city, country, color, url }) => (
-                    <button
-                      key={city}
-                      type="button"
-                      className="home-trips__dest-card"
-                      style={{ background: color }}
-                      onClick={() => openDest(url)}
-                    >
-                      <span className="home-trips__dest-emoji">{emoji}</span>
-                      <span className="home-trips__dest-city">{city}</span>
-                      <span className="home-trips__dest-country">{country}</span>
-                    </button>
-                  ))}
-                </div>
-              </motion.section>
-            </div>
-          )}
-        </motion.section>
-      </div>
+            <EmptySheetContent
+              motionHeight={motionHeight}
+              onCreateTrip={() => navigate('/trips/create')}
+              onOpenDest={openDest}
+            />
+          )
+        }
+      />
 
       <TabBar />
 
