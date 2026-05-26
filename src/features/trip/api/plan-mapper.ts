@@ -44,15 +44,11 @@ const getUniqueDayCount = (plans: PlacePlan[]) =>
   new Set(plans.map((p) => p.date)).size
 
 const getTransports = (plans: PlacePlan[]): Transport[] =>
-  plans.flatMap((p) =>
-    [p.departureTransport, p.arrivalTransport].filter(Boolean) as Transport[],
-  )
+  plans.map((p) => p.arrivalTransport).filter(Boolean) as Transport[]
 
-const getAverageMoveMinutes = (plans: PlacePlan[]) => {
-  const transports = getTransports(plans)
-  if (transports.length === 0) return 0
-  const totalSeconds = transports.reduce((sum, t) => sum + t.takeTime, 0)
-  return Math.round(totalSeconds / transports.length / 60)
+const getTotalMoveMinutes = (plans: PlacePlan[]) => {
+  const totalSeconds = getTransports(plans).reduce((sum, t) => sum + t.takeTime, 0)
+  return Math.round(totalSeconds / 60)
 }
 
 const getTotalDistanceMeters = (plans: PlacePlan[]) =>
@@ -73,7 +69,7 @@ export const mapPlanListToThemeCards = (body: PlanListBody): PlanThemeCard[] =>
       dayCount,
       nightCount: Math.max(dayCount - 1, 0),
       scheduleCount: plans.length,
-      averageMoveMinutes: getAverageMoveMinutes(plans),
+      totalMoveMinutes: getTotalMoveMinutes(plans),
       totalDistanceMeters: getTotalDistanceMeters(plans),
       summary: meta.summary,
     }
