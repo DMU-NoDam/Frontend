@@ -8,46 +8,35 @@ import { useAuthStore } from '@/app/store/auth-store'
 import { apiClient } from '@/shared/api/client'
 import { PrivacyPolicyModal } from './privacy-policy/PrivacyPolicyModal'
 import { ProfileEditSheet } from './profile-edit/ProfileEditSheet'
-import googleLoginImg from '@/assets/Social-Login/google_login.png'
-import kakaoLoginImg from '@/assets/Social-Login/kakao_login.png'
-import naverLoginImg from '@/assets/Social-Login/naver_login.png'
-import stampJP from '@/assets/Trip-Stamp/Japan_Stamp.png'
-import stampUS from '@/assets/Trip-Stamp/USA_Stamp.png'
-import stampFR from '@/assets/Trip-Stamp/France_Stamp.png'
-import stampIT from '@/assets/Trip-Stamp/Italy_Stamp.png'
-import stampES from '@/assets/Trip-Stamp/Spain_Stamp.png'
-import stampTH from '@/assets/Trip-Stamp/Thailand_Stamp.png'
-import stampVN from '@/assets/Trip-Stamp/Vietnam_Stamp.png'
-import stampTW from '@/assets/Trip-Stamp/Taiwan_Stamp.png'
-import stampGB from '@/assets/Trip-Stamp/United Kingdom_Stamp.png'
-import stampDE from '@/assets/Trip-Stamp/Germany_Stamp.png'
-import stampAU from '@/assets/Trip-Stamp/Australia_Stamp.png'
-import stampSG from '@/assets/Trip-Stamp/Singapore_Stamp.png'
 import './MyPage.css'
 
-const PROVIDER_IMG: Record<string, string> = {
-  google: googleLoginImg,
-  kakao:  kakaoLoginImg,
-  naver:  naverLoginImg,
-  test:   naverLoginImg, // 테스트 계정 미리보기용 fallback
+const stampModules = import.meta.glob('@/assets/Trip-Stamp/*.png', { eager: true }) as Record<string, { default: string }>
+const providerModules = import.meta.glob('@/assets/Social-Login/*.png', { eager: true }) as Record<string, { default: string }>
+
+function getStamp(file: string): string {
+  return stampModules[`/src/assets/Trip-Stamp/${file}_Stamp.png`]?.default ?? ''
+}
+
+function getProvider(provider: string): string {
+  return providerModules[`/src/assets/Social-Login/${provider}_login.png`]?.default ?? ''
 }
 
 // stamp rotation per position index [left-top, left-bottom, right-top, right-bottom]
 const ROTATIONS = [-8, 5, 3, -7]
 
 const COUNTRIES = [
-  { code: 'JP', name: '일본',     stamp: stampJP, aliases: ['JP', '일본', 'Japan'] },
-  { code: 'US', name: '미국',     stamp: stampUS, aliases: ['US', '미국', 'USA', 'United States'] },
-  { code: 'FR', name: '프랑스',   stamp: stampFR, aliases: ['FR', '프랑스', 'France'] },
-  { code: 'IT', name: '이탈리아', stamp: stampIT, aliases: ['IT', '이탈리아', 'Italy'] },
-  { code: 'ES', name: '스페인',   stamp: stampES, aliases: ['ES', '스페인', 'Spain'] },
-  { code: 'TH', name: '태국',     stamp: stampTH, aliases: ['TH', '태국', 'Thailand'] },
-  { code: 'VN', name: '베트남',   stamp: stampVN, aliases: ['VN', '베트남', 'Vietnam'] },
-  { code: 'TW', name: '대만',     stamp: stampTW, aliases: ['TW', '대만', 'Taiwan'] },
-  { code: 'GB', name: '영국',     stamp: stampGB, aliases: ['GB', '영국', 'UK', 'United Kingdom'] },
-  { code: 'DE', name: '독일',     stamp: stampDE, aliases: ['DE', '독일', 'Germany'] },
-  { code: 'AU', name: '호주',     stamp: stampAU, aliases: ['AU', '호주', 'Australia'] },
-  { code: 'SG', name: '싱가포르', stamp: stampSG, aliases: ['SG', '싱가포르', 'Singapore'] },
+  { code: 'JP', name: '일본',     file: 'Japan',          aliases: ['JP', '일본', 'Japan'] },
+  { code: 'US', name: '미국',     file: 'USA',            aliases: ['US', '미국', 'USA', 'United States'] },
+  { code: 'FR', name: '프랑스',   file: 'France',         aliases: ['FR', '프랑스', 'France'] },
+  { code: 'IT', name: '이탈리아', file: 'Italy',          aliases: ['IT', '이탈리아', 'Italy'] },
+  { code: 'ES', name: '스페인',   file: 'Spain',          aliases: ['ES', '스페인', 'Spain'] },
+  { code: 'TH', name: '태국',     file: 'Thailand',       aliases: ['TH', '태국', 'Thailand'] },
+  { code: 'VN', name: '베트남',   file: 'Vietnam',        aliases: ['VN', '베트남', 'Vietnam'] },
+  { code: 'TW', name: '대만',     file: 'Taiwan',         aliases: ['TW', '대만', 'Taiwan'] },
+  { code: 'GB', name: '영국',     file: 'United Kingdom', aliases: ['GB', '영국', 'UK', 'United Kingdom'] },
+  { code: 'DE', name: '독일',     file: 'Germany',        aliases: ['DE', '독일', 'Germany'] },
+  { code: 'AU', name: '호주',     file: 'Australia',      aliases: ['AU', '호주', 'Australia'] },
+  { code: 'SG', name: '싱가포르', file: 'Singapore',      aliases: ['SG', '싱가포르', 'Singapore'] },
 ]
 
 function siteToCode(site: string): string | null {
@@ -118,9 +107,9 @@ export function MyPage() {
         <div className="my-profile__info">
           <h1 className="my-profile__name">{user?.name ?? '여행자'}</h1>
           <div className="my-profile__email-row">
-            {user?.provider && PROVIDER_IMG[user.provider] && (
+            {user?.provider && getProvider(user.provider) && (
               <img
-                src={PROVIDER_IMG[user.provider]}
+                src={getProvider(user.provider)}
                 alt={user.provider}
                 className="my-profile__provider-img"
               />
@@ -284,7 +273,7 @@ export function MyPage() {
               <div className="passport-spread">
                 {/* 왼쪽 페이지 */}
                 <div className="passport-page passport-page--left">
-                  {STAMP_PAGES[page].slice(0, 2).map(({ code, name, stamp }, i) => {
+                  {STAMP_PAGES[page].slice(0, 2).map(({ code, name, file }, i) => {
                     const earned = earnedCodes.has(code)
                     return (
                       <div
@@ -293,7 +282,7 @@ export function MyPage() {
                         style={{ transform: `rotate(${ROTATIONS[i]}deg)` }}
                       >
                         <img
-                          src={stamp}
+                          src={getStamp(file)}
                           alt={name}
                           className="passport-stamp__img"
                         />
@@ -307,7 +296,7 @@ export function MyPage() {
 
                 {/* 오른쪽 페이지 */}
                 <div className="passport-page passport-page--right">
-                  {STAMP_PAGES[page].slice(2, 4).map(({ code, name, stamp }, i) => {
+                  {STAMP_PAGES[page].slice(2, 4).map(({ code, name, file }, i) => {
                     const earned = earnedCodes.has(code)
                     return (
                       <div
@@ -316,7 +305,7 @@ export function MyPage() {
                         style={{ transform: `rotate(${ROTATIONS[i + 2]}deg)` }}
                       >
                         <img
-                          src={stamp}
+                          src={getStamp(file)}
                           alt={name}
                           className="passport-stamp__img"
                         />
