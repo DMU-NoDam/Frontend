@@ -37,7 +37,7 @@ export function GuestDashboard() {
               onClick={() => navigate('/trips/create')}
             >
               <LuSparkles className="home-trips__make-icon" aria-hidden="true" />
-              여행 만들기
+              나만의 일정 만들기
             </button>
             <button
               type="button"
