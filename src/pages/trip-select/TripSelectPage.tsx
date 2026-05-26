@@ -69,7 +69,7 @@ function ThemeCard({
         <div className="stats-box">
           <StatItem label="일정" value={`${card.scheduleCount}개`} />
           <StatItem label="여행" value={`${card.dayCount}일`} />
-          <StatItem label="평균 이동" value={`${card.averageMoveMinutes}분`} />
+          <StatItem label="총 이동 시간" value={`${card.totalMoveMinutes}분`} />
           <StatItem label="총 이동" value={`${distanceKm}km`} />
         </div>
 
