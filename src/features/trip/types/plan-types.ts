@@ -46,10 +46,12 @@ export type Transport = {
   totalDistanceMeters: number
   fromPlacePlanId: number
   toPlacePlanId: number
+  transportPlanId?: number
   routeInfo: RouteInfo | null
 }
 
 export type PlaceType =
+  | 'AIRPORT'
   | 'SIGHT'
   | 'RESTAURANT'
   | 'HOTEL'
@@ -65,7 +67,7 @@ export type PlaceInfo = {
   googleId: string
   name: string
   address: string
-  priceType: PriceType
+  priceType: PriceType | null
   lon: number
   lat: number
 }
@@ -76,8 +78,8 @@ export type PlacePlan = {
   startTime: string         // "HH:mm:ss" — sorting only, not displayed
   endTime: string           // "HH:mm:ss"
   placeInfo: PlaceInfo
-  departureTransport: Transport | null
   arrivalTransport: Transport | null
+  departureTransport?: Transport | null
 }
 
 export type PlanListBody = Record<TripThemeType, PlacePlan[]>
@@ -114,7 +116,7 @@ export type PlanThemeCard = {
   dayCount: number
   nightCount: number
   scheduleCount: number
-  averageMoveMinutes: number
+  totalMoveMinutes: number
   totalDistanceMeters: number
   summary: string
 }
