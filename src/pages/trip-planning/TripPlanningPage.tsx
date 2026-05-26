@@ -26,6 +26,7 @@ export function TripPlanningPage() {
   }
 
   const isTimedOut = status === 'timeout'
+  const isFailed = status === 'failed'
 
   return (
     <main className="trip-planning-page">
@@ -35,16 +36,18 @@ export function TripPlanningPage() {
         </div>
 
         <h1 className="trip-planning-page__title">
-          {isTimedOut ? '생성 지연 중' : 'AI 일정 생성중...'}
+          {isFailed ? 'AI 일정 생성 실패' : isTimedOut ? '생성 지연 중' : 'AI 일정 생성중...'}
         </h1>
 
         <p className="trip-planning-page__desc">
-          {isTimedOut
+          {isFailed
+            ? 'AI 일정 생성이 실패했어요!\n여행 목록으로 돌아가 다시 시도해주세요.'
+            : isTimedOut
             ? '일정 생성이 예상보다 오래 걸리고 있어요.\n잠시 후 다시 확인해주세요.'
             : 'AI가 완벽한 일정을 마법처럼 짜고 있어요.\n잠시만 기다려주세요 ✈️'}
         </p>
 
-        {isTimedOut && (
+        {(isTimedOut || isFailed) && (
           <button
             type="button"
             className="trip-planning-page__back-btn"

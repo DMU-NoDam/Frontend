@@ -158,6 +158,8 @@ export function UserDashboard() {
     ? `${activeTrip.name} 여행 중 🗺️`
     : upcomingTrip
     ? `${upcomingTrip.name} ${getDdayLabel(upcomingTrip.startDate)}`
+    : trips.length === 0
+    ? '여행을 계획해보세요'
     : '일정을 확정해주세요'
 
   const height = useMotionValue(COLLAPSED)

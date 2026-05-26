@@ -133,6 +133,7 @@ export function TripSelectPage() {
       {
         onSuccess: ({ body }) => {
           navigate(`/trips/${body.id}/detail`, {
+            replace: true,
             state: { tripName: body.name },
           })
         },

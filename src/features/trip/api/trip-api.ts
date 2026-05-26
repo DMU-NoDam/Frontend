@@ -37,7 +37,7 @@ const getTripStatus = async (tripId: string): Promise<TripStatusResponse> => {
     return mockGetTripStatus(tripId)
   }
 
-  const { data } = await apiClient.get<TripStatusResponse>(`/trip/api/${tripId}`)
+  const { data } = await apiClient.get<TripStatusResponse>(`/plan/api/${tripId}/status`)
   return data
 }
 

@@ -73,7 +73,7 @@ export type TripCreateResponse = {
 
 export type TripStatusResponse = {
   message: string
-  body: { isPlanning: boolean }
+  body: { allCompleted: boolean; planning: boolean }
 }
 
 export type PlaceSelection = {
