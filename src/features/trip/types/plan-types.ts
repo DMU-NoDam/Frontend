@@ -13,29 +13,37 @@ export type LatLng = {
   lng: number
 }
 
-export type TransitInfo = {
-  lineName: string
-  lineShortName: string
-  vehicleType: string
-  departureStopName: string
-  arrivalStopName: string
-  stopCount: number
-}
+// ── Domain types (after mapping) ─────────────────────────────
 
 export type RouteStep = {
-  start: LatLon
-  end: LatLon
-  polyline: LatLon[]
-  distanceMeters: number
-  durationSeconds: number
-  travelMode: string
-  transitInfo: TransitInfo | null
+  method: string    // "WALK" | "TRAIN"
+  path: LatLng[]   // [start, ...polygon waypoints, end] — Google Maps ready
 }
 
 export type RouteInfo = {
   totalDistanceMeters: number
   totalDurationSeconds: number
   steps: RouteStep[]
+}
+
+// ── Raw API types (match backend JSON exactly) ───────────────
+
+export type RawCoordPoint = {
+  coordinate: { lat: number; lng: number }
+  name: string
+}
+
+export type RawRouteStep = {
+  start: RawCoordPoint
+  end: RawCoordPoint
+  methodType: string
+  polygon: RawCoordPoint[]
+}
+
+export type RawRouteInfo = {
+  totalDistanceMeters: number
+  totalDurationSeconds: number
+  steps: RawRouteStep[]
 }
 
 export type Transport = {
@@ -50,15 +58,7 @@ export type Transport = {
   routeInfo: RouteInfo | null
 }
 
-export type PlaceType =
-  | 'AIRPORT'
-  | 'SIGHT'
-  | 'RESTAURANT'
-  | 'HOTEL'
-  | 'CAFE'
-  | 'SHOPPING'
-  | 'ACTIVITY'
-  | 'CULTURE'
+export type PlaceType = string
 
 export type PlaceInfo = {
   id: number
@@ -78,7 +78,8 @@ export type PlacePlan = {
   startTime: string         // "HH:mm:ss" — sorting only, not displayed
   endTime: string           // "HH:mm:ss"
   placeInfo: PlaceInfo
-  arrivalTransport: Transport | null
+  fromTransport: Transport | null
+  arrivalTransport?: Transport | null  // legacy field, kept for API transition
   departureTransport?: Transport | null
 }
 
@@ -87,6 +88,25 @@ export type PlanListBody = Record<TripThemeType, PlacePlan[]>
 export type PlanListResponse = {
   message: string
   body: PlanListBody
+}
+
+// ── Raw API response types ───────────────────────────────────
+
+export type RawTransport = Omit<Transport, 'routeInfo'> & {
+  routeInfo: RawRouteInfo | null
+}
+
+export type RawPlacePlan = Omit<PlacePlan, 'fromTransport' | 'arrivalTransport' | 'departureTransport'> & {
+  fromTransport: RawTransport | null
+  arrivalTransport?: RawTransport | null
+  departureTransport?: RawTransport | null
+}
+
+export type RawPlanListBody = Record<TripThemeType, RawPlacePlan[]>
+
+export type RawPlanListResponse = {
+  message: string
+  body: RawPlanListBody
 }
 
 export type FixedTrip = {
@@ -104,7 +124,7 @@ export type FixedTrip = {
 
 export type TripThemeConfirmResponse = {
   message: string
-  body: FixedTrip
+  body: null
 }
 
 export type PlanThemeCard = {
@@ -119,4 +139,74 @@ export type PlanThemeCard = {
   totalMoveMinutes: number
   totalDistanceMeters: number
   summary: string
+}
+
+// ── Edit / Recommend API types ───────────────────────────────
+
+export type RawTimeObject = {
+  hour: number
+  minute: number
+  second: number
+  nano: number
+}
+
+export type RawTransportTimeObj = {
+  id: number
+  startTime: RawTimeObject
+  endTime: RawTimeObject
+  takeTime: number
+  totalDistanceMeters: number
+  fromPlacePlanId: number
+  toPlacePlanId: number
+  transportPlanId?: number
+  routeInfo: RawRouteInfo | null
+}
+
+export type RawPlacePlanTimeObj = {
+  id: number
+  date: string
+  startTime: RawTimeObject
+  endTime: RawTimeObject
+  placeInfo: PlaceInfo
+  fromTransport: RawTransportTimeObj | null
+}
+
+export type ReplacePlacePlanRequest = {
+  oldPlacePlanId: number
+  newPlaceId: number
+}
+
+export type ReplacePlacePlanResponse = {
+  message: string
+  body: RawPlacePlanTimeObj
+}
+
+export type RecommendPlaceRequest = {
+  placePlanId: number
+  placeType: PlaceType
+  userLat: null
+  userLon: null
+  weather: null
+  time: null
+}
+
+export type RawRecommendedPlaceItem = {
+  place: PlaceInfo
+  travelDurationSeconds: number
+  travelDistanceMeters: number
+  startTime: RawTimeObject
+  endTime: RawTimeObject
+}
+
+export type RecommendPlaceResponse = {
+  message: string
+  body: RawRecommendedPlaceItem[]
+}
+
+export type RecommendedPlaceItem = {
+  place: PlaceInfo
+  travelDurationSeconds: number
+  travelDistanceMeters: number
+  startTime: string
+  endTime: string
 }

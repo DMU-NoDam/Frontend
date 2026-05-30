@@ -7,6 +7,8 @@ export type PersonType = 'FRIEND' | 'FAMILY' | 'COUPLE' | 'SOLO'
 export type TripSummaryApiItem = {
   id: number
   name: string
+  country?: string | null
+  countryCode?: string | null
   personCount: number
   scheduleType: ScheduleType
   tripThemeType: TripThemeType | null

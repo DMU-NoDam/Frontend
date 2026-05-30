@@ -13,7 +13,11 @@
 
 .trip-list-page__header {
   flex-shrink: 0;
-  padding: 24px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: calc(24px + env(safe-area-inset-top)) 24px 0;
 }
 
 .trip-list-page__title {
@@ -22,6 +26,39 @@
   color: #1f2024;
   letter-spacing: 1px;
   margin: 0;
+}
+
+.trip-list-page__create-button {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #ff6f9f;
+  border-radius: 50%;
+  background: #fff;
+  color: #ff6f9f;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.trip-list-page__create-button:hover {
+  background: #fff0f5;
+  box-shadow: 0 6px 14px rgba(255, 111, 159, 0.18);
+}
+
+.trip-list-page__create-button:active {
+  transform: scale(0.96);
+}
+
+.trip-list-page__create-icon {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2.8;
 }
 
 /* ── Feed (tabs + list) ───────────────────────────────────── */

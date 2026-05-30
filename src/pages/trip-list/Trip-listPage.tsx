@@ -2,7 +2,9 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { HiPlus } from 'react-icons/hi2'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
+import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import { TripCard } from '@/features/trip/components/TripCard'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import './Trip-listPage.css'
@@ -26,6 +28,8 @@ function isUpcoming(endDate: string): boolean {
 }
 
 export function TripListPage() {
+  useBrowserChrome({ safeTopColor: '#ffffff' })
+
   const [tab, setTab] = useState<TabType>('upcoming')
   const navigate = useNavigate()
   const { data: trips = [], isLoading, isError } = useTrips()
@@ -38,6 +42,14 @@ export function TripListPage() {
     <main className="trip-list-page">
       <header className="trip-list-page__header">
         <h1 className="trip-list-page__title">나의 여행 일정</h1>
+        <button
+          type="button"
+          className="trip-list-page__create-button"
+          aria-label="새로운 일정 생성"
+          onClick={() => navigate('/trips/create')}
+        >
+          <HiPlus className="trip-list-page__create-icon" aria-hidden="true" />
+        </button>
       </header>
 
       <div className="trip-list-page__tabs" role="tablist">

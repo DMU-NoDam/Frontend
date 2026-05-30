@@ -12,8 +12,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
-  height: 52px;
+  padding: env(safe-area-inset-top) 16px 0;
+  height: calc(52px + env(safe-area-inset-top));
 }
 
 .trip-create-back {

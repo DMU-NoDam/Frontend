@@ -11,6 +11,7 @@ import { testAuthApi } from '@/features/auth/api/test-auth-api'
 import { useLogin } from '@/features/auth/hooks/use-login'
 import { OAUTH_PROVIDERS } from '@/features/auth/types/auth-types'
 import type { OAuthProvider } from '@/features/auth/types/auth-types'
+import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import './LoginPage.css'
 
 const providerLabels: Record<OAuthProvider, string> = {
@@ -26,6 +27,8 @@ const providerIcons: Record<OAuthProvider, ReactNode> = {
 }
 
 export function LoginPage() {
+  useBrowserChrome({ safeTopColor: '#ffffff' })
+
   const authMode = useAuthStore((state) => state.authMode)
   const userId = useAuthStore((state) => state.user?.id)
   const setTokens = useAuthStore((state) => state.setTokens)

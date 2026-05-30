@@ -1,9 +1,9 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion'
 import type { MotionValue } from 'framer-motion'
 import './TripMapSheet.css'
 
-export const SHEET_COLLAPSED = 42
+export const SHEET_COLLAPSED = 44
 export const SHEET_EXPANDED  = 90
 export const SHEET_SNAP_MID  = (SHEET_COLLAPSED + SHEET_EXPANDED) / 2
 
@@ -12,11 +12,18 @@ type TripMapSheetProps = {
   /** Content that floats over the map, below the sheet (e.g. a badge) */
   overlay?: React.ReactNode
   sheetContent: (motionHeight: MotionValue<number>) => React.ReactNode
+  forceExpanded?: boolean
 }
 
-export function TripMapSheet({ mapContent, overlay, sheetContent }: TripMapSheetProps) {
+export function TripMapSheet({ mapContent, overlay, sheetContent, forceExpanded }: TripMapSheetProps) {
   const height    = useMotionValue(SHEET_COLLAPSED)
   const heightPct = useTransform(height, (v) => `${v}%`)
+
+  useEffect(() => {
+    if (forceExpanded) {
+      animate(height, SHEET_EXPANDED, { type: 'spring', stiffness: 280, damping: 50 })
+    }
+  }, [forceExpanded, height])
 
   const isDragging = useRef(false)
   const startY     = useRef(0)

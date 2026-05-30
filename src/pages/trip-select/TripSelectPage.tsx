@@ -7,6 +7,7 @@ import { mapPlanListToThemeCards } from '@/features/trip/api/plan-mapper'
 import { useConfirmTripTheme } from '@/features/trip/hooks/use-confirm-trip-theme'
 import { useTripPlans } from '@/features/trip/hooks/use-trip-plans'
 import type { PlanThemeCard } from '@/features/trip/types/plan-types'
+import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import './TripSelectPage.css'
 
 const slideVariants = {
@@ -93,6 +94,8 @@ function ThemeCard({
 }
 
 export function TripSelectPage() {
+  useBrowserChrome({ safeTopColor: '#f6f7fb' })
+
   const { tripId } = useParams()
   const navigate = useNavigate()
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -131,10 +134,9 @@ export function TripSelectPage() {
     mutate(
       { tripId, theme: selectedCard.theme },
       {
-        onSuccess: ({ body }) => {
-          navigate(`/trips/${body.id}/detail`, {
+        onSuccess: () => {
+          navigate(`/trips/${tripId}/detail`, {
             replace: true,
-            state: { tripName: body.name },
           })
         },
       },

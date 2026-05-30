@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useCurrentLocation } from '@/shared/hooks/use-current-location'
 import { useNavigate } from 'react-router-dom'
 import { motion, useTransform } from 'framer-motion'
 import type { MotionValue } from 'framer-motion'
@@ -16,8 +17,11 @@ import {
   SHEET_SNAP_MID,
   SHEET_EXPANDED,
 } from '@/features/trip/components/TripMapSheet'
+import { TripRouteMap } from '@/features/trip/components/TripRouteMap'
 import { TripScheduleView } from '@/features/trip/components/TripScheduleView'
+import type { PlacePlan } from '@/features/trip/types/plan-types'
 import type { TripSummary } from '@/features/trip/types/trip-types'
+import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import { TravelHero } from './TravelHero'
 import './DashboardPage.css'
@@ -60,24 +64,44 @@ const DESTINATIONS = [
 // ── Sub-components ───────────────────────────────────────────
 
 function DashboardScheduleContent({
-  tripId,
   themeType,
+  plans,
+  isLoading,
+  isError,
   initialDate,
+  selectedDate,
+  onDateChange,
+  onPlaceClick,
+  focusedPlanId,
+  onTransportClick,
+  focusedTransportId,
 }: {
-  tripId: string
   themeType: TripSummary['tripThemeType']
+  plans: PlacePlan[]
+  isLoading: boolean
+  isError: boolean
   initialDate?: string
+  selectedDate?: string
+  onDateChange?: (date: string) => void
+  onPlaceClick?: (plan: PlacePlan) => void
+  focusedPlanId?: number | null
+  onTransportClick?: (transportId: number) => void
+  focusedTransportId?: number | null
 }) {
-  const { data: plans, isLoading, isError } = useTripPlans(tripId)
-
   if (!themeType) return <p className="home-schedule__status">선택된 일정이 없어요.</p>
   if (isLoading)  return <p className="home-schedule__status">일정을 불러오는 중...</p>
   if (isError)    return <p className="home-schedule__status">일정을 불러오지 못했어요.</p>
 
   return (
     <TripScheduleView
-      plans={plans?.body?.[themeType] ?? []}
+      plans={plans}
       initialDate={initialDate}
+      selectedDate={selectedDate}
+      onDateChange={onDateChange}
+      onPlaceClick={onPlaceClick}
+      focusedPlanId={focusedPlanId}
+      onTransportClick={onTransportClick}
+      focusedTransportId={focusedTransportId}
       emptyMessage="일정이 없습니다."
     />
   )
@@ -86,19 +110,42 @@ function DashboardScheduleContent({
 function ScheduleSheetContent({
   fixedTrip,
   activeTrip,
+  plans,
+  isLoading,
+  isError,
+  selectedDate,
+  onDateChange,
+  onPlaceClick,
+  focusedPlanId,
+  onTransportClick,
+  focusedTransportId,
 }: {
   fixedTrip: TripSummary
   activeTrip: TripSummary | undefined
+  plans: PlacePlan[]
+  isLoading: boolean
+  isError: boolean
+  selectedDate?: string
+  onDateChange?: (date: string) => void
+  onPlaceClick?: (plan: PlacePlan) => void
+  focusedPlanId?: number | null
+  onTransportClick?: (transportId: number) => void
+  focusedTransportId?: number | null
 }) {
   return (
     <div className="home-schedule">
-      <h2 className="home-schedule__title">
-        {activeTrip ? '오늘 일정' : '여행 일정'}
-      </h2>
       <DashboardScheduleContent
-        tripId={fixedTrip.id}
         themeType={fixedTrip.tripThemeType}
+        plans={plans}
+        isLoading={isLoading}
+        isError={isError}
         initialDate={activeTrip ? getTodayString() : undefined}
+        selectedDate={selectedDate}
+        onDateChange={onDateChange}
+        onPlaceClick={onPlaceClick}
+        focusedPlanId={focusedPlanId}
+        onTransportClick={onTransportClick}
+        focusedTransportId={focusedTransportId}
       />
     </div>
   )
@@ -172,7 +219,49 @@ export function UserDashboard() {
     [activeTrip, trips],
   )
   const fixedTrip = activeTrip ?? upcomingTrip
+  const dashboardTopColor = fixedTrip ? '#e8edf5' : '#ffb3cc'
 
+  useBrowserChrome({
+    safeTopColor: webViewUrl ? '#1f2024' : dashboardTopColor,
+    safeBottomColor: webViewUrl ? '#000000' : '#ffffff',
+  })
+
+  // ── Current location — only while activeTrip is ongoing ──
+  const { position: currentLocation } = useCurrentLocation({
+    enabled: !!activeTrip,
+  })
+
+  // ── Plan data (lifted from DashboardScheduleContent) ─────
+  const { data: plansData, isLoading: isPlansLoading, isError: isPlansError } =
+    useTripPlans(fixedTrip?.id)
+
+  const fixedPlans: PlacePlan[] = useMemo(() => {
+    if (!fixedTrip?.tripThemeType || !plansData?.body) return []
+    return plansData.body[fixedTrip.tripThemeType] ?? []
+  }, [fixedTrip, plansData])
+
+  // ── Shared map/schedule state ─────────────────────────────
+  const tripDates = useMemo(
+    () => [...new Set(fixedPlans.map((p) => p.date))].sort(),
+    [fixedPlans],
+  )
+
+  // User's explicit date choice (null = use default)
+  const [userSelectedDate, setUserSelectedDate] = useState<string | null>(null)
+
+  const selectedDate = useMemo(() => {
+    if (userSelectedDate && tripDates.includes(userSelectedDate)) return userSelectedDate
+    if (activeTrip) {
+      const today = getTodayString()
+      return tripDates.includes(today) ? today : (tripDates[0] ?? null)
+    }
+    return tripDates[0] ?? null
+  }, [userSelectedDate, tripDates, activeTrip])
+
+  const [focusedPlanId, setFocusedPlanId]           = useState<number | null>(null)
+  const [focusedTransportId, setFocusedTransportId] = useState<number | null>(null)
+
+  // ── Header message ────────────────────────────────────────
   const headerMessage = isTripsLoading
     ? '여행 일정을 확인하고 있어요'
     : activeTrip
@@ -197,7 +286,22 @@ export function UserDashboard() {
   return (
     <main className="home-page">
       <TripMapSheet
-        mapContent={fixedTrip ? <MapPlaceholder /> : <TravelHero />}
+        mapContent={
+          fixedTrip
+            ? fixedPlans.length > 0
+              ? (
+                <TripRouteMap
+                  plans={fixedPlans}
+                  selectedDate={selectedDate}
+                  focusedPlanId={focusedPlanId}
+                  onMarkerClick={(planId) => { setFocusedPlanId(planId); setFocusedTransportId(null) }}
+                  currentLocation={currentLocation}
+                  highlightedTransportId={focusedTransportId}
+                />
+              )
+              : <MapPlaceholder />
+            : <TravelHero />
+        }
         overlay={
           <div className="home-map-overlay">
             <span className="home-header__badge">✈️ {headerMessage}</span>
@@ -208,6 +312,15 @@ export function UserDashboard() {
             <ScheduleSheetContent
               fixedTrip={fixedTrip}
               activeTrip={activeTrip}
+              plans={fixedPlans}
+              isLoading={isPlansLoading}
+              isError={isPlansError}
+              selectedDate={selectedDate ?? undefined}
+              onDateChange={(date) => { setUserSelectedDate(date); setFocusedPlanId(null); setFocusedTransportId(null) }}
+              onPlaceClick={(plan) => { setFocusedPlanId(plan.id); setFocusedTransportId(null) }}
+              focusedPlanId={focusedPlanId}
+              onTransportClick={(id) => setFocusedTransportId((prev) => (prev === id ? null : id))}
+              focusedTransportId={focusedTransportId}
             />
           ) : (
             <EmptySheetContent

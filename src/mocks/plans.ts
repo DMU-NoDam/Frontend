@@ -1,4 +1,4 @@
-import type { PlaceInfo, PlacePlan, PlanListResponse, Transport } from '@/features/trip/types/plan-types'
+import type { PlaceInfo, PlacePlan, PlanListResponse, RecommendedPlaceItem, RouteInfo, Transport } from '@/features/trip/types/plan-types'
 
 // ── helpers ──────────────────────────────────────────────────
 
@@ -23,6 +23,7 @@ function transport(
   distanceMeters: number,
   fromId: number,
   toId: number,
+  routeInfo: RouteInfo | null = null,
 ): Transport {
   return {
     id,
@@ -32,8 +33,64 @@ function transport(
     totalDistanceMeters: distanceMeters,
     fromPlacePlanId: fromId,
     toPlacePlanId: toId,
-    routeInfo: null,
+    routeInfo,
   }
+}
+
+// ── Bangkok route mock data (domain format) ───────────────────
+
+const bkkRoute_chatuchakToJayFai: RouteInfo = {
+  totalDistanceMeters: 2500,
+  totalDurationSeconds: 1200,
+  steps: [
+    {
+      method: 'WALK',
+      path: [
+        { lat: 13.7999, lng: 100.5499 },
+        { lat: 13.7985, lng: 100.5503 },
+      ],
+    },
+    {
+      method: 'TRAIN',
+      path: [
+        { lat: 13.7985, lng: 100.5503 },
+        { lat: 13.7831, lng: 100.5450 },
+        { lat: 13.7761, lng: 100.5302 },
+        { lat: 13.7648, lng: 100.5237 },
+        { lat: 13.7545, lng: 100.5025 },
+      ],
+    },
+    {
+      method: 'WALK',
+      path: [
+        { lat: 13.7545, lng: 100.5025 },
+        { lat: 13.7534, lng: 100.5015 },
+      ],
+    },
+  ],
+}
+
+const bkkRoute_jayFaiToOrTorKor: RouteInfo = {
+  totalDistanceMeters: 1200,
+  totalDurationSeconds: 900,
+  steps: [
+    {
+      method: 'WALK',
+      path: [
+        { lat: 13.7534, lng: 100.5015 },
+        { lat: 13.7548, lng: 100.5030 },
+      ],
+    },
+    {
+      method: 'TRAIN',
+      path: [
+        { lat: 13.7548, lng: 100.5030 },
+        { lat: 13.7700, lng: 100.5180 },
+        { lat: 13.7860, lng: 100.5380 },
+        { lat: 13.8019, lng: 100.5495 },
+      ],
+    },
+  ],
 }
 
 function plan(
@@ -42,10 +99,9 @@ function plan(
   startTime: string,
   endTime: string,
   placeInfo: PlaceInfo,
-  arrivalTransport: Transport | null = null,
-  departureTransport: Transport | null = null,
+  fromTransport: Transport | null = null,
 ): PlacePlan {
-  return { id, date, startTime, endTime, placeInfo, arrivalTransport, departureTransport }
+  return { id, date, startTime, endTime, placeInfo, fromTransport }
 }
 
 // ── Bangkok Trip (id: '1') ────────────────────────────────────
@@ -80,8 +136,8 @@ const BKK = {
 }
 
 const T_BKK = {
-  t1: transport(2001, '11:30:00', '11:50:00', 1200, 2500, 1001, 1002),
-  t2: transport(2002, '14:00:00', '14:15:00',  900, 1200, 1002, 1003),
+  t1: transport(2001, '11:30:00', '11:50:00', 1200, 2500, 1001, 1002, bkkRoute_chatuchakToJayFai),
+  t2: transport(2002, '14:00:00', '14:15:00',  900, 1200, 1002, 1003, bkkRoute_jayFaiToOrTorKor),
   t3: transport(2003, '12:00:00', '12:10:00',  600,  800, 1004, 1005),
   t4: transport(2004, '14:00:00', '14:25:00', 1500, 3500, 1005, 1006),
   t5: transport(2005, '11:00:00', '11:15:00',  900, 1500, 1007, 1008),
@@ -93,17 +149,17 @@ const D2 = '2026-06-16'
 const D3 = '2026-06-17'
 
 const FOOD_PLANS: PlacePlan[] = [
-  plan(1001, D1, '09:00:00', '11:30:00', BKK.chatuchak, T_BKK.t1),
-  plan(1002, D1, '12:00:00', '14:00:00', BKK.jayFai,    T_BKK.t2, T_BKK.t1),
-  plan(1003, D1, '14:30:00', '17:00:00', BKK.orTorKor,  null,      T_BKK.t2),
+  plan(1001, D1, '09:00:00', '11:30:00', BKK.chatuchak,  T_BKK.t1),
+  plan(1002, D1, '12:00:00', '14:00:00', BKK.jayFai,     T_BKK.t2),
+  plan(1003, D1, '14:30:00', '17:00:00', BKK.orTorKor,   null),
 
-  plan(1004, D2, '10:00:00', '12:00:00', BKK.yaowarat,  T_BKK.t3),
-  plan(1005, D2, '12:30:00', '14:00:00', BKK.tkSeafood, T_BKK.t4, T_BKK.t3),
-  plan(1006, D2, '15:00:00', '18:00:00', BKK.iconsiam,  null,      T_BKK.t4),
+  plan(1004, D2, '10:00:00', '12:00:00', BKK.yaowarat,   T_BKK.t3),
+  plan(1005, D2, '12:30:00', '14:00:00', BKK.tkSeafood,  T_BKK.t4),
+  plan(1006, D2, '15:00:00', '18:00:00', BKK.iconsiam,   null),
 
   plan(1007, D3, '09:00:00', '11:00:00', BKK.lumphini,   T_BKK.t5),
-  plan(1008, D3, '11:30:00', '13:30:00', BKK.siamParagon,T_BKK.t6, T_BKK.t5),
-  plan(1009, D3, '14:00:00', '16:30:00', BKK.mbk,        null,     T_BKK.t6),
+  plan(1008, D3, '11:30:00', '13:30:00', BKK.siamParagon,T_BKK.t6),
+  plan(1009, D3, '14:00:00', '16:30:00', BKK.mbk,        null),
 ]
 
 const HEALING_PLANS: PlacePlan[] = [
@@ -148,10 +204,10 @@ const J4 = '2026-01-13'
 
 const JEJU_ACTIVITY_PLANS: PlacePlan[] = [
   plan(2001, J1, '06:00:00', '10:00:00', JJ.sunrise,  T_JJ.t1),
-  plan(2002, J1, '11:00:00', '15:00:00', JJ.hallasan, null,     T_JJ.t1),
+  plan(2002, J1, '11:00:00', '15:00:00', JJ.hallasan, null),
 
   plan(2003, J2, '09:00:00', '12:00:00', JJ.olle,     T_JJ.t2),
-  plan(2004, J2, '13:00:00', '16:00:00', JJ.zipline,  null,     T_JJ.t2),
+  plan(2004, J2, '13:00:00', '16:00:00', JJ.zipline,  null),
 
   plan(2005, J3, '10:00:00', '14:00:00', JJ.snorkel,  null),
   plan(2006, J4, '09:00:00', '12:00:00', JJ.sunrise,  null),
@@ -174,3 +230,29 @@ const MOCK_PLANS: Record<string, PlanListResponse> = {
 
 export const mockGetPlans = (tripId: string): Promise<PlanListResponse> =>
   Promise.resolve(MOCK_PLANS[tripId] ?? { message: 'success', body: { ...EMPTY } })
+
+const MOCK_RECOMMEND_PLACES: RecommendedPlaceItem[] = [
+  { place: BKK.orTorKor,    travelDurationSeconds: 900,  travelDistanceMeters: 1200, startTime: '14:30:00', endTime: '17:00:00' },
+  { place: BKK.watPho,      travelDurationSeconds: 1800, travelDistanceMeters: 3500, startTime: '14:30:00', endTime: '17:00:00' },
+  { place: BKK.lumphini,    travelDurationSeconds: 1200, travelDistanceMeters: 2100, startTime: '14:30:00', endTime: '17:00:00' },
+  { place: BKK.siamParagon, travelDurationSeconds: 2400, travelDistanceMeters: 4800, startTime: '14:30:00', endTime: '17:00:00' },
+]
+
+export const mockRecommendPlace = (): Promise<RecommendedPlaceItem[]> =>
+  Promise.resolve(MOCK_RECOMMEND_PLACES)
+
+export const mockReplacePlacePlan = (oldPlacePlanId: number, newPlaceId: number): Promise<PlacePlan> => {
+  const allPlaces = Object.values(BKK)
+  const newPlace = allPlaces.find((p) => p.id === newPlaceId) ?? BKK.watPho
+  return Promise.resolve({
+    id: oldPlacePlanId,
+    date: D1,
+    startTime: '14:30:00',
+    endTime: '17:00:00',
+    placeInfo: newPlace,
+    fromTransport: null,
+  })
+}
+
+export const mockDeletePlacePlan = (): Promise<void> =>
+  Promise.resolve()

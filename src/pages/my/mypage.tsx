@@ -4,8 +4,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { LuUser, LuShield, LuInfo, LuChevronRight, LuX, LuChevronLeft } from 'react-icons/lu'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import { useTrips } from '@/features/trip/hooks/use-trips'
+import { CITIES_BY_COUNTRY } from '@/features/trip/data/cities'
 import { useAuthStore } from '@/app/store/auth-store'
 import { apiClient } from '@/shared/api/client'
+import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import { PrivacyPolicyModal } from './privacy-policy/PrivacyPolicyModal'
 import { ProfileEditSheet } from './profile-edit/ProfileEditSheet'
 import './MyPage.css'
@@ -39,11 +41,42 @@ const COUNTRIES = [
   { code: 'SG', name: '싱가포르', file: 'Singapore',      aliases: ['SG', '싱가포르', 'Singapore'] },
 ]
 
-function siteToCode(site: string): string | null {
+const CITY_COUNTRY_CODES = Object.entries(CITIES_BY_COUNTRY).flatMap(([countryCode, cities]) =>
+  cities.flatMap((city) => [
+    { countryCode, alias: city.id },
+    { countryCode, alias: city.name },
+  ]),
+)
+
+function getLocalDateString(date = new Date()): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function siteToCode(site?: string | null): string | null {
+  if (!site) return null
+
+  const normalizedSite = site.trim().toLowerCase()
+  if (!normalizedSite) return null
+
   const found = COUNTRIES.find((c) =>
-    c.aliases.some((a) => a.toLowerCase() === site.toLowerCase())
+    c.aliases.some((a) => {
+      const alias = a.toLowerCase()
+      return alias.length <= 2 ? normalizedSite === alias : normalizedSite.includes(alias)
+    })
   )
-  return found?.code ?? null
+  if (found) return found.code
+
+  const city = CITY_COUNTRY_CODES.find(({ alias }) =>
+    normalizedSite.includes(alias.toLowerCase())
+  )
+  return city?.countryCode ?? null
+}
+
+function tripToStampCode(trip: { name: string; country?: string | null; countryCode?: string | null }): string | null {
+  return siteToCode(trip.countryCode) ?? siteToCode(trip.country) ?? siteToCode(trip.name)
 }
 
 function chunk<T>(arr: T[], size: number): T[][] {
@@ -60,6 +93,8 @@ const MENU_ITEMS = [
 const STAMP_PAGES = chunk(COUNTRIES, 4)
 
 export function MyPage() {
+  useBrowserChrome({ safeTopColor: '#f7f7f8' })
+
   const { data: trips = [] } = useTrips()
   const [passportOpen, setPassportOpen] = useState(false)
   const [page, setPage] = useState(0)
@@ -72,11 +107,12 @@ export function MyPage() {
   const logout = useAuthStore((s) => s.logout)
   const user = useAuthStore((s) => s.user)
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = getLocalDateString()
   const pastTrips   = trips.filter((t) => t.endDate < today)
   const upcoming    = trips.filter((t) => t.startDate > today)
+  const stampEligibleTrips = pastTrips.filter((t) => t.fixed)
   const earnedCodes = new Set(
-    pastTrips.map((t) => siteToCode(t.name)).filter(Boolean) as string[]
+    stampEligibleTrips.map((t) => tripToStampCode(t)).filter(Boolean) as string[]
   )
 
   function openPassport() { setPage(0); setPassportOpen(true) }
