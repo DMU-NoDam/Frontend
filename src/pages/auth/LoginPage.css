@@ -11,7 +11,7 @@
   min-height: 100%;
   display: grid;
   grid-template-rows: 1fr auto;
-  padding: 16px 32px 50px;
+  padding: calc(16px + env(safe-area-inset-top)) 32px calc(50px + env(safe-area-inset-bottom));
 }
 
 .login-brand {

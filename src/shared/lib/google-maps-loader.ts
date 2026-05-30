@@ -3,6 +3,10 @@ declare global {
     google?: {
       maps: {
         importLibrary: (library: string) => Promise<unknown>
+        event: {
+          removeListener(listener: unknown): void
+          trigger(instance: unknown, eventName: string): void
+        }
       }
     }
   }

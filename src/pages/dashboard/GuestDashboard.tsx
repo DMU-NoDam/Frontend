@@ -1,11 +1,16 @@
 import { useNavigate } from 'react-router-dom'
 import { LuSparkles } from 'react-icons/lu'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
+import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import { TravelHero } from './TravelHero'
 import './DashboardPage.css'
 
 export function GuestDashboard() {
   const navigate = useNavigate()
+  useBrowserChrome({
+    safeTopColor: '#ffb3cc',
+    safeBottomColor: '#ffffff',
+  })
 
   return (
     <main className="home-page">
@@ -21,7 +26,7 @@ export function GuestDashboard() {
         <section
           className="home-trips"
           aria-label="시작하기"
-          style={{ height: '60%' }}
+          style={{ height: '40%' }}
         >
           <div className="home-trips__handle-btn" style={{ cursor: 'default', pointerEvents: 'none' }} aria-hidden="true">
             <div className="home-trips__handle" />

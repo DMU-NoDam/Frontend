@@ -1,13 +1,19 @@
 .home-page {
+  --home-hero-top: #ffb3cc;
+  --home-hero-mid: #ffd0e0;
+  --home-hero-soft: #ffe4ee;
+  --home-hero-bottom: #fff0f5;
+
   height: 100%;
   display: flex;
   flex-direction: column;
   background: linear-gradient(
-    160deg,
-    #ffb3cc 0%,
-    #ffd0e0 35%,
-    #ffe4ee 68%,
-    #fff0f5 100%
+    180deg,
+    var(--home-hero-top) 0,
+    var(--home-hero-top) calc(env(safe-area-inset-top) + 72px),
+    var(--home-hero-mid) 42%,
+    var(--home-hero-soft) 72%,
+    var(--home-hero-bottom) 100%
   );
 }
 
@@ -15,7 +21,7 @@
   flex-shrink: 0;
   display: flex;
   justify-content: center;
-  padding: 18px 10px;
+  padding: calc(18px + env(safe-area-inset-top)) 10px 18px;
   position: relative;
   z-index: 10;
 }
@@ -38,7 +44,7 @@
 .home-map-overlay {
   display: flex;
   justify-content: center;
-  padding: 18px 10px;
+  padding: calc(18px + env(safe-area-inset-top)) 10px 18px;
 }
 
 /* ── GuestDashboard layout (home-feed / home-map / home-trips) ── */

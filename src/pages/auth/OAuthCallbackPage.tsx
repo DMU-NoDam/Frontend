@@ -3,12 +3,15 @@ import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { useLogin } from '@/features/auth/hooks/use-login'
 import { OAUTH_PROVIDERS } from '@/features/auth/types/auth-types'
 import type { OAuthProvider } from '@/features/auth/types/auth-types'
+import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 
 const isOAuthProvider = (value: string | null): value is OAuthProvider => {
   return OAUTH_PROVIDERS.includes(value as OAuthProvider)
 }
 
 export function OAuthCallbackPage() {
+  useBrowserChrome({ safeTopColor: '#ffffff' })
+
   const { provider: pathProvider } = useParams()
   const [searchParams] = useSearchParams()
   const hasRequestedLogin = useRef(false)
