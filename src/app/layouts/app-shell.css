@@ -1,7 +1,7 @@
 .app-shell-background {
   --app-shell-width: 393px;
   --app-shell-bg: #ffffff;
-  --app-page-bg: var(--page-bg);
+  --app-page-bg: #f3f4f6;
 
   height: 100svh;
   display: flex;
@@ -11,31 +11,7 @@
   overflow: hidden;
 }
 
-.app-shell-background::before,
-.app-shell-background::after {
-  content: "";
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.app-shell-background::before {
-  top: 0;
-  height: env(safe-area-inset-top);
-  background: var(--safe-top-bg);
-}
-
-.app-shell-background::after {
-  bottom: 0;
-  height: env(safe-area-inset-bottom);
-  background: var(--safe-bottom-bg);
-}
-
 .app-shell-frame {
-  position: relative;
-  z-index: 1;
   width: min(100%, var(--app-shell-width));
   height: calc(100svh - 48px);
   overflow-x: hidden;
@@ -60,13 +36,14 @@
 
 @media (max-width: 480px) {
   .app-shell-background {
-    padding: 0;
-    background: var(--app-shell-bg);
+    padding: env(safe-area-inset-top, 0px) 0 0;
+    /* html background-color (set by useThemeColor)이 safe area 뒤를 채움 */
+    background: transparent;
   }
 
   .app-shell-frame {
     width: 100%;
-    height: 100svh;
+    height: calc(100svh - env(safe-area-inset-top, 0px));
     border: 0;
     border-radius: 0;
     box-shadow: none;

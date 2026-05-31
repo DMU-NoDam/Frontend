@@ -1,14 +1,9 @@
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
 :root {
-  --browser-theme-color: #ffffff;
-  --safe-top-bg: #ffffff;
-  --safe-bottom-bg: #ffffff;
-  --page-bg: #ffffff;
-
   font-family: 'Pretendard', system-ui, 'Segoe UI', Roboto, sans-serif;
   color: #111827;
-  background: var(--page-bg);
+  background: #f3f4f6;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -19,7 +14,6 @@ html,
 body {
   height: 100%;
   overflow: hidden;
-  background: var(--page-bg);
 }
 
 * {
