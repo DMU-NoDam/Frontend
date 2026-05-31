@@ -30,7 +30,7 @@
   flex-direction: row;
   align-items: flex-start;
   justify-content: space-between;
-  padding: calc(36px + env(safe-area-inset-top)) 24px 28px;
+  padding: 36px 24px 28px;
 }
 
 .my-profile__info {

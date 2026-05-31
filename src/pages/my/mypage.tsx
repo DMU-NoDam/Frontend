@@ -7,9 +7,9 @@ import { useTrips } from '@/features/trip/hooks/use-trips'
 import { CITIES_BY_COUNTRY } from '@/features/trip/data/cities'
 import { useAuthStore } from '@/app/store/auth-store'
 import { apiClient } from '@/shared/api/client'
-import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import { PrivacyPolicyModal } from './privacy-policy/PrivacyPolicyModal'
 import { ProfileEditSheet } from './profile-edit/ProfileEditSheet'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import './MyPage.css'
 
 const stampModules = import.meta.glob('@/assets/Trip-Stamp/*.png', { eager: true }) as Record<string, { default: string }>
@@ -93,8 +93,7 @@ const MENU_ITEMS = [
 const STAMP_PAGES = chunk(COUNTRIES, 4)
 
 export function MyPage() {
-  useBrowserChrome({ safeTopColor: '#f7f7f8' })
-
+  useThemeColor('#f7f7f8', '#ffffff')
   const { data: trips = [] } = useTrips()
   const [passportOpen, setPassportOpen] = useState(false)
   const [page, setPage] = useState(0)

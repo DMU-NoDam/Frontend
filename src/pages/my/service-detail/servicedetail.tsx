@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { LuChevronLeft } from 'react-icons/lu'
 import { PrivacyPolicyModal } from '@/pages/my/privacy-policy/PrivacyPolicyModal'
-import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import arubiIcon from '@/assets/Arubi-icon.png'
 import './ServiceDetail.css'
 
@@ -13,8 +12,6 @@ const INFO_ROWS = [
 ]
 
 export function ServiceDetail() {
-  useBrowserChrome({ safeTopColor: '#ffffff' })
-
   const navigate = useNavigate()
   const [privacyOpen, setPrivacyOpen] = useState(false)
 
