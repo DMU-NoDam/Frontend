@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useCurrentLocation } from '@/shared/hooks/use-current-location'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import { useNavigate } from 'react-router-dom'
 import { motion, useTransform } from 'framer-motion'
 import type { MotionValue } from 'framer-motion'
@@ -21,7 +22,6 @@ import { TripRouteMap } from '@/features/trip/components/TripRouteMap'
 import { TripScheduleView } from '@/features/trip/components/TripScheduleView'
 import type { PlacePlan } from '@/features/trip/types/plan-types'
 import type { TripSummary } from '@/features/trip/types/trip-types'
-import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import { TravelHero } from './TravelHero'
 import './DashboardPage.css'
@@ -205,6 +205,7 @@ function EmptySheetContent({
 // ── Main component ────────────────────────────────────────────
 
 export function UserDashboard() {
+  useThemeColor('#ffb3cc', '#ffffff')
   const navigate = useNavigate()
   const { data: trips = [], isLoading: isTripsLoading } = useTrips()
   const [webViewUrl, setWebViewUrl]       = useState<string | null>(null)
@@ -219,12 +220,6 @@ export function UserDashboard() {
     [activeTrip, trips],
   )
   const fixedTrip = activeTrip ?? upcomingTrip
-  const dashboardTopColor = fixedTrip ? '#e8edf5' : '#ffb3cc'
-
-  useBrowserChrome({
-    safeTopColor: webViewUrl ? '#1f2024' : dashboardTopColor,
-    safeBottomColor: webViewUrl ? '#000000' : '#ffffff',
-  })
 
   // ── Current location — only while activeTrip is ongoing ──
   const { position: currentLocation } = useCurrentLocation({

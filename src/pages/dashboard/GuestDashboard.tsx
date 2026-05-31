@@ -1,16 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { LuSparkles } from 'react-icons/lu'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
-import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import { TravelHero } from './TravelHero'
 import './DashboardPage.css'
 
 export function GuestDashboard() {
+  useThemeColor('#ffb3cc', '#ffffff')
   const navigate = useNavigate()
-  useBrowserChrome({
-    safeTopColor: '#ffb3cc',
-    safeBottomColor: '#ffffff',
-  })
 
   return (
     <main className="home-page">
