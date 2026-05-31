@@ -12,15 +12,11 @@ import { TripRouteMap } from '@/features/trip/components/TripRouteMap'
 import { TripScheduleView } from '@/features/trip/components/TripScheduleView'
 import { PlaceRecommendSheet } from '@/features/trip/components/PlaceRecommendSheet'
 import type { PlacePlan, RecommendedPlaceItem } from '@/features/trip/types/plan-types'
-import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import './TripDetailPage.css'
 
 export function TripDetailPage() {
-  useBrowserChrome({
-    safeTopColor: '#e8edf5',
-    safeBottomColor: '#ffffff',
-  })
-
+  useThemeColor('#e8edf5', '#e8edf5')
   const { tripId } = useParams()
   const navigate   = useNavigate()
 

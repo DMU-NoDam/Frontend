@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef } from 'react'
+import { LuLocateFixed } from 'react-icons/lu'
 import { useGoogleMap } from '@/shared/hooks/use-google-map'
 import type {
   GoogleMapInstance,
@@ -359,6 +360,12 @@ export function TripRouteMap({
     mapInstance.setZoom(15)
   }, [mapInstance, focusedPlanId, plans])
 
+  const handleFocusCurrentLocation = useCallback(() => {
+    if (!mapInstance || !currentLocation) return
+    mapInstance.panTo(currentLocation)
+    mapInstance.setZoom(15)
+  }, [mapInstance, currentLocation])
+
   return (
     <div className="trip-route-map">
       {isError && (
@@ -371,6 +378,17 @@ export function TripRouteMap({
         <div className="trip-route-map__loading">지도 불러오는 중...</div>
       )}
       <div ref={mapDivRef} className="trip-route-map__canvas" />
+      {isLoaded && (
+        <button
+          type="button"
+          className="trip-route-map__locate-btn"
+          onClick={handleFocusCurrentLocation}
+          disabled={!currentLocation}
+          aria-label="현재 위치로 이동"
+        >
+          <LuLocateFixed className="trip-route-map__locate-icon" />
+        </button>
+      )}
     </div>
   )
 }

@@ -2,15 +2,11 @@ import { useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { LuSparkles } from 'react-icons/lu'
 import { useTripPlanningStatus } from '@/features/trip/hooks/use-trip-planning-status'
-import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import './TripPlanningPage.css'
 
 export function TripPlanningPage() {
-  useBrowserChrome({
-    safeTopColor: '#ffb3cc',
-    safeBottomColor: '#fff0f5',
-  })
-
+  useThemeColor('#ffb3cc', '#fff0f5')
   const { tripId } = useParams()
   const navigate = useNavigate()
 
