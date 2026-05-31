@@ -54,7 +54,7 @@ apiClient.interceptors.response.use(
 
     const { authMode, refreshToken, setTokens, logout } = useAuthStore.getState()
 
-    if (authMode !== 'test' && !refreshToken) {
+    if (authMode === 'dev-token' || (authMode !== 'test' && !refreshToken)) {
       logout()
       return Promise.reject(error)
     }
