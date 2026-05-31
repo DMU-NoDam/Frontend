@@ -16,7 +16,9 @@ export function useReplacePlacePlan(tripId: string | undefined) {
           const newBody = { ...old.body }
           for (const theme of Object.keys(newBody) as (keyof typeof newBody)[]) {
             newBody[theme] = newBody[theme].map((p) =>
-              p.id === req.oldPlacePlanId ? updatedPlan : p,
+              p.id === req.oldPlacePlanId
+                ? { ...updatedPlan, date: p.date, startTime: p.startTime, endTime: p.endTime }
+                : p,
             )
           }
           return { ...old, body: newBody }

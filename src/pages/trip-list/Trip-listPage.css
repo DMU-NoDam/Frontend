@@ -17,7 +17,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: calc(24px + env(safe-area-inset-top)) 24px 0;
+  padding: 24px 24px 0;
 }
 
 .trip-list-page__title {

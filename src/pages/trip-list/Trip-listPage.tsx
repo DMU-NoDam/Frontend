@@ -4,9 +4,9 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { HiPlus } from 'react-icons/hi2'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
-import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import { TripCard } from '@/features/trip/components/TripCard'
 import { useTrips } from '@/features/trip/hooks/use-trips'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import './Trip-listPage.css'
 
 type TabType = 'upcoming' | 'past'
@@ -28,8 +28,7 @@ function isUpcoming(endDate: string): boolean {
 }
 
 export function TripListPage() {
-  useBrowserChrome({ safeTopColor: '#ffffff' })
-
+  useThemeColor('#ffffff', '#ffffff')
   const [tab, setTab] = useState<TabType>('upcoming')
   const navigate = useNavigate()
   const { data: trips = [], isLoading, isError } = useTrips()

@@ -12,7 +12,6 @@ import { useTripPlanningStatus } from '@/features/trip/hooks/use-trip-planning-s
 import { mapFormToRequest } from '@/features/trip/api/trip-mapper'
 import { tripFormSchema } from '@/features/trip/types/trip-schema'
 import type { TripCreateFormValues } from '@/features/trip/types/trip-types'
-import { useBrowserChrome } from '@/shared/hooks/use-browser-chrome'
 import { CountryStep } from './steps/CountryStep'
 import { CityStep } from './steps/CityStep'
 import { DateStep } from './steps/DateStep'
@@ -22,6 +21,7 @@ import { FlightStep } from './steps/FlightStep'
 import { PlaceStep } from './steps/PlaceStep'
 import { BudgetStep } from './steps/BudgetStep'
 import { StyleStep } from './steps/StyleStep'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import './TripCreatePage.css'
 
 const TOTAL_STEPS = 9
@@ -115,6 +115,7 @@ function PlanningSparkle() {
 }
 
 export function TripCreatePage() {
+  useThemeColor('#ffffff', '#ffffff')
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
@@ -242,12 +243,6 @@ export function TripCreatePage() {
   const isPolling = tripId !== null && planningStatus === 'pending'
   const showPlanningOverlay = isCreating || isPolling
   const showPlanningFailure = showPlanningFailureRaw && retryCount < 1
-  const chromeColor = showPlanningOverlay || showPlanningFailure ? '#f8cddd' : '#ffffff'
-
-  useBrowserChrome({
-    safeTopColor: chromeColor,
-    safeBottomColor: chromeColor,
-  })
 
   if (showPlanningOverlay) {
     return (
