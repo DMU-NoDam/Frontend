@@ -184,14 +184,21 @@
 }
 
 .trip-schedule-view__transport-row--clickable:hover {
-  background-color: #f5f5f7;
+  background-color: transparent;
 }
 
 .trip-schedule-view__transport-row--clickable:active {
-  background-color: #f0f1f5;
+  background-color: transparent;
 }
 
 /* ── Focused transport row ─────────────────────────────────── */
+
+.trip-schedule-view__transport-row--focused,
+.trip-schedule-view__transport-row--focused:hover,
+.trip-schedule-view__transport-row--focused:active,
+.trip-schedule-view__transport-row--focused:focus {
+  background-color: transparent;
+}
 
 .trip-schedule-view__transport-row--focused .trip-schedule-view__transport-line {
   background: #ff5f9a;
@@ -238,6 +245,30 @@
   font-weight: 600;
   cursor: pointer;
   padding: 4px 0 4px 12px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.trip-schedule-view__edit-controls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 12px;
+}
+
+.trip-schedule-view__edit-controls .trip-schedule-view__edit-btn {
+  padding-left: 0;
+}
+
+.trip-schedule-view__cancel-btn {
+  background: none;
+  border: none;
+  color: #8f9098;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
   flex-shrink: 0;
   line-height: 1;
 }
