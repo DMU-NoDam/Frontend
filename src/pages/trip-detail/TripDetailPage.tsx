@@ -12,8 +12,22 @@ import { TripRouteMap } from '@/features/trip/components/TripRouteMap'
 import { TripScheduleView } from '@/features/trip/components/TripScheduleView'
 import { PlaceRecommendSheet } from '@/features/trip/components/PlaceRecommendSheet'
 import type { PlacePlan, RecommendedPlaceItem } from '@/features/trip/types/plan-types'
+import type { TripSummary } from '@/features/trip/types/trip-types'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import './TripDetailPage.css'
+
+function toDateKey(date: string) {
+  return date.slice(0, 10)
+}
+
+function isDateRangeOverlapping(
+  startA: string,
+  endA: string,
+  startB: string,
+  endB: string,
+) {
+  return toDateKey(startA) <= toDateKey(endB) && toDateKey(startB) <= toDateKey(endA)
+}
 
 export function TripDetailPage() {
   useThemeColor('#e8edf5', '#e8edf5')
@@ -51,6 +65,8 @@ export function TripDetailPage() {
   const [recommendations, setRecommendations]             = useState<RecommendedPlaceItem[]>([])
   const [selectedRecommendIndex, setSelectedRecommendIndex] = useState(0)
   const [recommendTarget, setRecommendTarget]             = useState<PlacePlan | null>(null)
+  const [conflictFixedTrips, setConflictFixedTrips]       = useState<TripSummary[]>([])
+  const [conflictError, setConflictError]                 = useState<string | null>(null)
 
   const selectedDate = useMemo(
     () =>
@@ -62,7 +78,45 @@ export function TripDetailPage() {
 
   const handleToggleFixed = () => {
     if (!tripId || !trip) return
-    updateTripFixedMutation.mutate({ tripId, fixed: !trip.fixed })
+    if (trip.fixed) {
+      updateTripFixedMutation.mutate({ tripId, fixed: false })
+      return
+    }
+
+    const overlappingFixedTrips = trips.filter((t) =>
+      t.fixed &&
+      t.id !== trip.id &&
+      isDateRangeOverlapping(trip.startDate, trip.endDate, t.startDate, t.endDate)
+    )
+
+    if (overlappingFixedTrips.length > 0) {
+      setConflictError(null)
+      setConflictFixedTrips(overlappingFixedTrips)
+      return
+    }
+
+    updateTripFixedMutation.mutate({ tripId, fixed: true })
+  }
+
+  const handleCloseConflictModal = () => {
+    if (updateTripFixedMutation.isPending) return
+    setConflictFixedTrips([])
+    setConflictError(null)
+  }
+
+  const handleConfirmConflictFixed = async () => {
+    if (!tripId || conflictFixedTrips.length === 0) return
+
+    setConflictError(null)
+    try {
+      for (const fixedTrip of conflictFixedTrips) {
+        await updateTripFixedMutation.mutateAsync({ tripId: fixedTrip.id, fixed: false })
+      }
+      await updateTripFixedMutation.mutateAsync({ tripId, fixed: true })
+      setConflictFixedTrips([])
+    } catch {
+      setConflictError('일정 확정에 실패했습니다. 다시 시도해 주세요.')
+    }
   }
 
   const handleBack = () => {
@@ -280,6 +334,49 @@ export function TripDetailPage() {
           isConfirming={replaceMutation.isPending}
           countryCode={trip.countryCode ?? undefined}
         />
+      )}
+
+      {conflictFixedTrips.length > 0 && (
+        <>
+          <button
+            type="button"
+            className="detail-fixed-conflict__backdrop"
+            aria-label="일정 확정 팝업 닫기"
+            onClick={handleCloseConflictModal}
+            disabled={updateTripFixedMutation.isPending}
+          />
+          <section
+            className="detail-fixed-conflict"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="detail-fixed-conflict-title"
+          >
+            <p id="detail-fixed-conflict-title" className="detail-fixed-conflict__title">
+              이미 같은 날짜에 확정된 일정이 있습니다
+            </p>
+            {conflictError && (
+              <p className="detail-fixed-conflict__error">{conflictError}</p>
+            )}
+            <div className="detail-fixed-conflict__actions">
+              <button
+                type="button"
+                className="detail-fixed-conflict__confirm"
+                onClick={handleConfirmConflictFixed}
+                disabled={updateTripFixedMutation.isPending}
+              >
+                {updateTripFixedMutation.isPending ? '처리 중...' : '이 일정 확정하기'}
+              </button>
+              <button
+                type="button"
+                className="detail-fixed-conflict__cancel"
+                onClick={handleCloseConflictModal}
+                disabled={updateTripFixedMutation.isPending}
+              >
+                취소
+              </button>
+            </div>
+          </section>
+        </>
       )}
     </main>
   )
