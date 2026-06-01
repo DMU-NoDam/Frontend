@@ -54,7 +54,9 @@ const replacePlacePlan = async (req: ReplacePlacePlanRequest): Promise<PlacePlan
 
 const deletePlacePlan = async (placePlanId: number): Promise<void> => {
   if (useMockPlans) return mockDeletePlacePlan()
-  await apiClient.delete(`/plan/api/place-plan/${placePlanId}`)
+  await apiClient.delete(`/plan/api/place-plan/${placePlanId}`, {
+    timeout: 120000,
+  })
 }
 
 export const planApi = {
