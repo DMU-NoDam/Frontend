@@ -10,6 +10,11 @@ import type {
 const TEST_AUTH_ENABLED = import.meta.env.DEV && import.meta.env.VITE_ENABLE_TEST_AUTH === 'true'
 const TEST_AUTH_REFRESH_ENABLED =
   TEST_AUTH_ENABLED && import.meta.env.VITE_ENABLE_TEST_AUTH_REFRESH === 'true'
+const DEV_ACCESS_TOKEN =
+  import.meta.env.DEV && import.meta.env.VITE_ENABLE_DEV_TOKEN_LOGIN === 'true'
+    ? import.meta.env.VITE_DEV_ACCESS_TOKEN
+    : undefined
+const DEV_TOKEN_LOGIN_ENABLED = Boolean(DEV_ACCESS_TOKEN)
 const TEST_USER_ROLE = 'USER'
 
 const testAuthClient = axios.create({
@@ -62,9 +67,29 @@ const refresh = async (): Promise<AuthTokens> => {
   return { accessToken, refreshToken }
 }
 
+const loginWithDevToken = async (): Promise<AuthSession> => {
+  if (!DEV_ACCESS_TOKEN) {
+    throw new Error('Dev token login is disabled.')
+  }
+
+  return {
+    accessToken: DEV_ACCESS_TOKEN,
+    refreshToken: '',
+    authMode: 'dev-token',
+    user: {
+      email: 'dev-token-user@arubi.dev',
+      name: 'Dev Token User',
+      provider: 'test',
+      oauthUser: false,
+    },
+  }
+}
+
 export const testAuthApi = {
   enabled: TEST_AUTH_ENABLED,
   refreshEnabled: TEST_AUTH_REFRESH_ENABLED,
+  devTokenEnabled: DEV_TOKEN_LOGIN_ENABLED,
   login,
+  loginWithDevToken,
   refresh,
 }

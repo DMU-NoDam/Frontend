@@ -36,13 +36,14 @@
 
 @media (max-width: 480px) {
   .app-shell-background {
-    padding: 0;
-    background: var(--app-shell-bg);
+    padding: env(safe-area-inset-top, 0px) 0 0;
+    /* html background-color (set by useThemeColor)이 safe area 뒤를 채움 */
+    background: transparent;
   }
 
   .app-shell-frame {
     width: 100%;
-    height: 100svh;
+    height: calc(100svh - env(safe-area-inset-top, 0px));
     border: 0;
     border-radius: 0;
     box-shadow: none;

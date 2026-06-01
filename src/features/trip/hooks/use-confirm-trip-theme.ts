@@ -14,6 +14,7 @@ export const useConfirmTripTheme = () => {
   return useMutation({
     mutationFn: ({ tripId, theme }: ConfirmThemeVariables) =>
       planApi.confirmTheme(tripId, theme),
+    meta: { globalLoading: true },
     onSuccess: (_data, { tripId }) => {
       queryClient.invalidateQueries({ queryKey: tripKeys.list() })
       queryClient.invalidateQueries({ queryKey: tripKeys.plans(tripId) })

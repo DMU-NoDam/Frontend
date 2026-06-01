@@ -7,6 +7,8 @@ export type PersonType = 'FRIEND' | 'FAMILY' | 'COUPLE' | 'SOLO'
 export type TripSummaryApiItem = {
   id: number
   name: string
+  country?: string | null
+  countryCode?: string | null
   personCount: number
   scheduleType: ScheduleType
   tripThemeType: TripThemeType | null
@@ -73,7 +75,7 @@ export type TripCreateResponse = {
 
 export type TripStatusResponse = {
   message: string
-  body: { isPlanning: boolean }
+  body: { allCompleted: boolean; planning: boolean }
 }
 
 export type PlaceSelection = {

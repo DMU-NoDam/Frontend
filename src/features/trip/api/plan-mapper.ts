@@ -1,7 +1,20 @@
 import type {
   PlacePlan,
   PlanListBody,
+  PlanListResponse,
   PlanThemeCard,
+  RawPlacePlan,
+  RawPlacePlanTimeObj,
+  RawPlanListResponse,
+  RawRecommendedPlaceItem,
+  RawRouteInfo,
+  RawRouteStep,
+  RawTimeObject,
+  RawTransport,
+  RawTransportTimeObj,
+  RecommendedPlaceItem,
+  RouteInfo,
+  RouteStep,
   Transport,
   TripThemeType,
 } from '../types/plan-types'
@@ -44,19 +57,114 @@ const getUniqueDayCount = (plans: PlacePlan[]) =>
   new Set(plans.map((p) => p.date)).size
 
 const getTransports = (plans: PlacePlan[]): Transport[] =>
-  plans.flatMap((p) =>
-    [p.departureTransport, p.arrivalTransport].filter(Boolean) as Transport[],
-  )
+  plans.map((p) => p.fromTransport).filter(Boolean) as Transport[]
 
-const getAverageMoveMinutes = (plans: PlacePlan[]) => {
-  const transports = getTransports(plans)
-  if (transports.length === 0) return 0
-  const totalSeconds = transports.reduce((sum, t) => sum + t.takeTime, 0)
-  return Math.round(totalSeconds / transports.length / 60)
+const getTotalMoveMinutes = (plans: PlacePlan[]) => {
+  const totalSeconds = getTransports(plans).reduce((sum, t) => sum + t.takeTime, 0)
+  return Math.round(totalSeconds / 60)
 }
 
 const getTotalDistanceMeters = (plans: PlacePlan[]) =>
   getTransports(plans).reduce((sum, t) => sum + t.totalDistanceMeters, 0)
+
+// ── Raw API → Domain mapping ──────────────────────────────────
+
+function mapRouteStep(raw: RawRouteStep): RouteStep {
+  return {
+    method: raw.methodType,
+    path: [
+      raw.start.coordinate,
+      ...raw.polygon.map((p) => p.coordinate),
+      raw.end.coordinate,
+    ],
+  }
+}
+
+function mapRouteInfo(raw: RawRouteInfo | null): RouteInfo | null {
+  if (!raw) return null
+  return {
+    totalDistanceMeters: raw.totalDistanceMeters,
+    totalDurationSeconds: raw.totalDurationSeconds,
+    steps: raw.steps.map(mapRouteStep),
+  }
+}
+
+function mapTransport(raw: RawTransport): Transport {
+  return {
+    id: raw.id,
+    startTime: raw.startTime,
+    endTime: raw.endTime,
+    takeTime: raw.takeTime,
+    totalDistanceMeters: raw.totalDistanceMeters,
+    fromPlacePlanId: raw.fromPlacePlanId,
+    toPlacePlanId: raw.toPlacePlanId,
+    transportPlanId: raw.transportPlanId,
+    routeInfo: mapRouteInfo(raw.routeInfo),
+  }
+}
+
+function mapPlacePlan(raw: RawPlacePlan): PlacePlan {
+  return {
+    id: raw.id,
+    date: raw.date,
+    startTime: raw.startTime,
+    endTime: raw.endTime,
+    placeInfo: raw.placeInfo,
+    fromTransport: raw.fromTransport ? mapTransport(raw.fromTransport) : null,
+  }
+}
+
+export function mapPlanListResponse(raw: RawPlanListResponse): PlanListResponse {
+  const body = {} as PlanListBody
+  for (const [theme, plans] of Object.entries(raw.body)) {
+    (body as Record<string, PlacePlan[]>)[theme] = plans.map(mapPlacePlan)
+  }
+  return { message: raw.message, body }
+}
+
+// ── Theme card mapping ────────────────────────────────────────
+
+// ── Edit / Recommend mappers ──────────────────────────────────
+
+export function mapTimeObject(t: RawTimeObject): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(t.hour)}:${pad(t.minute)}:${pad(t.second)}`
+}
+
+function mapTransportTimeObj(raw: RawTransportTimeObj): Transport {
+  return {
+    id: raw.id,
+    startTime: mapTimeObject(raw.startTime),
+    endTime: mapTimeObject(raw.endTime),
+    takeTime: raw.takeTime,
+    totalDistanceMeters: raw.totalDistanceMeters,
+    fromPlacePlanId: raw.fromPlacePlanId,
+    toPlacePlanId: raw.toPlacePlanId,
+    transportPlanId: raw.transportPlanId,
+    routeInfo: mapRouteInfo(raw.routeInfo),
+  }
+}
+
+export function mapReplacedPlacePlan(raw: RawPlacePlanTimeObj): PlacePlan {
+  return {
+    id: raw.id,
+    date: raw.date,
+    startTime: mapTimeObject(raw.startTime),
+    endTime: mapTimeObject(raw.endTime),
+    placeInfo: raw.placeInfo,
+    fromTransport: raw.fromTransport ? mapTransportTimeObj(raw.fromTransport) : null,
+  }
+}
+
+export function mapRecommendedPlaceItems(raw: RawRecommendedPlaceItem[]): RecommendedPlaceItem[] {
+  return raw.map((item) => ({
+    place: item.place,
+    travelDurationSeconds: item.travelDurationSeconds,
+    travelDistanceMeters: item.travelDistanceMeters,
+    startTime: mapTimeObject(item.startTime),
+    endTime: mapTimeObject(item.endTime),
+  }))
+}
 
 export const mapPlanListToThemeCards = (body: PlanListBody): PlanThemeCard[] =>
   THEME_ORDER.map((theme) => {
@@ -73,7 +181,7 @@ export const mapPlanListToThemeCards = (body: PlanListBody): PlanThemeCard[] =>
       dayCount,
       nightCount: Math.max(dayCount - 1, 0),
       scheduleCount: plans.length,
-      averageMoveMinutes: getAverageMoveMinutes(plans),
+      totalMoveMinutes: getTotalMoveMinutes(plans),
       totalDistanceMeters: getTotalDistanceMeters(plans),
       summary: meta.summary,
     }

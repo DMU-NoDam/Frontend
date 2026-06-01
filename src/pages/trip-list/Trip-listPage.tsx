@@ -2,9 +2,11 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { HiPlus } from 'react-icons/hi2'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import { TripCard } from '@/features/trip/components/TripCard'
 import { useTrips } from '@/features/trip/hooks/use-trips'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import './Trip-listPage.css'
 
 type TabType = 'upcoming' | 'past'
@@ -26,18 +28,27 @@ function isUpcoming(endDate: string): boolean {
 }
 
 export function TripListPage() {
+  useThemeColor('#ffffff', '#ffffff')
   const [tab, setTab] = useState<TabType>('upcoming')
   const navigate = useNavigate()
   const { data: trips = [], isLoading, isError } = useTrips()
 
   const filtered = trips.filter((t) =>
-    tab === 'upcoming' ? isUpcoming(t.endDate) : !isUpcoming(t.endDate),
+    !t.isPlanning && (tab === 'upcoming' ? isUpcoming(t.endDate) : !isUpcoming(t.endDate)),
   )
 
   return (
     <main className="trip-list-page">
       <header className="trip-list-page__header">
         <h1 className="trip-list-page__title">나의 여행 일정</h1>
+        <button
+          type="button"
+          className="trip-list-page__create-button"
+          aria-label="새로운 일정 생성"
+          onClick={() => navigate('/trips/create')}
+        >
+          <HiPlus className="trip-list-page__create-icon" aria-hidden="true" />
+        </button>
       </header>
 
       <div className="trip-list-page__tabs" role="tablist">
@@ -91,13 +102,7 @@ export function TripListPage() {
                 <button
                   type="button"
                   className="trip-list-page__card-button"
-                  onClick={() =>
-                    navigate(
-                      trip.isPlanning
-                        ? `/trips/${trip.id}/planning`
-                        : `/trips/${trip.id}/detail`,
-                    )
-                  }
+                  onClick={() => navigate(`/trips/${trip.id}/detail`)}
                 >
                   <TripCard trip={trip} isPast={tab === 'past'} />
                 </button>

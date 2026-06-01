@@ -3,101 +3,41 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { LuArrowLeft, LuSparkles } from 'react-icons/lu'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { useTripPlans } from '@/features/trip/hooks/use-trip-plans'
-import type { PlacePlan, PlaceType, Transport } from '@/features/trip/types/plan-types'
+import { useUpdateTripFixed } from '@/features/trip/hooks/use-update-trip-fixed'
+import { useRecommendPlace } from '@/features/trip/hooks/use-recommend-place'
+import { useReplacePlacePlan } from '@/features/trip/hooks/use-replace-place-plan'
+import { useDeletePlacePlan } from '@/features/trip/hooks/use-delete-place-plan'
+import { TripMapSheet, MapPlaceholder } from '@/features/trip/components/TripMapSheet'
+import { TripRouteMap } from '@/features/trip/components/TripRouteMap'
+import { TripScheduleView } from '@/features/trip/components/TripScheduleView'
+import { PlaceRecommendSheet } from '@/features/trip/components/PlaceRecommendSheet'
+import type { PlacePlan, RecommendedPlaceItem } from '@/features/trip/types/plan-types'
+import type { TripSummary } from '@/features/trip/types/trip-types'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import './TripDetailPage.css'
 
-// ── utils ────────────────────────────────────────────────────
-
-const PLACE_TYPE_LABEL: Record<PlaceType, string> = {
-  SIGHT:      '관광지',
-  RESTAURANT: '음식점',
-  HOTEL:      '숙소',
-  CAFE:       '카페',
-  SHOPPING:   '쇼핑',
-  ACTIVITY:   '액티비티',
-  CULTURE:    '문화·예술',
+function toDateKey(date: string) {
+  return date.slice(0, 10)
 }
 
-function formatDistance(meters: number): string {
-  return meters >= 1000 ? `${(meters / 1000).toFixed(1)}km` : `${meters}m`
+function isDateRangeOverlapping(
+  startA: string,
+  endA: string,
+  startB: string,
+  endB: string,
+) {
+  return toDateKey(startA) <= toDateKey(endB) && toDateKey(startB) <= toDateKey(endA)
 }
-
-function formatDuration(seconds: number): string {
-  const m = Math.round(seconds / 60)
-  if (m < 60) return `${m}분`
-  const h = Math.floor(m / 60)
-  const rem = m % 60
-  return rem === 0 ? `${h}시간` : `${h}시간 ${rem}분`
-}
-
-function getSortedDates(plans: PlacePlan[]): string[] {
-  return [...new Set(plans.map((p) => p.date))].sort()
-}
-
-function groupByDate(plans: PlacePlan[]): Map<string, PlacePlan[]> {
-  const map = new Map<string, PlacePlan[]>()
-  for (const plan of plans) {
-    const arr = map.get(plan.date) ?? []
-    arr.push(plan)
-    map.set(plan.date, arr)
-  }
-  return map
-}
-
-function sortByStartTime(plans: PlacePlan[]): PlacePlan[] {
-  return [...plans].sort((a, b) => a.startTime.localeCompare(b.startTime))
-}
-
-function formatDateLabel(date: string): string {
-  const d = new Date(date + 'T00:00:00')
-  return `${d.getMonth() + 1}월 ${d.getDate()}일`
-}
-
-// ── sub-components ───────────────────────────────────────────
-
-function TransportRow({ transport }: { transport: Transport }) {
-  return (
-    <div className="detail-transport-row" aria-label="이동 정보">
-      <div className="detail-transport-row__line" aria-hidden="true" />
-      <span className="detail-transport-row__info">
-        {formatDuration(transport.takeTime)} · {formatDistance(transport.totalDistanceMeters)}
-      </span>
-    </div>
-  )
-}
-
-function PlaceCard({ plan, index }: { plan: PlacePlan; index: number }) {
-  const { placeInfo } = plan
-  return (
-    <div className="detail-place-card">
-      <div className="detail-place-card__num" aria-hidden="true">
-        {index + 1}
-      </div>
-      <div className="detail-place-card__body">
-        <span className="detail-place-card__name">{placeInfo.name}</span>
-        <span className="detail-place-card__type">
-          {PLACE_TYPE_LABEL[placeInfo.placeType] ?? placeInfo.placeType}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-function MapPlaceholder({ tripName }: { tripName: string }) {
-  return (
-    <div className="detail-map-placeholder" aria-label="지도 영역">
-      <span className="detail-map-placeholder__emoji" aria-hidden="true">🗺️</span>
-      <span className="detail-map-placeholder__label">{tripName}</span>
-    </div>
-  )
-}
-
-// ── main ─────────────────────────────────────────────────────
 
 export function TripDetailPage() {
+  useThemeColor('#e8edf5', '#e8edf5')
   const { tripId } = useParams()
-  const navigate = useNavigate()
-  const [selectedDayIndex, setSelectedDayIndex] = useState(0)
+  const navigate   = useNavigate()
+
+  const updateTripFixedMutation = useUpdateTripFixed()
+  const recommendMutation       = useRecommendPlace()
+  const replaceMutation         = useReplacePlacePlan(tripId)
+  const deleteMutation          = useDeletePlacePlan(tripId)
 
   const { data: trips = [], isLoading: isTripsLoading } = useTrips()
   const trip = trips.find((t) => t.id === tripId)
@@ -111,14 +51,155 @@ export function TripDetailPage() {
     return plans.body[trip.tripThemeType] ?? []
   }, [trip, plans])
 
-  const sortedDates = useMemo(() => getSortedDates(selectedPlans), [selectedPlans])
-  const grouped    = useMemo(() => groupByDate(selectedPlans),     [selectedPlans])
+  const planDates = useMemo(
+    () => [...new Set(selectedPlans.map((p) => p.date))].sort(),
+    [selectedPlans],
+  )
 
-  const plansForDay = useMemo(() => {
-    const date = sortedDates[selectedDayIndex]
-    if (!date) return []
-    return sortByStartTime(grouped.get(date) ?? [])
-  }, [grouped, sortedDates, selectedDayIndex])
+  const [userSelectedDate, setUserSelectedDate]           = useState<string | null>(null)
+  const [focusedPlanId, setFocusedPlanId]                 = useState<number | null>(null)
+  const [focusedTransportId, setFocusedTransportId]       = useState<number | null>(null)
+  const [editMode, setEditMode]                           = useState(false)
+  const [editingPlanId, setEditingPlanId]                 = useState<number | null>(null)
+  const [showRecommendSheet, setShowRecommendSheet]       = useState(false)
+  const [recommendations, setRecommendations]             = useState<RecommendedPlaceItem[]>([])
+  const [selectedRecommendIndex, setSelectedRecommendIndex] = useState(0)
+  const [recommendTarget, setRecommendTarget]             = useState<PlacePlan | null>(null)
+  const [conflictFixedTrips, setConflictFixedTrips]       = useState<TripSummary[]>([])
+  const [conflictError, setConflictError]                 = useState<string | null>(null)
+
+  const selectedDate = useMemo(
+    () =>
+      userSelectedDate && planDates.includes(userSelectedDate)
+        ? userSelectedDate
+        : (planDates[0] ?? null),
+    [userSelectedDate, planDates],
+  )
+
+  const handleToggleFixed = () => {
+    if (!tripId || !trip) return
+    if (trip.fixed) {
+      updateTripFixedMutation.mutate({ tripId, fixed: false })
+      return
+    }
+
+    const overlappingFixedTrips = trips.filter((t) =>
+      t.fixed &&
+      t.id !== trip.id &&
+      isDateRangeOverlapping(trip.startDate, trip.endDate, t.startDate, t.endDate)
+    )
+
+    if (overlappingFixedTrips.length > 0) {
+      setConflictError(null)
+      setConflictFixedTrips(overlappingFixedTrips)
+      return
+    }
+
+    updateTripFixedMutation.mutate({ tripId, fixed: true })
+  }
+
+  const handleCloseConflictModal = () => {
+    if (updateTripFixedMutation.isPending) return
+    setConflictFixedTrips([])
+    setConflictError(null)
+  }
+
+  const handleConfirmConflictFixed = async () => {
+    if (!tripId || conflictFixedTrips.length === 0) return
+
+    setConflictError(null)
+    try {
+      for (const fixedTrip of conflictFixedTrips) {
+        await updateTripFixedMutation.mutateAsync({ tripId: fixedTrip.id, fixed: false })
+      }
+      await updateTripFixedMutation.mutateAsync({ tripId, fixed: true })
+      setConflictFixedTrips([])
+    } catch {
+      setConflictError('일정 확정에 실패했습니다. 다시 시도해 주세요.')
+    }
+  }
+
+  const handleBack = () => {
+    if (trip?.tripThemeType) {
+      navigate('/trips')
+      return
+    }
+    navigate(-1)
+  }
+
+  const handleEditToggle = () => {
+    if (editMode) {
+      setEditMode(false)
+      setEditingPlanId(null)
+      setShowRecommendSheet(false)
+      setRecommendations([])
+      setRecommendTarget(null)
+    } else {
+      setEditMode(true)
+      setFocusedPlanId(null)
+      setFocusedTransportId(null)
+    }
+  }
+
+  const handleEditCancel = () => {
+    setEditMode(false)
+    setEditingPlanId(null)
+    setShowRecommendSheet(false)
+    setRecommendations([])
+    setRecommendTarget(null)
+  }
+
+  const handleEditCardClick = (plan: PlacePlan) => {
+    setEditingPlanId((prev) => (prev === plan.id ? null : plan.id))
+  }
+
+  const handleAIRecommendClick = (plan: PlacePlan) => {
+    setRecommendTarget(plan)
+    recommendMutation.mutate(
+      {
+        placePlanId: plan.id,
+        placeType: plan.placeInfo.placeType,
+        userLat: null,
+        userLon: null,
+        weather: null,
+        time: null,
+      },
+      {
+        onSuccess: (items) => {
+          setRecommendations(items)
+          setSelectedRecommendIndex(0)
+          setShowRecommendSheet(true)
+        },
+      },
+    )
+  }
+
+  const handleDeletePlan = (plan: PlacePlan) => {
+    deleteMutation.mutate(plan.id, {
+      onSuccess: () => {
+        if (editingPlanId === plan.id) setEditingPlanId(null)
+      },
+    })
+  }
+
+  const handleRecommendConfirm = () => {
+    if (!recommendTarget || !recommendations[selectedRecommendIndex]) return
+    replaceMutation.mutate(
+      {
+        oldPlacePlanId: recommendTarget.id,
+        newPlaceId: recommendations[selectedRecommendIndex].place.id,
+      },
+      {
+        onSuccess: () => {
+          setShowRecommendSheet(false)
+          setRecommendations([])
+          setRecommendTarget(null)
+          setEditingPlanId(null)
+          setEditMode(false)
+        },
+      },
+    )
+  }
 
   if (!tripId) {
     return (
@@ -153,79 +234,150 @@ export function TripDetailPage() {
         <button
           type="button"
           className="detail-header__back"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           aria-label="뒤로 가기"
         >
           <LuArrowLeft className="detail-header__back-icon" aria-hidden="true" />
         </button>
         <h1 className="detail-header__title">{trip.name}</h1>
-        <div className="detail-header__spacer" />
+        <button
+          type="button"
+          className={`detail-header__fixed-btn${trip.fixed ? ' detail-header__fixed-btn--active' : ''}`}
+          onClick={handleToggleFixed}
+          disabled={updateTripFixedMutation.isPending}
+        >
+          {trip.fixed ? '확정 취소' : '일정 확정'}
+        </button>
       </header>
 
-      <div className="detail-feed">
-        <div className="detail-map">
-          <MapPlaceholder tripName={trip.name} />
-        </div>
+      <TripMapSheet
+        forceExpanded={editMode}
+        mapContent={
+          selectedPlans.length > 0
+            ? (
+              <TripRouteMap
+                plans={selectedPlans}
+                selectedDate={selectedDate}
+                focusedPlanId={editMode ? editingPlanId : focusedPlanId}
+                onMarkerClick={(planId) => {
+                  if (editMode) {
+                    setEditingPlanId(planId)
+                  } else {
+                    setFocusedPlanId((prev) => (prev === planId ? null : planId))
+                    setFocusedTransportId(null)
+                  }
+                }}
+                countryCode={trip.countryCode ?? undefined}
+                highlightedTransportId={editMode ? null : focusedTransportId}
+              />
+            )
+            : <MapPlaceholder label={trip.name} />
+        }
+        sheetContent={() => {
+          if (!trip.tripThemeType) {
+            return (
+              <div className="detail-sheet__unconfirmed">
+                <LuSparkles className="detail-sheet__unconfirmed-icon" aria-hidden="true" />
+                <p className="detail-sheet__unconfirmed-text">
+                  아직 일정을 선택하지 않았어요.
+                  <br />
+                  AI가 추천하는 일정을 확인해보세요.
+                </p>
+                <button
+                  type="button"
+                  className="detail-cta-btn"
+                  onClick={() => navigate(`/trips/${tripId}/select`)}
+                >
+                  일정 선택하기
+                </button>
+              </div>
+            )
+          }
+          if (isPlansLoading) {
+            return <div className="detail-sheet__status">일정을 불러오는 중...</div>
+          }
+          if (isPlansError) {
+            return (
+              <div className="detail-sheet__status detail-sheet__status--error">
+                일정을 불러오지 못했어요.
+              </div>
+            )
+          }
+          return (
+            <TripScheduleView
+              plans={selectedPlans}
+              selectedDate={selectedDate ?? undefined}
+              onDateChange={(date) => { setUserSelectedDate(date); setFocusedPlanId(null); setFocusedTransportId(null); setEditingPlanId(null) }}
+              onPlaceClick={(plan) => { setFocusedPlanId((prev) => (prev === plan.id ? null : plan.id)); setFocusedTransportId(null) }}
+              focusedPlanId={editMode ? editingPlanId : focusedPlanId}
+              onTransportClick={(id) => setFocusedTransportId((prev) => (prev === id ? null : id))}
+              focusedTransportId={focusedTransportId}
+              editMode={editMode}
+              onEditToggle={handleEditToggle}
+              onEditCancel={handleEditCancel}
+              onEditCardClick={handleEditCardClick}
+              onAIRecommendClick={handleAIRecommendClick}
+              onDeletePlan={handleDeletePlan}
+            />
+          )
+        }}
+      />
 
-        <section className="detail-sheet" aria-label="여행 일정">
-          <div className="detail-sheet__handle" aria-hidden="true" />
+      {showRecommendSheet && recommendTarget && (
+        <PlaceRecommendSheet
+          originalPlanName={recommendTarget.placeInfo.name}
+          recommendations={recommendations}
+          selectedIndex={selectedRecommendIndex}
+          onSelect={setSelectedRecommendIndex}
+          onBack={() => { setShowRecommendSheet(false); setRecommendations([]) }}
+          onConfirm={handleRecommendConfirm}
+          isConfirming={replaceMutation.isPending}
+          countryCode={trip.countryCode ?? undefined}
+        />
+      )}
 
-          {!trip.tripThemeType ? (
-            <div className="detail-sheet__unconfirmed">
-              <LuSparkles className="detail-sheet__unconfirmed-icon" aria-hidden="true" />
-              <p className="detail-sheet__unconfirmed-text">
-                아직 일정을 선택하지 않았어요.
-                <br />
-                AI가 추천하는 일정을 확인해보세요.
-              </p>
+      {conflictFixedTrips.length > 0 && (
+        <>
+          <button
+            type="button"
+            className="detail-fixed-conflict__backdrop"
+            aria-label="일정 확정 팝업 닫기"
+            onClick={handleCloseConflictModal}
+            disabled={updateTripFixedMutation.isPending}
+          />
+          <section
+            className="detail-fixed-conflict"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="detail-fixed-conflict-title"
+          >
+            <p id="detail-fixed-conflict-title" className="detail-fixed-conflict__title">
+              이미 같은 날짜에 확정된 일정이 있습니다
+            </p>
+            {conflictError && (
+              <p className="detail-fixed-conflict__error">{conflictError}</p>
+            )}
+            <div className="detail-fixed-conflict__actions">
               <button
                 type="button"
-                className="detail-cta-btn"
-                onClick={() => navigate(`/trips/${tripId}/select`)}
+                className="detail-fixed-conflict__confirm"
+                onClick={handleConfirmConflictFixed}
+                disabled={updateTripFixedMutation.isPending}
               >
-                일정 선택하기
+                {updateTripFixedMutation.isPending ? '처리 중...' : '이 일정 확정하기'}
+              </button>
+              <button
+                type="button"
+                className="detail-fixed-conflict__cancel"
+                onClick={handleCloseConflictModal}
+                disabled={updateTripFixedMutation.isPending}
+              >
+                취소
               </button>
             </div>
-          ) : isPlansLoading ? (
-            <div className="detail-sheet__status">일정을 불러오는 중...</div>
-          ) : isPlansError ? (
-            <div className="detail-sheet__status detail-sheet__status--error">
-              일정을 불러오지 못했어요.
-            </div>
-          ) : sortedDates.length === 0 ? (
-            <div className="detail-sheet__status">일정이 없습니다.</div>
-          ) : (
-            <>
-              <nav className="detail-day-tabs" role="tablist" aria-label="날짜 선택">
-                {sortedDates.map((date, i) => (
-                  <button
-                    key={date}
-                    role="tab"
-                    type="button"
-                    aria-selected={i === selectedDayIndex}
-                    className={`detail-day-tab${i === selectedDayIndex ? ' detail-day-tab--active' : ''}`}
-                    onClick={() => setSelectedDayIndex(i)}
-                  >
-                    <span className="detail-day-tab__label">Day {i + 1}</span>
-                    <span className="detail-day-tab__date">{formatDateLabel(date)}</span>
-                  </button>
-                ))}
-              </nav>
-
-              <div className="detail-schedule-list">
-                {plansForDay.map((plan, i) => (
-                  <div key={plan.id}>
-                    <PlaceCard plan={plan} index={i} />
-                    {plan.arrivalTransport && (
-                      <TransportRow transport={plan.arrivalTransport} />
-                    )}
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </section>
-      </div>
+          </section>
+        </>
+      )}
     </main>
   )
 }

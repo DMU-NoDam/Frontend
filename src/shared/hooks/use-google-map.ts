@@ -4,16 +4,36 @@ import { waitForGoogleMaps } from '@/shared/lib/google-maps-loader'
 
 export type LatLngLiteral = { lat: number; lng: number }
 
+export type MapPadding = { top: number; right: number; bottom: number; left: number }
+
 export type GoogleMapInstance = {
-  fitBounds(bounds: LatLngBoundsInstance, padding?: number): void
+  fitBounds(bounds: LatLngBoundsInstance, padding?: number | MapPadding): void
   setCenter(latlng: LatLngLiteral): void
   setZoom(zoom: number): void
   panTo(latlng: LatLngLiteral): void
+  getBounds(): LatLngBoundsInstance | null
+  addListener(event: string, handler: () => void): unknown
 }
 
 export type LatLngBoundsInstance = {
   extend(point: LatLngLiteral): void
   isEmpty(): boolean
+  contains(point: LatLngLiteral): boolean
+}
+
+export type PolylineInstance = {
+  setMap(map: GoogleMapInstance | null): void
+  setVisible(visible: boolean): void
+}
+
+export type PolylineOptions = {
+  path: LatLngLiteral[]
+  strokeColor?: string
+  strokeOpacity?: number
+  strokeWeight?: number
+  map?: GoogleMapInstance
+  icons?: unknown[]
+  visible?: boolean
 }
 
 export type InfoWindowInstance = {
@@ -34,8 +54,9 @@ export type MapsLibrary = {
       gestureHandling?: string
     },
   ) => GoogleMapInstance
-  LatLngBounds: new () => LatLngBoundsInstance
+  // LatLngBounds is in the 'core' library, not 'maps'
   InfoWindow: new (opts?: { content?: string }) => InfoWindowInstance
+  Polyline: new (opts: PolylineOptions) => PolylineInstance
 }
 
 const COUNTRY_CENTERS: Record<string, LatLngLiteral> = {
@@ -109,12 +130,13 @@ export function useGoogleMap(
       }
     }
 
+    const mapEl = mapRef.current
     init()
     return () => {
       cancelled = true
       initializedRef.current = false        // allow re-init after Strict Mode cleanup / remount
-      if (mapRef.current) {
-        mapRef.current.innerHTML = ''       // clear partial map DOM so re-init starts clean
+      if (mapEl) {
+        mapEl.innerHTML = ''                // clear partial map DOM so re-init starts clean
       }
     }
   // countryCode intentionally excluded: center is fixed at init, markers drive pan/zoom later

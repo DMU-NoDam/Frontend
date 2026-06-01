@@ -37,12 +37,19 @@ const getTripStatus = async (tripId: string): Promise<TripStatusResponse> => {
     return mockGetTripStatus(tripId)
   }
 
-  const { data } = await apiClient.get<TripStatusResponse>(`/trip/api/${tripId}`)
+  const { data } = await apiClient.get<TripStatusResponse>(`/plan/api/${tripId}/status`)
   return data
+}
+
+const updateTripFixed = async (tripId: string, fixed: boolean): Promise<void> => {
+  await apiClient.patch(`/trip/api/${tripId}/fixed`, fixed, {
+    headers: { 'Content-Type': 'application/json' },
+  })
 }
 
 export const tripApi = {
   getTrips,
   createTrip,
   getTripStatus,
+  updateTripFixed,
 }

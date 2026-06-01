@@ -1,5 +1,7 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
 :root {
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Pretendard', system-ui, 'Segoe UI', Roboto, sans-serif;
   color: #111827;
   background: #f3f4f6;
   font-synthesis: none;

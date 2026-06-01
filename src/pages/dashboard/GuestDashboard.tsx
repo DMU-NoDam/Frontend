@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { LuSparkles } from 'react-icons/lu'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import { TravelHero } from './TravelHero'
 import './DashboardPage.css'
 
 export function GuestDashboard() {
+  useThemeColor('#ffb3cc', '#ffffff')
   const navigate = useNavigate()
 
   return (
@@ -21,7 +23,7 @@ export function GuestDashboard() {
         <section
           className="home-trips"
           aria-label="시작하기"
-          style={{ height: '60%' }}
+          style={{ height: '40%' }}
         >
           <div className="home-trips__handle-btn" style={{ cursor: 'default', pointerEvents: 'none' }} aria-hidden="true">
             <div className="home-trips__handle" />
@@ -37,7 +39,7 @@ export function GuestDashboard() {
               onClick={() => navigate('/trips/create')}
             >
               <LuSparkles className="home-trips__make-icon" aria-hidden="true" />
-              여행 만들기
+              나만의 일정 만들기
             </button>
             <button
               type="button"

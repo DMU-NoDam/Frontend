@@ -7,6 +7,7 @@ import { mapPlanListToThemeCards } from '@/features/trip/api/plan-mapper'
 import { useConfirmTripTheme } from '@/features/trip/hooks/use-confirm-trip-theme'
 import { useTripPlans } from '@/features/trip/hooks/use-trip-plans'
 import type { PlanThemeCard } from '@/features/trip/types/plan-types'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import './TripSelectPage.css'
 
 const slideVariants = {
@@ -69,7 +70,7 @@ function ThemeCard({
         <div className="stats-box">
           <StatItem label="일정" value={`${card.scheduleCount}개`} />
           <StatItem label="여행" value={`${card.dayCount}일`} />
-          <StatItem label="평균 이동" value={`${card.averageMoveMinutes}분`} />
+          <StatItem label="총 이동 시간" value={`${card.totalMoveMinutes}분`} />
           <StatItem label="총 이동" value={`${distanceKm}km`} />
         </div>
 
@@ -93,6 +94,7 @@ function ThemeCard({
 }
 
 export function TripSelectPage() {
+  useThemeColor('#f6f7fb', '#f6f7fb')
   const { tripId } = useParams()
   const navigate = useNavigate()
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -131,9 +133,9 @@ export function TripSelectPage() {
     mutate(
       { tripId, theme: selectedCard.theme },
       {
-        onSuccess: ({ body }) => {
-          navigate(`/trips/${body.id}/detail`, {
-            state: { tripName: body.name },
+        onSuccess: () => {
+          navigate(`/trips/${tripId}/detail`, {
+            replace: true,
           })
         },
       },

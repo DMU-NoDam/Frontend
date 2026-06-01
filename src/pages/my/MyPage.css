@@ -1,0 +1,583 @@
+/* ============================================================
+   MyPage
+   ============================================================ */
+
+.my-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f7f7f8;
+  overflow: hidden;
+}
+
+.my-page__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.my-page__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Profile ──────────────────────────────────────────────── */
+
+.my-profile {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 36px 24px 28px;
+}
+
+.my-profile__info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.my-profile__name {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1f2024;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.my-profile__email-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.my-profile__provider-img {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.my-profile__email {
+  font-size: 13px;
+  font-weight: 400;
+  color: #71727a;
+}
+
+.my-profile__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #e8e9f1;
+  border: none;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.my-profile__avatar-icon {
+  width: 24px;
+  height: 24px;
+  color: #9b9ba5;
+}
+
+/* ── Stats card ───────────────────────────────────────────── */
+
+.my-stats {
+  margin: 0 16px 8px;
+  background: #ffffff;
+  border: 1px solid #f3f4f6;
+  border-radius: 20px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.my-stats__row {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.my-stats__card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+.my-stats__card--past {
+  background: #f3f4f6;
+}
+
+.my-stats__card--upcoming {
+  background: #f3f4f6;
+}
+
+.my-stats__card-value {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1f2024;
+  line-height: 1;
+}
+
+.my-stats__card-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #9b9ba5;
+}
+
+/* ── Passport card (cover) ────────────────────────────────── */
+
+.my-passport {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 20px;
+  padding: 20px 20px;
+  background: linear-gradient(135deg, #1b3a5c 0%, #0f2440 100%);
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 4px 16px rgba(15, 36, 64, 0.3);
+}
+
+.my-passport__left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.my-passport__country {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: #c9a84c;
+  margin: 0;
+}
+
+.my-passport__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.my-passport__sub {
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.55);
+  margin: 0;
+}
+
+.my-passport__emblem {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.my-passport__book {
+  font-size: 40px;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+}
+
+/* ── Passport backdrop ────────────────────────────────────── */
+
+.passport-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 290;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+/* ── Passport book (floating card) ───────────────────────── */
+
+.passport-book {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  margin: auto;
+  width: calc(100% - 8px);
+  max-width: min(480px, var(--app-shell-width, 393px));
+  height: fit-content;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 16px 56px rgba(0, 0, 0, 0.5);
+}
+
+/* 표지 상단 띠 */
+.passport-book__header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 14px 20px;
+  background: linear-gradient(135deg, #1b3a5c 0%, #0f2440 100%);
+}
+
+.passport-book__country {
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #c9a84c;
+  margin: 0 0 3px;
+}
+
+.passport-book__title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.passport-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  border: none;
+  color: #ffffff;
+  font-size: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.passport-close:hover { background: rgba(255, 255, 255, 0.28); }
+
+/* 펼친 두 페이지 */
+.passport-spread {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  width: 100%;
+  min-height: min(380px, 44vh);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.passport-page {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 12px 6px;
+  gap: 8px;
+  /* 여권 속지 가로선 패턴 */
+  background-image: repeating-linear-gradient(
+    0deg, transparent, transparent 23px,
+    rgba(27, 58, 92, 0.05) 24px
+  );
+}
+
+.passport-page--left  { background-color: #f2ece0; }
+.passport-page--right { background-color: #f5efe4; }
+
+/* 중철 선 */
+.passport-spine {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  transform: translateX(-50%);
+  background: linear-gradient(
+    to right,
+    rgba(0,0,0,0.12),
+    rgba(0,0,0,0.04),
+    rgba(0,0,0,0.12)
+  );
+  box-shadow: 0 0 6px rgba(0,0,0,0.1);
+}
+
+/* ── Stamp ────────────────────────────────────────────────── */
+
+.passport-stamp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+}
+
+.passport-stamp__img {
+  height: min(150px, 16vh);
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  filter: grayscale(1) opacity(0.25);
+  transition: filter 0.3s ease;
+}
+
+.passport-stamp--earned .passport-stamp__img {
+  filter: grayscale(0) opacity(1);
+}
+
+/* ── Navigation ───────────────────────────────────────────── */
+
+.passport-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 12px 16px;
+  background: #e8e0d0;
+  border-top: 1px solid #d4cbba;
+}
+
+.passport-nav__arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1px solid #cdc4b2;
+  color: #4a2f12;
+  font-size: 15px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.passport-nav__arrow:disabled { opacity: 0.28; cursor: default; }
+
+.passport-nav__dots {
+  display: flex;
+  flex-direction: row;
+  gap: 7px;
+}
+
+.passport-nav__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #c8bfaa;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.passport-nav__dot--active {
+  background: #4a2f12;
+  transform: scale(1.35);
+}
+
+@media (max-width: 480px) {
+  .passport-book {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 14px;
+  }
+}
+
+/* ── Menu ─────────────────────────────────────────────────── */
+
+.my-menu {
+  display: flex;
+  flex-direction: column;
+  margin: 8px 0 0;
+}
+
+.my-menu__item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 20px 24px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+}
+
+.my-menu__item:first-child {
+  border-top: 1px solid #f3f4f6;
+}
+
+.my-menu__item:hover {
+  background: #fafafa;
+}
+
+.my-menu__item:active {
+  background: #f3f4f6;
+}
+
+.my-menu__icon {
+  width: 20px;
+  height: 20px;
+  color: #9b9ba5;
+  flex-shrink: 0;
+}
+
+.my-menu__label {
+  flex: 1;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2024;
+}
+
+.my-menu__arrow {
+  width: 16px;
+  height: 16px;
+  color: #c5c6cc;
+  flex-shrink: 0;
+}
+
+/* ── Spacer + Logout ──────────────────────────────────────── */
+
+.my-spacer {
+  flex: 1;
+  min-height: 24px;
+}
+
+
+.my-bottom-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 12px 24px 32px;
+}
+
+.my-logout {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #c5c6cc;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.my-logout:hover {
+  color: #9b9ba5;
+}
+
+.my-withdraw {
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #e0e0e0;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.my-withdraw:hover {
+  color: #ef5350;
+}
+
+/* ── Withdraw modal ───────────────────────────────────────── */
+
+.withdraw-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 310;
+  margin: auto;
+  width: calc(100% - 48px);
+  max-width: 340px;
+  height: fit-content;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 28px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+}
+
+.withdraw-modal__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2024;
+  margin: 0;
+}
+
+.withdraw-modal__desc {
+  font-size: 13px;
+  font-weight: 400;
+  color: #71727a;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.withdraw-modal__actions {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.withdraw-modal__cancel {
+  flex: 1;
+  padding: 13px 0;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2024;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.withdraw-modal__cancel:hover {
+  background: #e8e9f1;
+}
+
+.withdraw-modal__cancel:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.withdraw-modal__confirm {
+  flex: 1;
+  padding: 13px 0;
+  background: #ef5350;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.withdraw-modal__confirm:hover {
+  background: #e53935;
+}
+
+.withdraw-modal__confirm:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

@@ -11,6 +11,7 @@ import { testAuthApi } from '@/features/auth/api/test-auth-api'
 import { useLogin } from '@/features/auth/hooks/use-login'
 import { OAUTH_PROVIDERS } from '@/features/auth/types/auth-types'
 import type { OAuthProvider } from '@/features/auth/types/auth-types'
+import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import './LoginPage.css'
 
 const providerLabels: Record<OAuthProvider, string> = {
@@ -26,6 +27,7 @@ const providerIcons: Record<OAuthProvider, ReactNode> = {
 }
 
 export function LoginPage() {
+  useThemeColor('#ffffff', '#ffffff')
   const authMode = useAuthStore((state) => state.authMode)
   const userId = useAuthStore((state) => state.user?.id)
   const setTokens = useAuthStore((state) => state.setTokens)
@@ -38,6 +40,13 @@ export function LoginPage() {
     mutationFn: testAuthApi.login,
   })
   const {
+    mutate: loginWithDevToken,
+    isPending: isDevTokenLoginPending,
+    isError: isDevTokenLoginError,
+  } = useLogin({
+    mutationFn: testAuthApi.loginWithDevToken,
+  })
+  const {
     mutate: refreshTestUser,
     isPending: isTestRefreshPending,
     isError: isTestRefreshError,
@@ -48,7 +57,8 @@ export function LoginPage() {
   })
   const canRefreshTestUser =
     testAuthApi.refreshEnabled && authMode === 'test' && userId !== undefined
-  const isLoginPending = isPending || isTestLoginPending || isTestRefreshPending
+  const isLoginPending =
+    isPending || isTestLoginPending || isDevTokenLoginPending || isTestRefreshPending
 
   const handleOAuthLogin = (provider: OAuthProvider) => {
     sessionStorage.setItem('oauth_provider', provider)
@@ -107,6 +117,20 @@ export function LoginPage() {
               </button>
             )}
 
+            {testAuthApi.devTokenEnabled && (
+              <button
+                type="button"
+                className="login-provider-button login-provider-button--test"
+                onClick={() => loginWithDevToken()}
+                disabled={isLoginPending}
+              >
+                <span className="login-provider-icon" aria-hidden="true">
+                  DEV
+                </span>
+                <span>Dev token login</span>
+              </button>
+            )}
+
             {canRefreshTestUser && (
               <button
                 type="button"
@@ -122,7 +146,7 @@ export function LoginPage() {
             )}
           </div>
 
-          {(isError || isTestLoginError || isTestRefreshError) && (
+          {(isError || isTestLoginError || isDevTokenLoginError || isTestRefreshError) && (
             <p className="login-message login-message--error">
               {'\uB85C\uADF8\uC778\uC5D0 \uC2E4\uD328\uD588\uC2B5\uB2C8\uB2E4. \uB2E4\uC2DC \uC2DC\uB3C4\uD574 \uC8FC\uC138\uC694.'}
             </p>

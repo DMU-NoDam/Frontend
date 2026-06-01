@@ -1,0 +1,116 @@
+/* ============================================================
+   ProfileEditSheet
+   ============================================================ */
+
+.pes-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 290;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.pes-sheet {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 300;
+  width: min(calc(100% - 48px), var(--app-shell-width, 345px));
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 0 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+
+.pes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 16px;
+}
+
+.pes-header__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1f2024;
+}
+
+.pes-header__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f3f4f6;
+  border: none;
+  color: #4a4b57;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.pes-header__close:hover {
+  background: #e8e9f1;
+}
+
+/* ── Field ────────────────────────────────────────────────── */
+
+.pes-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.pes-field__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #71727a;
+}
+
+.pes-field__input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1.5px solid #e8e9f1;
+  border-radius: 12px;
+  font-size: 15px;
+  color: #1f2024;
+  outline: none;
+  box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.pes-field__input:focus {
+  border-color: #e8e9f1;
+  outline: none;
+}
+
+/* ── Save button ──────────────────────────────────────────── */
+
+.pes-save-btn {
+  width: 100%;
+  padding: 16px;
+  background: #1f2024;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.pes-save-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pes-save-btn:not(:disabled):hover {
+  opacity: 0.85;
+}

@@ -3,9 +3,21 @@
   height: 100%;
   position: relative;
   overflow: hidden;
+  user-select: none;
+  caret-color: transparent;
+}
+
+.travel-hero * {
+  caret-color: transparent;
 }
 
 /* 루트 SVG — 전체 영역을 덮는 절대 레이어 */
+@media (min-width: 300px) {
+  .travel-hero {
+    top: 32px;
+  }
+}
+
 .travel-hero__svg {
   position: absolute;
   inset: 0;

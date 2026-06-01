@@ -2,7 +2,7 @@ export const OAUTH_PROVIDERS = ['google', 'kakao', 'naver'] as const
 
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number]
 export type AuthProvider = OAuthProvider | 'test'
-export type AuthMode = 'oauth' | 'test'
+export type AuthMode = 'oauth' | 'test' | 'dev-token'
 
 export type AuthUser = {
   id?: number
