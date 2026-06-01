@@ -4,6 +4,7 @@ import { LuArrowLeft, LuSparkles } from 'react-icons/lu'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { useTripPlans } from '@/features/trip/hooks/use-trip-plans'
 import { useUpdateTripFixed } from '@/features/trip/hooks/use-update-trip-fixed'
+import { useUpdateTrip } from '@/features/trip/hooks/use-update-trip'
 import { useRecommendPlace } from '@/features/trip/hooks/use-recommend-place'
 import { useReplacePlacePlan } from '@/features/trip/hooks/use-replace-place-plan'
 import { useDeletePlacePlan } from '@/features/trip/hooks/use-delete-place-plan'
@@ -35,6 +36,7 @@ export function TripDetailPage() {
   const navigate   = useNavigate()
 
   const updateTripFixedMutation = useUpdateTripFixed()
+  const updateTripMutation      = useUpdateTrip()
   const recommendMutation       = useRecommendPlace()
   const replaceMutation         = useReplacePlacePlan(tripId)
   const deleteMutation          = useDeletePlacePlan(tripId)
@@ -56,10 +58,26 @@ export function TripDetailPage() {
     [selectedPlans],
   )
 
+  const [editMode, setEditMode]                           = useState(false)
+  const [nameInput, setNameInput]                         = useState(trip?.name ?? '')
+  const [personCountInput, setPersonCountInput]           = useState(String(trip?.personCount ?? ''))
+  const [headerError, setHeaderError]                     = useState<string | null>(null)
+
+  // Sync inputs when server data changes — React "storing previous renders" pattern, only outside edit mode
+  const [prevServerName, setPrevServerName]   = useState(trip?.name)
+  const [prevServerCount, setPrevServerCount] = useState(trip?.personCount)
+  if (!editMode && trip?.name !== prevServerName) {
+    setPrevServerName(trip?.name)
+    setNameInput(trip?.name ?? '')
+  }
+  if (!editMode && trip?.personCount !== prevServerCount) {
+    setPrevServerCount(trip?.personCount)
+    setPersonCountInput(String(trip?.personCount ?? ''))
+  }
+
   const [userSelectedDate, setUserSelectedDate]           = useState<string | null>(null)
   const [focusedPlanId, setFocusedPlanId]                 = useState<number | null>(null)
   const [focusedTransportId, setFocusedTransportId]       = useState<number | null>(null)
-  const [editMode, setEditMode]                           = useState(false)
   const [editingPlanId, setEditingPlanId]                 = useState<number | null>(null)
   const [showRecommendSheet, setShowRecommendSheet]       = useState(false)
   const [recommendations, setRecommendations]             = useState<RecommendedPlaceItem[]>([])
@@ -119,6 +137,38 @@ export function TripDetailPage() {
     }
   }
 
+  const handleSaveTripInfo = () => {
+    if (!tripId || !trip || updateTripMutation.isPending) return
+
+    const trimmedName = nameInput.trim()
+    const parsedCount = parseInt(personCountInput, 10)
+
+    const nameChanged = trimmedName !== '' && trimmedName !== trip.name
+    const countChanged =
+      !Number.isNaN(parsedCount) &&
+      parsedCount >= 1 &&
+      parsedCount <= 6 &&
+      parsedCount !== trip.personCount
+
+    if (!nameChanged && !countChanged) return
+
+    updateTripMutation.mutate(
+      {
+        tripId,
+        request: {
+          name: nameChanged ? trimmedName : null,
+          personCount: countChanged ? parsedCount : null,
+        },
+      },
+      {
+        onError: () => {
+          setHeaderError('저장에 실패했습니다.')
+          setTimeout(() => setHeaderError(null), 3000)
+        },
+      },
+    )
+  }
+
   const handleBack = () => {
     if (trip?.tripThemeType) {
       navigate('/trips')
@@ -129,12 +179,18 @@ export function TripDetailPage() {
 
   const handleEditToggle = () => {
     if (editMode) {
+      // 저장 버튼: trip info 저장 후 편집 모드 종료
+      handleSaveTripInfo()
       setEditMode(false)
       setEditingPlanId(null)
       setShowRecommendSheet(false)
       setRecommendations([])
       setRecommendTarget(null)
     } else {
+      // 편집 버튼: 현재 trip 값으로 input 초기화 후 편집 모드 진입
+      setNameInput(trip?.name ?? '')
+      setPersonCountInput(String(trip?.personCount ?? ''))
+      setHeaderError(null)
       setEditMode(true)
       setFocusedPlanId(null)
       setFocusedTransportId(null)
@@ -142,6 +198,10 @@ export function TripDetailPage() {
   }
 
   const handleEditCancel = () => {
+    // 취소: input 원복 후 편집 모드 종료
+    setNameInput(trip?.name ?? '')
+    setPersonCountInput(String(trip?.personCount ?? ''))
+    setHeaderError(null)
     setEditMode(false)
     setEditingPlanId(null)
     setShowRecommendSheet(false)
@@ -239,7 +299,40 @@ export function TripDetailPage() {
         >
           <LuArrowLeft className="detail-header__back-icon" aria-hidden="true" />
         </button>
-        <h1 className="detail-header__title">{trip.name}</h1>
+
+        {editMode ? (
+          <div className="detail-header__fields">
+            <input
+              className="detail-header__name-input"
+              type="text"
+              aria-label="여행 제목"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              disabled={updateTripMutation.isPending}
+              maxLength={50}
+            />
+            {headerError && (
+              <span className="detail-header__error" role="alert">{headerError}</span>
+            )}
+          </div>
+        ) : (
+          <span className="detail-header__title">{trip.name}</span>
+        )}
+        {editMode && ( 
+          <div className="detail-header__person-wrap">
+            <input
+              className="detail-header__person-input"
+              type="number"
+              aria-label="인원수"
+              value={personCountInput}
+              min={1}
+              max={6}
+              onChange={(e) => setPersonCountInput(e.target.value)}
+              disabled={updateTripMutation.isPending}
+            />
+            <span className="detail-header__person-unit">명</span>
+          </div>
+        )}
         <button
           type="button"
           className={`detail-header__fixed-btn${trip.fixed ? ' detail-header__fixed-btn--active' : ''}`}
