@@ -8,6 +8,7 @@ import type {
   TripListResponse,
   TripSummary,
   TripStatusResponse,
+  TripUpdateRequest,
 } from '../types/trip-types'
 
 const useMockTrips = import.meta.env.VITE_USE_MOCK_TRIPS !== 'false'
@@ -47,9 +48,14 @@ const updateTripFixed = async (tripId: string, fixed: boolean): Promise<void> =>
   })
 }
 
+const updateTrip = async (tripId: string, request: TripUpdateRequest): Promise<void> => {
+  await apiClient.put(`/trip/api/${tripId}`, request)
+}
+
 export const tripApi = {
   getTrips,
   createTrip,
   getTripStatus,
   updateTripFixed,
+  updateTrip,
 }
