@@ -87,6 +87,11 @@ export type PlaceSelection = {
   }
 }
 
+export type TripUpdateRequest = {
+  name: string | null
+  personCount: number | null
+}
+
 export type TripCreateFormValues = {
   uuid: string
   country: string
