@@ -7,7 +7,7 @@ export function useDeletePlacePlan(tripId: string | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (placePlanId: number) => planApi.deletePlacePlan(placePlanId),
-    onSuccess: (_: void, placePlanId: number) => {
+    onSuccess: async (_: void, placePlanId: number) => {
       if (!tripId) return
       queryClient.setQueryData<PlanListResponse>(
         tripKeys.plans(tripId),
@@ -20,6 +20,7 @@ export function useDeletePlacePlan(tripId: string | undefined) {
           return { ...old, body: newBody }
         },
       )
+      await queryClient.invalidateQueries({ queryKey: tripKeys.plans(tripId) })
     },
   })
 }
