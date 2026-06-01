@@ -87,6 +87,14 @@ export function TripDetailPage() {
     }
   }
 
+  const handleEditCancel = () => {
+    setEditMode(false)
+    setEditingPlanId(null)
+    setShowRecommendSheet(false)
+    setRecommendations([])
+    setRecommendTarget(null)
+  }
+
   const handleEditCardClick = (plan: PlacePlan) => {
     setEditingPlanId((prev) => (prev === plan.id ? null : plan.id))
   }
@@ -201,7 +209,7 @@ export function TripDetailPage() {
                   if (editMode) {
                     setEditingPlanId(planId)
                   } else {
-                    setFocusedPlanId(planId)
+                    setFocusedPlanId((prev) => (prev === planId ? null : planId))
                     setFocusedTransportId(null)
                   }
                 }}
@@ -246,12 +254,13 @@ export function TripDetailPage() {
               plans={selectedPlans}
               selectedDate={selectedDate ?? undefined}
               onDateChange={(date) => { setUserSelectedDate(date); setFocusedPlanId(null); setFocusedTransportId(null); setEditingPlanId(null) }}
-              onPlaceClick={(plan) => { setFocusedPlanId(plan.id); setFocusedTransportId(null) }}
+              onPlaceClick={(plan) => { setFocusedPlanId((prev) => (prev === plan.id ? null : plan.id)); setFocusedTransportId(null) }}
               focusedPlanId={editMode ? editingPlanId : focusedPlanId}
               onTransportClick={(id) => setFocusedTransportId((prev) => (prev === id ? null : id))}
               focusedTransportId={focusedTransportId}
               editMode={editMode}
               onEditToggle={handleEditToggle}
+              onEditCancel={handleEditCancel}
               onEditCardClick={handleEditCardClick}
               onAIRecommendClick={handleAIRecommendClick}
               onDeletePlan={handleDeletePlan}

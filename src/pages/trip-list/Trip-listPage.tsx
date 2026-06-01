@@ -34,7 +34,7 @@ export function TripListPage() {
   const { data: trips = [], isLoading, isError } = useTrips()
 
   const filtered = trips.filter((t) =>
-    tab === 'upcoming' ? isUpcoming(t.endDate) : !isUpcoming(t.endDate),
+    !t.isPlanning && (tab === 'upcoming' ? isUpcoming(t.endDate) : !isUpcoming(t.endDate)),
   )
 
   return (
@@ -102,13 +102,7 @@ export function TripListPage() {
                 <button
                   type="button"
                   className="trip-list-page__card-button"
-                  onClick={() =>
-                    navigate(
-                      trip.isPlanning
-                        ? `/trips/${trip.id}/planning`
-                        : `/trips/${trip.id}/detail`,
-                    )
-                  }
+                  onClick={() => navigate(`/trips/${trip.id}/detail`)}
                 >
                   <TripCard trip={trip} isPast={tab === 'past'} />
                 </button>

@@ -289,7 +289,7 @@ export function UserDashboard() {
                   plans={fixedPlans}
                   selectedDate={selectedDate}
                   focusedPlanId={focusedPlanId}
-                  onMarkerClick={(planId) => { setFocusedPlanId(planId); setFocusedTransportId(null) }}
+                  onMarkerClick={(planId) => { setFocusedPlanId((prev) => (prev === planId ? null : planId)); setFocusedTransportId(null) }}
                   currentLocation={currentLocation}
                   highlightedTransportId={focusedTransportId}
                 />
@@ -312,7 +312,7 @@ export function UserDashboard() {
               isError={isPlansError}
               selectedDate={selectedDate ?? undefined}
               onDateChange={(date) => { setUserSelectedDate(date); setFocusedPlanId(null); setFocusedTransportId(null) }}
-              onPlaceClick={(plan) => { setFocusedPlanId(plan.id); setFocusedTransportId(null) }}
+              onPlaceClick={(plan) => { setFocusedPlanId((prev) => (prev === plan.id ? null : plan.id)); setFocusedTransportId(null) }}
               focusedPlanId={focusedPlanId}
               onTransportClick={(id) => setFocusedTransportId((prev) => (prev === id ? null : id))}
               focusedTransportId={focusedTransportId}
