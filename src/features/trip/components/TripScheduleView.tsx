@@ -130,7 +130,7 @@ function EditActions({
         className="trip-schedule-view__ai-btn"
         onClick={onAIRecommend}
       >
-        <LuSparkles size={13} aria-hidden="true" />
+        <LuSparkles size={20} aria-hidden="true" />
         AI 추천 장소 변경
       </button>
       <button
@@ -139,7 +139,7 @@ function EditActions({
         onClick={onDelete}
         aria-label="일정 삭제"
       >
-        <LuTrash2 size={15} />
+        <LuTrash2 size={14} />
       </button>
     </div>
   )
@@ -284,40 +284,53 @@ export function TripScheduleView({
             )}
           </header>
         )}
-        {plansForDay.map((plan, i) => (
-          <div
-            key={plan.id}
-            className={`trip-schedule-view__item${editMode || !plan.fromTransport ? ' trip-schedule-view__item--no-transport' : ''}`}
-            ref={(el) => {
-              if (el) itemRefsMap.current.set(plan.id, el)
-              else itemRefsMap.current.delete(plan.id)
-            }}
-          >
-            <PlaceCard
-              plan={plan}
-              index={i}
-              focused={plan.id === focusedPlanId}
-              onClick={
-                editMode
-                  ? () => onEditCardClick?.(plan)
-                  : (onPlaceClick ? () => onPlaceClick(plan) : undefined)
-              }
-            />
-            {editMode && plan.id === focusedPlanId && onAIRecommendClick && onDeletePlan && (
-              <EditActions
-                onAIRecommend={() => onAIRecommendClick(plan)}
-                onDelete={() => onDeletePlan(plan)}
-              />
-            )}
-            {!editMode && plan.fromTransport && (
-              <TransportRow
-                transport={plan.fromTransport}
-                focused={plan.fromTransport.id === focusedTransportId}
-                onClick={onTransportClick ? () => onTransportClick(plan.fromTransport!.id) : undefined}
-              />
-            )}
-          </div>
-        ))}
+        {plansForDay.map((plan, i) => {
+          const isFocusedPlan = plan.id === focusedPlanId
+          const showEditActions = editMode && isFocusedPlan && onAIRecommendClick && onDeletePlan
+
+          return (
+            <div
+              key={plan.id}
+              className={`trip-schedule-view__item${editMode || !plan.fromTransport ? ' trip-schedule-view__item--no-transport' : ''}`}
+              ref={(el) => {
+                if (el) itemRefsMap.current.set(plan.id, el)
+                else itemRefsMap.current.delete(plan.id)
+              }}
+            >
+              {showEditActions ? (
+                <div className="trip-schedule-view__edit-card">
+                  <PlaceCard
+                    plan={plan}
+                    index={i}
+                    onClick={() => onEditCardClick?.(plan)}
+                  />
+                  <EditActions
+                    onAIRecommend={() => onAIRecommendClick(plan)}
+                    onDelete={() => onDeletePlan(plan)}
+                  />
+                </div>
+              ) : (
+                <PlaceCard
+                  plan={plan}
+                  index={i}
+                  focused={isFocusedPlan}
+                  onClick={
+                    editMode
+                      ? () => onEditCardClick?.(plan)
+                      : (onPlaceClick ? () => onPlaceClick(plan) : undefined)
+                  }
+                />
+              )}
+              {!editMode && plan.fromTransport && (
+                <TransportRow
+                  transport={plan.fromTransport}
+                  focused={plan.fromTransport.id === focusedTransportId}
+                  onClick={onTransportClick ? () => onTransportClick(plan.fromTransport!.id) : undefined}
+                />
+              )}
+            </div>
+          )
+        })}
       </div>
     </>
   )
