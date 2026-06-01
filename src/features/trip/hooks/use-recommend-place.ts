@@ -5,5 +5,6 @@ import type { RecommendPlaceRequest } from '../types/plan-types'
 export function useRecommendPlace() {
   return useMutation({
     mutationFn: (req: RecommendPlaceRequest) => planApi.recommendPlace(req),
+    meta: { globalLoading: true },
   })
 }

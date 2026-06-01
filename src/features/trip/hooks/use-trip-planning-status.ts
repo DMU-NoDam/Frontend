@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { tripApi } from '../api/trip-api'
 
 const POLLING_INTERVAL_MS = 2000
-const POLLING_TIMEOUT_MS = 3 * 60 * 1000
+const POLLING_TIMEOUT_MS = 10 * 60 * 1000
 
 export type PlanningStatus = 'pending' | 'done' | 'failed' | 'timeout'
 

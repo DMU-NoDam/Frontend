@@ -7,6 +7,7 @@ export function useReplacePlacePlan(tripId: string | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (req: ReplacePlacePlanRequest) => planApi.replacePlacePlan(req),
+    meta: { globalLoading: true },
     onSuccess: (updatedPlan: PlacePlan, req: ReplacePlacePlanRequest) => {
       if (!tripId) return
       queryClient.setQueryData<PlanListResponse>(
