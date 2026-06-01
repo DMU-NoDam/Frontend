@@ -56,12 +56,14 @@ type PolylineGroup = {
 
 // Padding (px) when fitting bounds to a single transport segment — adjust to shift the focus
 const SEGMENT_FIT_PADDING = { top: 80, right: 60, bottom: 80, left: 60 }
+const ROUTE_BORDER_COLOR = '#3f3f46'
+const ROUTE_BORDER_EXTRA_WEIGHT = 3
 
 const ROUTE_STYLE: Record<string, Pick<PolylineOptions, 'strokeColor' | 'strokeOpacity' | 'strokeWeight'>> = {
-  WALK:  { strokeColor: '#ff5f9a', strokeWeight: 3, strokeOpacity: 0.85 },
-  TRAIN: { strokeColor: '#ff5f9a', strokeWeight: 3, strokeOpacity: 0.85 },
+  WALK:  { strokeColor: '#ff5f9a', strokeWeight: 4, strokeOpacity: 0.85 },
+  TRAIN: { strokeColor: '#ff5f9a', strokeWeight: 4, strokeOpacity: 0.85 },
 }
-const DEFAULT_ROUTE_STYLE = { strokeColor: '#ff5f9a', strokeWeight: 3, strokeOpacity: 0.85 }
+const DEFAULT_ROUTE_STYLE = { strokeColor: '#ff5f9a', strokeWeight: 4, strokeOpacity: 0.85 }
 
 function routeStyle(method: string): Pick<PolylineOptions, 'strokeColor' | 'strokeOpacity' | 'strokeWeight'> {
   return ROUTE_STYLE[method] ?? DEFAULT_ROUTE_STYLE
@@ -241,12 +243,22 @@ export function TripRouteMap({
 
           const group: PolylineGroup = { transportId: fromTransport.id, polylines: [] }
           for (const step of fromTransport.routeInfo.steps) {
+            const style = routeStyle(step.method)
+            const border = new mapsLib.Polyline({
+              path:          step.path,
+              map:           mapInstance,
+              visible:       false,
+              strokeColor:   ROUTE_BORDER_COLOR,
+              strokeOpacity: 0.75,
+              strokeWeight:  (style.strokeWeight ?? 4) + ROUTE_BORDER_EXTRA_WEIGHT,
+            })
             const poly = new mapsLib.Polyline({
               path:    step.path,
               map:     mapInstance,
               visible: false,
-              ...routeStyle(step.method),
+              ...style,
             })
+            group.polylines.push(border)
             group.polylines.push(poly)
           }
           polylineGroupsRef.current.push(group)
