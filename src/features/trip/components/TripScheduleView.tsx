@@ -157,6 +157,7 @@ export type TripScheduleViewProps = {
   focusedTransportId?: number | null
   editMode?: boolean
   onEditToggle?: () => void
+  onEditCancel?: () => void
   onEditCardClick?: (plan: PlacePlan) => void
   onAIRecommendClick?: (plan: PlacePlan) => void
   onDeletePlan?: (plan: PlacePlan) => void
@@ -174,6 +175,7 @@ export function TripScheduleView({
   focusedTransportId,
   editMode,
   onEditToggle,
+  onEditCancel,
   onEditCardClick,
   onAIRecommendClick,
   onDeletePlan,
@@ -253,13 +255,32 @@ export function TripScheduleView({
               </span>
             </div>
             {onEditToggle && (
-              <button
-                type="button"
-                className="trip-schedule-view__edit-btn"
-                onClick={onEditToggle}
-              >
-                {editMode ? '저장' : '편집'}
-              </button>
+              editMode ? (
+                <div className="trip-schedule-view__edit-controls">
+                  <button
+                    type="button"
+                    className="trip-schedule-view__cancel-btn"
+                    onClick={onEditCancel ?? onEditToggle}
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    className="trip-schedule-view__edit-btn"
+                    onClick={onEditToggle}
+                  >
+                    저장
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="trip-schedule-view__edit-btn"
+                  onClick={onEditToggle}
+                >
+                  편집
+                </button>
+              )
             )}
           </header>
         )}
