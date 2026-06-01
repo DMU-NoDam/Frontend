@@ -7,7 +7,6 @@ import { DashboardPage } from '@/pages/dashboard/DashboardPage'
 import { TripListPage } from '@/pages/trip-list/Trip-listPage'
 import { TripCreatePage } from '@/pages/trip-create/TripCreatePage'
 import { TripDetailPage } from '@/pages/trip-detail/TripDetailPage'
-import { TripPlanningPage } from '@/pages/trip-planning/TripPlanningPage'
 import { TripSelectPage } from '@/pages/trip-select/TripSelectPage'
 import { MyPage } from '@/pages/my/mypage'
 import { ServiceDetail } from '@/pages/my/service-detail/servicedetail'
@@ -54,10 +53,6 @@ const router = createBrowserRouter([
           {
             path: '/trips/:tripId/detail',
             element: <TripDetailPage />,
-          },
-          {
-            path: '/trips/:tripId/planning',
-            element: <TripPlanningPage />,
           },
           {
             path: '/mypage',
