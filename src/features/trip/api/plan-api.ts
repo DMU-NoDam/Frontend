@@ -38,13 +38,17 @@ const confirmTheme = async (
 
 const recommendPlace = async (req: RecommendPlaceRequest): Promise<RecommendedPlaceItem[]> => {
   if (useMockPlans) return mockRecommendPlace()
-  const { data } = await apiClient.post<RecommendPlaceResponse>('/place/api/recommend', req)
+  const { data } = await apiClient.post<RecommendPlaceResponse>('/place/api/recommend', req, {
+    timeout: 60000,
+  })
   return mapRecommendedPlaceItems(data.body)
 }
 
 const replacePlacePlan = async (req: ReplacePlacePlanRequest): Promise<PlacePlan> => {
   if (useMockPlans) return mockReplacePlacePlan(req.oldPlacePlanId, req.newPlaceId)
-  const { data } = await apiClient.put<ReplacePlacePlanResponse>('/plan/api/place-plan', req)
+  const { data } = await apiClient.put<ReplacePlacePlanResponse>('/plan/api/place-plan', req, {
+    timeout: 60000,
+  })
   return mapReplacedPlacePlan(data.body)
 }
 

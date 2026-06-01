@@ -7,5 +7,6 @@ export const useTripPlans = (tripId: string | undefined) => {
     queryKey: tripKeys.plans(tripId ?? ''),
     queryFn: () => planApi.getPlans(tripId!),
     enabled: Boolean(tripId),
+    meta: { globalLoading: true },
   })
 }
