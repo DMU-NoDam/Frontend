@@ -8,7 +8,7 @@ export function useReplacePlacePlan(tripId: string | undefined) {
   return useMutation({
     mutationFn: (req: ReplacePlacePlanRequest) => planApi.replacePlacePlan(req),
     meta: { globalLoading: true },
-    onSuccess: (updatedPlan: PlacePlan, req: ReplacePlacePlanRequest) => {
+    onSuccess: async (updatedPlan: PlacePlan, req: ReplacePlacePlanRequest) => {
       if (!tripId) return
       queryClient.setQueryData<PlanListResponse>(
         tripKeys.plans(tripId),
@@ -25,6 +25,7 @@ export function useReplacePlacePlan(tripId: string | undefined) {
           return { ...old, body: newBody }
         },
       )
+      await queryClient.invalidateQueries({ queryKey: tripKeys.plans(tripId) })
     },
   })
 }
