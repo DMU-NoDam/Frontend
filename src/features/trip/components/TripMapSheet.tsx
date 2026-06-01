@@ -20,9 +20,11 @@ export function TripMapSheet({ mapContent, overlay, sheetContent, forceExpanded 
   const heightPct = useTransform(height, (v) => `${v}%`)
 
   useEffect(() => {
-    if (forceExpanded) {
-      animate(height, SHEET_EXPANDED, { type: 'spring', stiffness: 280, damping: 50 })
-    }
+    animate(
+      height,
+      forceExpanded ? SHEET_EXPANDED : SHEET_COLLAPSED,
+      { type: 'spring', stiffness: 280, damping: 50 },
+    )
   }, [forceExpanded, height])
 
   const isDragging = useRef(false)
