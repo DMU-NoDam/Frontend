@@ -7,4 +7,6 @@ export const tripKeys = {
   status: (tripId: string) => [...tripKeys.all, 'status', tripId] as const,
   flight: (iata: string, date: string) =>
     [...tripKeys.all, 'flight', iata, date] as const,
+  members: (tripId: string) => [...tripKeys.all, 'members', tripId] as const,
+  invitationPreview: (token: string) => [...tripKeys.all, 'invitation', token] as const,
 }
