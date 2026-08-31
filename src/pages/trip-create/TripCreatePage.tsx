@@ -7,8 +7,8 @@ import { LuSparkle } from 'react-icons/lu'
 import { PiStarFourBold } from 'react-icons/pi'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/app/store/auth-store'
+import { useTripCreationStore } from '@/app/store/trip-creation-store'
 import { useCreateTrip } from '@/features/trip/hooks/use-create-trip'
-import { useTripPlanningStatus } from '@/features/trip/hooks/use-trip-planning-status'
 import { mapFormToRequest } from '@/features/trip/api/trip-mapper'
 import { tripFormSchema } from '@/features/trip/types/trip-schema'
 import type { TripCreateFormValues } from '@/features/trip/types/trip-types'
@@ -127,9 +127,13 @@ export function TripCreatePage() {
   const [toast, setToast] = useState(!pendingResult.ok && pendingResult.hadData)
   const [freshUuid] = useState(createUuid)
 
-  // polling state
-  const [tripId, setTripId] = useState<string | null>(null)
-  const [pollingStartedAt, setPollingStartedAt] = useState<number | null>(null)
+  // trip creation pipeline state lives in a shared store (see TripGenerationWatcher) so
+  // it keeps advancing even if the user navigates away from this page
+  const tripId = useTripCreationStore((s) => s.tripId)
+  const planningStatus = useTripCreationStore((s) => s.status)
+  const isPollError = useTripCreationStore((s) => s.isError)
+  const startTripCreation = useTripCreationStore((s) => s.start)
+  const clearTripCreation = useTripCreationStore((s) => s.clear)
   const [retryCount, setRetryCount] = useState(0)
 
   const { control, setValue, getValues, watch, trigger, handleSubmit } =
@@ -151,7 +155,6 @@ export function TripCreatePage() {
 
   const queryClient = useQueryClient()
   const { mutate, isPending: isCreating, isError: isCreateError, reset: resetMutation } = useCreateTrip()
-  const { status: planningStatus, isError: isPollError } = useTripPlanningStatus(tripId, pollingStartedAt)
 
   // toast auto-dismiss
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -163,12 +166,7 @@ export function TripCreatePage() {
     }
   }, [toast])
 
-  // navigate when polling done
-  useEffect(() => {
-    if (tripId && planningStatus === 'done') {
-      navigate(`/trips/${tripId}/select`)
-    }
-  }, [tripId, planningStatus, navigate])
+  // navigate-on-done is handled globally by TripGenerationWatcher (root layout)
 
   // navigate to dashboard after second failure
   const showPlanningFailureRaw = (isCreateError || isPollError || planningStatus === 'timeout' || planningStatus === 'failed') && !isCreating
@@ -216,8 +214,7 @@ export function TripCreatePage() {
         sessionStorage.removeItem(PENDING_KEY)
         const id = String(res.body.id)
         if (!id) return
-        setTripId(id)
-        setPollingStartedAt(Date.now())
+        startTripCreation(id)
       },
     })
   }
@@ -225,16 +222,14 @@ export function TripCreatePage() {
   const handleRetry = () => {
     setRetryCount((c) => c + 1)
     resetMutation()
-    setTripId(null)
-    setPollingStartedAt(null)
+    clearTripCreation()
     queryClient.removeQueries({ queryKey: ['trip-status'] })
     const values = getValues()
     mutate(mapFormToRequest(values), {
       onSuccess: (res) => {
         const id = String(res.body.id)
         if (!id) return
-        setTripId(id)
-        setPollingStartedAt(Date.now())
+        startTripCreation(id)
       },
     })
   }
