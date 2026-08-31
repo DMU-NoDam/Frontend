@@ -1,4 +1,4 @@
-import { mockDeletePlacePlan, mockGetPlans, mockRecommendPlace, mockReplacePlacePlan } from '@/mocks/plans'
+import { mockDeletePlacePlan, mockGetPlans, mockRecommendPlace, mockReplacePlacePlan, mockSwitchPlacePlan } from '@/mocks/plans'
 import { apiClient } from '@/shared/api/client'
 import type {
   PlacePlan,
@@ -9,12 +9,13 @@ import type {
   RecommendPlaceResponse,
   ReplacePlacePlanRequest,
   ReplacePlacePlanResponse,
+  SwitchPlacePlanRequest,
   TripThemeConfirmResponse,
   TripThemeType,
 } from '../types/plan-types'
 import { mapPlanListResponse, mapRecommendedPlaceItems, mapReplacedPlacePlan } from './plan-mapper'
 
-const useMockPlans = import.meta.env.VITE_USE_MOCK_TRIPS !== 'false'
+const useMockPlans = import.meta.env.VITE_USE_MOCK_TRIPS === 'true'
 
 const getPlans = async (tripId: string): Promise<PlanListResponse> => {
   if (useMockPlans) {
@@ -52,6 +53,11 @@ const replacePlacePlan = async (req: ReplacePlacePlanRequest): Promise<PlacePlan
   return mapReplacedPlacePlan(data.body)
 }
 
+const switchPlacePlan = async (req: SwitchPlacePlanRequest): Promise<void> => {
+  if (useMockPlans) return mockSwitchPlacePlan()
+  await apiClient.put('/plan/api/place-plan/switch', req)
+}
+
 const deletePlacePlan = async (placePlanId: number): Promise<void> => {
   if (useMockPlans) return mockDeletePlacePlan()
   await apiClient.delete(`/plan/api/place-plan/${placePlanId}`, {
@@ -64,5 +70,6 @@ export const planApi = {
   confirmTheme,
   recommendPlace,
   replacePlacePlan,
+  switchPlacePlan,
   deletePlacePlan,
 }

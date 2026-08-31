@@ -256,3 +256,6 @@ export const mockReplacePlacePlan = (oldPlacePlanId: number, newPlaceId: number)
 
 export const mockDeletePlacePlan = (): Promise<void> =>
   Promise.resolve()
+
+export const mockSwitchPlacePlan = (): Promise<void> =>
+  Promise.resolve()
