@@ -1,0 +1,149 @@
+/* ============================================================
+   TripManageSheet
+   ============================================================ */
+
+.trip-manage__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 290;
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.trip-manage__backdrop:disabled {
+  cursor: default;
+}
+
+.trip-manage {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  margin: auto;
+  width: calc(100% - 48px);
+  max-width: 360px;
+  height: fit-content;
+  max-height: calc(100% - 96px);
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 28px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+}
+
+.trip-manage__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #1f2024;
+  text-align: center;
+}
+
+.trip-manage__hint {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #71727a;
+  text-align: center;
+}
+
+.trip-manage__notice {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #16a34a;
+  text-align: center;
+}
+
+.trip-manage__error {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: #dc2626;
+  text-align: center;
+}
+
+.trip-manage__members {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.trip-manage__member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f7f7f8;
+  font-size: 13px;
+  color: #1f2024;
+}
+
+.trip-manage__member-role {
+  font-size: 12px;
+  font-weight: 600;
+  color: #71727a;
+}
+
+.trip-manage__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.trip-manage__action,
+.trip-manage__cancel {
+  width: 100%;
+  min-height: 46px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.trip-manage__action {
+  background: #f3f4f6;
+  color: #1f2024;
+}
+
+.trip-manage__action:hover:not(:disabled) {
+  background: #e8e9f1;
+}
+
+.trip-manage__action--danger {
+  background: #fff0f0;
+  color: #dc2626;
+}
+
+.trip-manage__action--danger:hover:not(:disabled) {
+  background: #ffe1e1;
+}
+
+.trip-manage__cancel {
+  background: #f3f4f6;
+  color: #1f2024;
+}
+
+.trip-manage__cancel:hover:not(:disabled) {
+  background: #e8e9f1;
+}
+
+.trip-manage__action:disabled,
+.trip-manage__cancel:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

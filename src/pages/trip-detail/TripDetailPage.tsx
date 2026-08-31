@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { LuArrowLeft, LuSparkles } from 'react-icons/lu'
+import { LuArrowLeft, LuEllipsisVertical, LuSparkles } from 'react-icons/lu'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { useTripPlans } from '@/features/trip/hooks/use-trip-plans'
 import { useUpdateTripFixed } from '@/features/trip/hooks/use-update-trip-fixed'
@@ -12,6 +12,7 @@ import { TripMapSheet, MapPlaceholder } from '@/features/trip/components/TripMap
 import { TripRouteMap } from '@/features/trip/components/TripRouteMap'
 import { TripScheduleView } from '@/features/trip/components/TripScheduleView'
 import { PlaceRecommendSheet } from '@/features/trip/components/PlaceRecommendSheet'
+import { TripManageSheet } from '@/features/trip/components/TripManageSheet'
 import type { PlacePlan, RecommendedPlaceItem } from '@/features/trip/types/plan-types'
 import type { TripSummary } from '@/features/trip/types/trip-types'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
@@ -85,6 +86,7 @@ export function TripDetailPage() {
   const [recommendTarget, setRecommendTarget]             = useState<PlacePlan | null>(null)
   const [conflictFixedTrips, setConflictFixedTrips]       = useState<TripSummary[]>([])
   const [conflictError, setConflictError]                 = useState<string | null>(null)
+  const [showManageSheet, setShowManageSheet]             = useState(false)
 
   const selectedDate = useMemo(
     () =>
@@ -341,6 +343,14 @@ export function TripDetailPage() {
         >
           {trip.fixed ? '확정 취소' : '일정 확정'}
         </button>
+        <button
+          type="button"
+          className="detail-header__manage"
+          onClick={() => setShowManageSheet(true)}
+          aria-label="여행 관리"
+        >
+          <LuEllipsisVertical className="detail-header__manage-icon" aria-hidden="true" />
+        </button>
       </header>
 
       <TripMapSheet
@@ -360,7 +370,6 @@ export function TripDetailPage() {
                     setFocusedTransportId(null)
                   }
                 }}
-                countryCode={trip.countryCode ?? undefined}
                 highlightedTransportId={editMode ? null : focusedTransportId}
               />
             )
@@ -425,8 +434,11 @@ export function TripDetailPage() {
           onBack={() => { setShowRecommendSheet(false); setRecommendations([]) }}
           onConfirm={handleRecommendConfirm}
           isConfirming={replaceMutation.isPending}
-          countryCode={trip.countryCode ?? undefined}
         />
+      )}
+
+      {showManageSheet && (
+        <TripManageSheet tripId={tripId} onClose={() => setShowManageSheet(false)} />
       )}
 
       {conflictFixedTrips.length > 0 && (

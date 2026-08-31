@@ -186,6 +186,30 @@
   cursor: not-allowed;
 }
 
+.detail-header__manage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.detail-header__manage:hover {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.detail-header__manage-icon {
+  width: 18px;
+  height: 18px;
+  color: #1f2024;
+}
+
 /* ── Sheet content states ─────────────────────────────────── */
 
 .detail-sheet__status {

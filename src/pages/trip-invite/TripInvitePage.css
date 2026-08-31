@@ -1,0 +1,68 @@
+.invite-page {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #202124;
+  padding: 24px;
+}
+
+.invite-shell {
+  width: 100%;
+  max-width: 360px;
+  display: grid;
+  gap: 12px;
+  text-align: center;
+}
+
+.invite-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1f2024;
+}
+
+.invite-dates {
+  margin: 0;
+  font-size: 14px;
+  color: #71727a;
+}
+
+.invite-hint {
+  margin: 8px 0 4px;
+  font-size: 14px;
+  color: #1f2024;
+}
+
+.invite-message {
+  font-size: 14px;
+  color: #71727a;
+}
+
+.invite-message--error {
+  color: #dc2626;
+}
+
+.invite-join-btn {
+  margin-top: 8px;
+  width: 100%;
+  min-height: 48px;
+  border: none;
+  border-radius: 12px;
+  background: #ff5f9a;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.invite-join-btn:hover:not(:disabled) {
+  background: #f04486;
+}
+
+.invite-join-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
