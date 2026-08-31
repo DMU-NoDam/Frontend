@@ -1,4 +1,4 @@
-import type { PriceType, ScheduleType, TripThemeType } from './trip-types'
+import type { PriceType, TripThemeType } from './trip-types'
 export type { TripThemeType } from './trip-types'
 
 // lon/lat as the backend sends them (lon, not lng)
@@ -109,19 +109,6 @@ export type RawPlanListResponse = {
   body: RawPlanListBody
 }
 
-export type FixedTrip = {
-  id: number
-  name: string
-  personCount: number
-  scheduleType: ScheduleType
-  tripThemeType: TripThemeType
-  priceType: PriceType
-  startDate: string
-  endDate: string
-  isPlanning: boolean
-  fixed: boolean
-}
-
 export type TripThemeConfirmResponse = {
   message: string
   body: null
@@ -179,6 +166,11 @@ export type ReplacePlacePlanRequest = {
 export type ReplacePlacePlanResponse = {
   message: string
   body: RawPlacePlanTimeObj
+}
+
+export type SwitchPlacePlanRequest = {
+  placePlan1: number
+  placePlan2: number
 }
 
 export type RecommendPlaceRequest = {

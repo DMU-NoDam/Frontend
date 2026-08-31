@@ -34,7 +34,9 @@ export function TripCard({ trip, isPast = false }: Props) {
   const duration = calcDuration(trip.startDate, trip.endDate)
   const numericId = Number.parseInt(trip.id, 10)
   const variant = (Number.isNaN(numericId) ? 0 : numericId) % VARIANT_COUNT
-  const status = trip.isPlanning ? '생성 중' : trip.fixed ? '확정' : '확정 전'
+  // 여행 목록 응답에는 일정 생성 진행도가 없다(planCreated 삭제됨). 생성 중 표시는
+  // TripGenerationWatcher의 전체화면 오버레이가 담당하므로 카드에서는 확정 여부만 보여준다.
+  const status = trip.fixed ? '확정' : '확정 전'
 
   return (
     <article
@@ -45,11 +47,7 @@ export function TripCard({ trip, isPast = false }: Props) {
       <div className="trip-card__overlay" aria-hidden="true" />
       <div className="trip-card__badges">
         <span
-          className={clsx(
-            'trip-card__status',
-            trip.isPlanning && 'trip-card__status--planning',
-            !trip.isPlanning && !trip.fixed && 'trip-card__status--draft',
-          )}
+          className={clsx('trip-card__status', !trip.fixed && 'trip-card__status--draft')}
         >
           {status}
         </span>

@@ -25,8 +25,8 @@ export const mockGetTripStatus = async (
   return Promise.resolve({
     message: 'success',
     body: stillPlanning
-      ? { allCompleted: false, planning: true }
-      : { allCompleted: true, planning: false },
+      ? { planStatus: 'AI_PLANNED', planning: true }
+      : { planStatus: 'TRANSPORT_PLANNED', planning: false },
   })
 }
 

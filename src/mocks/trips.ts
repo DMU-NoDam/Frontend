@@ -1,5 +1,10 @@
 import type { TripSummaryApiItem } from '@/features/trip/types/trip-types'
 
+// 오늘 기준 상대 날짜. 고정 날짜를 쓰면 시간이 지나 mock 여행이 전부 과거가 되고
+// "다가오는 여행" 탭이 빈 화면이 된다.
+const dayOffset = (days: number): string =>
+  new Date(Date.now() + days * 86_400_000).toISOString().slice(0, 10)
+
 const MOCK_TRIPS: TripSummaryApiItem[] = [
   {
     id: 1,
@@ -8,9 +13,8 @@ const MOCK_TRIPS: TripSummaryApiItem[] = [
     scheduleType: 'LOOSE',
     tripThemeType: 'FOOD',
     priceType: 'NORMAL',
-    startDate: '2026-06-15',
-    endDate: '2026-06-21',
-    isPlanning: false,
+    startDate: dayOffset(21),
+    endDate: dayOffset(27),
     fixed: true,
   },
   {
@@ -20,9 +24,8 @@ const MOCK_TRIPS: TripSummaryApiItem[] = [
     scheduleType: 'TIGHT',
     tripThemeType: null,
     priceType: 'CHEEP',
-    startDate: '2026-07-20',
-    endDate: '2026-07-25',
-    isPlanning: false,
+    startDate: dayOffset(56),
+    endDate: dayOffset(61),
     fixed: false,
   },
   {
@@ -32,9 +35,8 @@ const MOCK_TRIPS: TripSummaryApiItem[] = [
     scheduleType: 'LOOSE',
     tripThemeType: null,
     priceType: 'LUXURY',
-    startDate: '2026-08-01',
-    endDate: '2026-08-07',
-    isPlanning: true,
+    startDate: dayOffset(7),
+    endDate: dayOffset(13),
     fixed: false,
   },
   {
@@ -44,9 +46,8 @@ const MOCK_TRIPS: TripSummaryApiItem[] = [
     scheduleType: 'LOOSE',
     tripThemeType: 'ACTIVITY',
     priceType: 'NORMAL',
-    startDate: '2026-01-10',
-    endDate: '2026-01-13',
-    isPlanning: false,
+    startDate: dayOffset(-226),
+    endDate: dayOffset(-223),
     fixed: true,
   },
   {
@@ -56,9 +57,8 @@ const MOCK_TRIPS: TripSummaryApiItem[] = [
     scheduleType: 'TIGHT',
     tripThemeType: 'LANDMARK',
     priceType: 'LUXURY',
-    startDate: '2025-12-24',
-    endDate: '2025-12-31',
-    isPlanning: false,
+    startDate: dayOffset(-243),
+    endDate: dayOffset(-236),
     fixed: true,
   },
 ]

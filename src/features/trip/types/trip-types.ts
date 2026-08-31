@@ -3,19 +3,17 @@ export type PriceType = 'CHEEP' | 'NORMAL' | 'LUXURY'
 export type TripThemeType = 'FOOD' | 'HEALING' | 'LANDMARK' | 'ACTIVITY'
 export type TransportType = 'PUBLIC' | 'PRIVATE'
 export type PersonType = 'FRIEND' | 'FAMILY' | 'COUPLE' | 'SOLO'
+export type PlanStatus = 'CREATED' | 'FIXED_PLANNED' | 'AI_PLANNED' | 'TRANSPORT_PLANNED' | 'EDIT'
 
 export type TripSummaryApiItem = {
   id: number
   name: string
-  country?: string | null
-  countryCode?: string | null
   personCount: number
   scheduleType: ScheduleType
   tripThemeType: TripThemeType | null
   priceType: PriceType
   startDate: string
   endDate: string
-  isPlanning: boolean
   fixed: boolean
 }
 
@@ -51,6 +49,12 @@ export type FlightInfo = {
   arrivalTime: string
 }
 
+// backend leg shape: one airport code + one "yyyy-MM-dd HH:mm" timestamp per flight
+export type TripFlightLegRequest = {
+  airport: string
+  time: string
+}
+
 export type TripCreateRequest = {
   trip: {
     name: string
@@ -64,8 +68,8 @@ export type TripCreateRequest = {
   region: string[]
   selectedPlace: string[]
   hotel?: string
-  departFlight?: FlightInfo
-  arriveFlight?: FlightInfo
+  departFlight?: TripFlightLegRequest
+  arriveFlight?: TripFlightLegRequest
 }
 
 export type TripCreateResponse = {
@@ -73,9 +77,11 @@ export type TripCreateResponse = {
   body: { id: number }
 }
 
+// `planning` 키가 맞다 — 백엔드 필드는 `isPlanning`이지만 Lombok 게터 `isPlanning()`에서
+// Jackson이 `is` 접두어를 떼고 직렬화한다.
 export type TripStatusResponse = {
   message: string
-  body: { allCompleted: boolean; planning: boolean }
+  body: { planStatus: PlanStatus | null; planning: boolean }
 }
 
 export type PlaceSelection = {

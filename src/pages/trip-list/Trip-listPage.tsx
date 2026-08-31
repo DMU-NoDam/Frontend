@@ -34,7 +34,7 @@ export function TripListPage() {
   const { data: trips = [], isLoading, isError } = useTrips()
 
   const filtered = trips.filter((t) =>
-    !t.isPlanning && (tab === 'upcoming' ? isUpcoming(t.endDate) : !isUpcoming(t.endDate)),
+    tab === 'upcoming' ? isUpcoming(t.endDate) : !isUpcoming(t.endDate),
   )
 
   return (
