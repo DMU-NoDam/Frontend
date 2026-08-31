@@ -48,6 +48,11 @@ apiClient.interceptors.response.use(
   async (error) => {
     const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
 
+    // 만료 판정은 401만 쓴다. 백엔드 AccessTokenFilter가 만료 토큰에
+    // ErrorCode.EXPIRED_TOKEN(=401)을 내려주므로 403 우회는 필요 없다.
+    // 403은 인증 누락(토큰 없음/불량)이라 재발급 대상이 아니다 — 로그아웃 상태의
+    // 백그라운드 요청도 403을 받는데, 재발급을 걸면 refreshToken이 없어 logout()이 불리고
+    // 그 사이 완료된 로그인의 토큰까지 지워버린다(로그인 직후 튕김).
     if (error.response?.status !== 401 || original._retry) {
       return Promise.reject(error)
     }
