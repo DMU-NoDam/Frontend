@@ -531,6 +531,14 @@
   margin: 0;
 }
 
+.withdraw-modal__error {
+  font-size: 13px;
+  font-weight: 400;
+  color: #d94040;
+  line-height: 1.6;
+  margin: 0;
+}
+
 .withdraw-modal__actions {
   display: flex;
   flex-direction: row;

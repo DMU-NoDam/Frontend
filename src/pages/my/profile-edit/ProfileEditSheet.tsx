@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { LuX } from 'react-icons/lu'
 import { useAuthStore } from '@/app/store/auth-store'
-import { apiClient } from '@/shared/api/client'
+import { userApi } from '@/features/user/api/user-api'
 import './ProfileEditSheet.css'
 
 type Props = {
@@ -16,16 +16,18 @@ export function ProfileEditSheet({ open, onClose }: Props) {
 
   const [name, setName] = useState(user?.name ?? '')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   async function handleSave() {
     if (!name.trim()) return
     setSaving(true)
+    setError('')
     try {
-      await apiClient.patch('/user/api', { name: name.trim() })
+      await userApi.updateName(name.trim())
       updateUser({ name: name.trim() })
       onClose()
     } catch {
-      // 실패 시 시트 유지
+      setError('닉네임을 변경하지 못했어요. 잠시 후 다시 시도해 주세요.')
     } finally {
       setSaving(false)
     }
@@ -33,6 +35,7 @@ export function ProfileEditSheet({ open, onClose }: Props) {
 
   function handleClose() {
     setName(user?.name ?? '')
+    setError('')
     onClose()
   }
 
@@ -73,6 +76,8 @@ export function ProfileEditSheet({ open, onClose }: Props) {
                 placeholder="닉네임을 입력하세요"
               />
             </div>
+
+            {error && <p className="pes-error" role="alert">{error}</p>}
 
             <button
               type="button"
