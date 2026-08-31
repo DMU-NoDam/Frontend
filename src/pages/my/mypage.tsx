@@ -6,7 +6,7 @@ import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { CITIES_BY_COUNTRY } from '@/features/trip/data/cities'
 import { useAuthStore } from '@/app/store/auth-store'
-import { apiClient } from '@/shared/api/client'
+import { userApi } from '@/features/user/api/user-api'
 import { PrivacyPolicyModal } from './privacy-policy/PrivacyPolicyModal'
 import { ProfileEditSheet } from './profile-edit/ProfileEditSheet'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
@@ -75,8 +75,8 @@ function siteToCode(site?: string | null): string | null {
   return city?.countryCode ?? null
 }
 
-function tripToStampCode(trip: { name: string; country?: string | null; countryCode?: string | null }): string | null {
-  return siteToCode(trip.countryCode) ?? siteToCode(trip.country) ?? siteToCode(trip.name)
+function tripToStampCode(trip: { name: string }): string | null {
+  return siteToCode(trip.name)
 }
 
 function chunk<T>(arr: T[], size: number): T[][] {
@@ -99,6 +99,7 @@ export function MyPage() {
   const [page, setPage] = useState(0)
   const [withdrawOpen, setWithdrawOpen] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
+  const [withdrawError, setWithdrawError] = useState('')
   const [privacyOpen, setPrivacyOpen] = useState(false)
   const [profileEditOpen, setProfileEditOpen] = useState(false)
 
@@ -124,14 +125,17 @@ export function MyPage() {
 
   async function handleWithdraw() {
     setWithdrawing(true)
+    setWithdrawError('')
     try {
-      await apiClient.delete('/user/api')
+      await userApi.deleteAccount()
     } catch {
-      // 계정 삭제 실패해도 클라이언트 상태는 초기화
-    } finally {
-      logout()
-      navigate('/login', { replace: true })
+      // 서버에서 계정이 안 지워졌는데 로그아웃하면 사용자는 탈퇴된 줄 안다 — 모달을 유지하고 알린다
+      setWithdrawError('탈퇴 처리에 실패했어요. 잠시 후 다시 시도해 주세요.')
+      setWithdrawing(false)
+      return
     }
+    logout()
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -244,6 +248,7 @@ export function MyPage() {
             >
               <p className="withdraw-modal__title">정말 탈퇴하시겠어요?</p>
               <p className="withdraw-modal__desc">탈퇴하면 모든 여행 데이터가 삭제되며 복구할 수 없습니다.</p>
+              {withdrawError && <p className="withdraw-modal__error" role="alert">{withdrawError}</p>}
               <div className="withdraw-modal__actions">
                 <button
                   type="button"

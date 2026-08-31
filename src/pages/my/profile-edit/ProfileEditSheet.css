@@ -114,3 +114,9 @@
 .pes-save-btn:not(:disabled):hover {
   opacity: 0.85;
 }
+
+.pes-error {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #d94040;
+}
