@@ -167,7 +167,7 @@ export function TripSelectPage() {
         </span>
         <h1 className="select-title">
           테마에 완벽히 맞는<br />
-          <em className="select-title-accent">4가지 여행 일정</em>
+          <em className="select-title-accent">{cards.length}가지 여행 일정</em>
         </h1>
       </header>
 

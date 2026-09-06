@@ -115,9 +115,12 @@ function mapPlacePlan(raw: RawPlacePlan): PlacePlan {
 }
 
 export function mapPlanListResponse(raw: RawPlanListResponse): PlanListResponse {
+  // DatePlan은 날짜 x 테마로 하나씩 온다. 같은 테마의 날짜들을 날짜순으로 이어붙여 한 코스로 만든다.
+  // placePlanInfos는 백엔드가 orderIndex 순으로 주므로 그 안에서는 다시 정렬하지 않는다.
   const body = {} as PlanListBody
-  for (const [theme, plans] of Object.entries(raw.body)) {
-    (body as Record<string, PlacePlan[]>)[theme] = plans.map(mapPlacePlan)
+  for (const datePlan of [...raw.body].sort((a, b) => a.date.localeCompare(b.date))) {
+    const plans = (body[datePlan.datePlanTheme] ??= [])
+    plans.push(...datePlan.placePlanInfos.map(mapPlacePlan))
   }
   return { message: raw.message, body }
 }
@@ -166,8 +169,10 @@ export function mapRecommendedPlaceItems(raw: RawRecommendedPlaceItem[]): Recomm
   }))
 }
 
+// 백엔드가 모든 테마를 만들어주지는 않는다 (지금은 FOOD/HEALING/LANDMARK 3종).
+// 일정이 없는 테마는 빈 카드가 되므로 제외한다.
 export const mapPlanListToThemeCards = (body: PlanListBody): PlanThemeCard[] =>
-  THEME_ORDER.map((theme) => {
+  THEME_ORDER.filter((theme) => body[theme]?.length).map((theme) => {
     const plans = body[theme] ?? []
     const dayCount = getUniqueDayCount(plans)
     const meta = THEME_META[theme]
