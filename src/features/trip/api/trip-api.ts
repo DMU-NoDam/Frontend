@@ -45,21 +45,24 @@ const getTripStatus = async (tripId: string): Promise<TripStatusResponse> => {
   return data
 }
 
-// Trip creation pipeline steps 2–4 (async on the backend, fire-and-forget from here).
+// Trip creation pipeline steps 2–4. 백엔드가 동기로 바뀌어서(89a8429) 작업이 끝나야 응답이 온다 —
+// 전역 timeout 5초로는 AI 일정 생성을 기다리지 못하고 ECONNABORTED로 죽는다.
 // No-op under mock mode since mockGetTripStatus already simulates the whole pipeline.
+const PLAN_STEP_TIMEOUT_MS = 180000
+
 const generateDatePlans = async (tripId: string): Promise<void> => {
   if (useMockTrip) return
-  await apiClient.post(`/trip/api/${tripId}/date-plans`)
+  await apiClient.post(`/trip/api/${tripId}/date-plans`, null, { timeout: PLAN_STEP_TIMEOUT_MS })
 }
 
 const generatePlacePlans = async (tripId: string): Promise<void> => {
   if (useMockTrip) return
-  await apiClient.post(`/trip/api/${tripId}/place-plans`)
+  await apiClient.post(`/trip/api/${tripId}/place-plans`, null, { timeout: PLAN_STEP_TIMEOUT_MS })
 }
 
 const generateTransportPlans = async (tripId: string): Promise<void> => {
   if (useMockTrip) return
-  await apiClient.post(`/trip/api/${tripId}/transport-plans`)
+  await apiClient.post(`/trip/api/${tripId}/transport-plans`, null, { timeout: PLAN_STEP_TIMEOUT_MS })
 }
 
 const updateTripFixed = async (tripId: string, fixed: boolean): Promise<void> => {
