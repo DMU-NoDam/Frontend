@@ -102,11 +102,19 @@ export type RawPlacePlan = Omit<PlacePlan, 'fromTransport' | 'arrivalTransport' 
   departureTransport?: RawTransport | null
 }
 
-export type RawPlanListBody = Record<TripThemeType, RawPlacePlan[]>
+// GET /plan/api/{tripId}는 DatePlan 단위 배열(날짜 x 테마)을 준다. mapper에서 테마별로 묶어
+// PlanListBody(Record<theme, PlacePlan[]>)로 만든다.
+export type RawDatePlan = {
+  id: number
+  date: string
+  datePlanTheme: TripThemeType
+  version: number
+  placePlanInfos: RawPlacePlan[]
+}
 
 export type RawPlanListResponse = {
   message: string
-  body: RawPlanListBody
+  body: RawDatePlan[]
 }
 
 export type TripThemeConfirmResponse = {
