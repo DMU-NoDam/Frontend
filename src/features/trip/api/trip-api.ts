@@ -1,4 +1,4 @@
-import { mockCreateTrip, mockGetTripStatus } from '@/mocks/trip'
+import { mockCreateTrip, mockGetTripStatus, mockRunPlanStep } from '@/mocks/trip'
 import { mockGetTrips } from '@/mocks/trips'
 import { apiClient } from '@/shared/api/client'
 import { mapTripSummary } from './trip-summary-mapper'
@@ -6,6 +6,7 @@ import type {
   TripCreateRequest,
   TripCreateResponse,
   TripListResponse,
+  PlanStepResult,
   TripSummary,
   TripStatusResponse,
   TripUpdateRequest,
@@ -47,22 +48,36 @@ const getTripStatus = async (tripId: string): Promise<TripStatusResponse> => {
 
 // Trip creation pipeline steps 2–4. 백엔드가 동기로 바뀌어서(89a8429) 작업이 끝나야 응답이 온다 —
 // 전역 timeout 5초로는 AI 일정 생성을 기다리지 못하고 ECONNABORTED로 죽는다.
-// No-op under mock mode since mockGetTripStatus already simulates the whole pipeline.
 const PLAN_STEP_TIMEOUT_MS = 180000
 
-const generateDatePlans = async (tripId: string): Promise<void> => {
-  if (useMockTrip) return
-  await apiClient.post(`/trip/api/${tripId}/date-plans`, null, { timeout: PLAN_STEP_TIMEOUT_MS })
+// 이미 같은 trip의 단계가 서버에서 돌고 있으면 백엔드 락(TripLockService)이 ALREADY_PROCESSING을
+// 던지는데, 이 ErrorCode의 status가 202라 axios는 성공으로 넘겨준다. 그대로 통과시키면 실행되지도
+// 않은 단계를 성공으로 보고 다음 단계를 빈 데이터 위에서 돌리게 되므로 응답 code로 구분한다.
+const ALREADY_PROCESSING_CODE = '0006'
+
+const isAlreadyProcessing = (data: unknown): boolean =>
+  typeof data === 'object' &&
+  data !== null &&
+  (data as { code?: unknown }).code === ALREADY_PROCESSING_CODE
+
+const postPlanStep = async (path: string): Promise<PlanStepResult> => {
+  const { data } = await apiClient.post<unknown>(path, null, { timeout: PLAN_STEP_TIMEOUT_MS })
+  return isAlreadyProcessing(data) ? 'locked' : 'done'
 }
 
-const generatePlacePlans = async (tripId: string): Promise<void> => {
-  if (useMockTrip) return
-  await apiClient.post(`/trip/api/${tripId}/place-plans`, null, { timeout: PLAN_STEP_TIMEOUT_MS })
+const generateDatePlans = async (tripId: string): Promise<PlanStepResult> => {
+  if (useMockTrip) return mockRunPlanStep(tripId, 'CREATED')
+  return postPlanStep(`/trip/api/${tripId}/date-plans`)
 }
 
-const generateTransportPlans = async (tripId: string): Promise<void> => {
-  if (useMockTrip) return
-  await apiClient.post(`/trip/api/${tripId}/transport-plans`, null, { timeout: PLAN_STEP_TIMEOUT_MS })
+const generatePlacePlans = async (tripId: string): Promise<PlanStepResult> => {
+  if (useMockTrip) return mockRunPlanStep(tripId, 'AI_PLANNED')
+  return postPlanStep(`/trip/api/${tripId}/place-plans`)
+}
+
+const generateTransportPlans = async (tripId: string): Promise<PlanStepResult> => {
+  if (useMockTrip) return mockRunPlanStep(tripId, 'TRANSPORT_PLANNED')
+  return postPlanStep(`/trip/api/${tripId}/transport-plans`)
 }
 
 const updateTripFixed = async (tripId: string, fixed: boolean): Promise<void> => {

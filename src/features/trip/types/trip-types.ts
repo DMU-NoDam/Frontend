@@ -5,6 +5,10 @@ export type TransportType = 'PUBLIC' | 'PRIVATE'
 export type PersonType = 'FRIEND' | 'FAMILY' | 'COUPLE' | 'SOLO'
 export type PlanStatus = 'CREATED' | 'FIXED_PLANNED' | 'AI_PLANNED' | 'TRANSPORT_PLANNED' | 'EDIT'
 
+// 파이프라인 단계(POST date-plans/place-plans/transport-plans) 호출 결과.
+// 'locked' = 백엔드 락(ALREADY_PROCESSING)에 막혀 실제로는 실행되지 않음.
+export type PlanStepResult = 'done' | 'locked'
+
 export type TripSummaryApiItem = {
   id: number
   name: string

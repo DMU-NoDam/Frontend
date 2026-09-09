@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { LuSparkle } from 'react-icons/lu'
 import { PiStarFourBold } from 'react-icons/pi'
@@ -131,8 +130,9 @@ export function TripCreatePage() {
   // it keeps advancing even if the user navigates away from this page
   const tripId = useTripCreationStore((s) => s.tripId)
   const planningStatus = useTripCreationStore((s) => s.status)
-  const isPollError = useTripCreationStore((s) => s.isError)
+  const isPipelineError = useTripCreationStore((s) => s.isError)
   const startTripCreation = useTripCreationStore((s) => s.start)
+  const retryTripCreation = useTripCreationStore((s) => s.retry)
   const clearTripCreation = useTripCreationStore((s) => s.clear)
   const [retryCount, setRetryCount] = useState(0)
 
@@ -153,7 +153,6 @@ export function TripCreatePage() {
           },
     })
 
-  const queryClient = useQueryClient()
   const { mutate, isPending: isCreating, isError: isCreateError, reset: resetMutation } = useCreateTrip()
 
   // toast auto-dismiss
@@ -169,7 +168,7 @@ export function TripCreatePage() {
   // navigate-on-done is handled globally by TripGenerationWatcher (root layout)
 
   // navigate to dashboard after second failure
-  const showPlanningFailureRaw = (isCreateError || isPollError || planningStatus === 'timeout' || planningStatus === 'failed') && !isCreating
+  const showPlanningFailureRaw = (isCreateError || isPipelineError || planningStatus === 'timeout' || planningStatus === 'failed') && !isCreating
   useEffect(() => {
     if (showPlanningFailureRaw && retryCount >= 1) {
       navigate('/trips')
@@ -222,8 +221,17 @@ export function TripCreatePage() {
   const handleRetry = () => {
     setRetryCount((c) => c + 1)
     resetMutation()
+
+    // trip은 이미 서버에 만들어졌고 생성 단계만 실패한 경우다. 타임아웃이나 게이트웨이 절단으로
+    // 응답만 놓쳤을 뿐 서버는 그 단계를 계속 진행했을 수 있으므로, 새로 만들지 않고 남은 단계만
+    // 이어서 돌린다 — 완료된 단계는 재개 시 status 1회 조회로 확인되어 건너뛴다.
+    if (tripId !== null) {
+      retryTripCreation()
+      return
+    }
+
+    // tripId가 없다 = POST /trip/api 자체가 실패했다. 이때만 처음부터 다시 만든다.
     clearTripCreation()
-    queryClient.removeQueries({ queryKey: ['trip-status'] })
     const values = getValues()
     mutate(mapFormToRequest(values), {
       onSuccess: (res) => {
@@ -234,9 +242,9 @@ export function TripCreatePage() {
     })
   }
 
-  // Show full-screen overlay when POST is pending or polling is in progress
-  const isPolling = tripId !== null && planningStatus === 'pending'
-  const showPlanningOverlay = isCreating || isPolling
+  // Show full-screen overlay while the create POST or the generation pipeline is running
+  const isGenerating = tripId !== null && planningStatus === 'pending'
+  const showPlanningOverlay = isCreating || isGenerating
   const showPlanningFailure = showPlanningFailureRaw && retryCount < 1
 
   if (showPlanningOverlay) {
