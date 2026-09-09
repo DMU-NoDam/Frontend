@@ -69,6 +69,9 @@
 
 /* Inline text link — used for "다시 입력" in FlightSection */
 .step-skip {
+  /* .flight-section이 grid라 기본 stretch로 늘어나면 글자가 가운데 정렬된 전체 폭 버튼이 된다.
+     (조회 실패 분기에서는 div로 감싸져 있어 좌측 정렬로 나와서 상태마다 모양이 달랐다) */
+  justify-self: start;
   background: none;
   border: none;
   color: #FF6F9F;
@@ -400,6 +403,12 @@
 
 .flight-input {
   flex: 1;
+  /* input은 기본 size=20의 고유 폭(약 192px)을 min-content로 들고 있어서, 그대로 두면
+     flight-input-row -> flight-section -> step-body -> step 순으로 최소 폭이 전파돼
+     .step이 335px까지 부풀고 화면 폭 320px에서 .trip-create-page의 overflow:hidden에 잘린다.
+     width를 명시해 고유 폭을 무력화하고 min-width:0으로 축소를 허용한다. */
+  width: 100%;
+  min-width: 0;
   min-height: 36px;
   padding: 16px 0px;
   border: none;
