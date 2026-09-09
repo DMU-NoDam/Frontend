@@ -60,6 +60,15 @@ function FlightSection({
   const hasSavedFlight = Boolean(savedFlight)
   const shouldShowInput = !searchedIata && !hasSavedFlight
 
+  // 이번 조회 결과가 있으면 그것을, 없으면 폼에 저장된 값을 보여준다.
+  // 예전에는 data와 savedFlight를 각각 렌더링해서, 조회 실패(isError) + 저장된 항공편이
+  // 같이 있는 상태에서 결과 카드와 "다시 입력" 버튼이 두 벌씩 나왔다.
+  const displayFlight = data ?? savedFlight
+
+  // 조회를 걸었는데 결과도 에러도 아직 없는 순간에는 아무것도 렌더링되지 않아서
+  // 섹션이 제목만 남고 납작해졌다. 그 구간도 로딩으로 본다.
+  const isPending = isFetching || (!displayFlight && !isError)
+
   return (
     <div className="flight-section">
       <div className="flight-section-header">
@@ -91,41 +100,22 @@ function FlightSection({
             조회
           </button>
         </div>
+      ) : isPending ? (
+        <p className="flight-loading">조회 중...</p>
       ) : (
         <>
-          {isFetching && <p className="flight-loading">조회 중...</p>}
-          {isError && (
-            <div>
-              <button type="button" className="step-skip" onClick={onClear}>
-                다시 입력
-              </button>
+          {displayFlight && (
+            <div className="flight-result-card">
+              <div className="flight-result-row">
+                <span className="flight-result-label">{label}</span>
+                <span>{getDisplayText(displayFlight)}</span>
+              </div>
             </div>
           )}
-          {data && (
-            <>
-              <div className="flight-result-card">
-                <div className="flight-result-row">
-                  <span className="flight-result-label">{label}</span>
-                  <span>{getDisplayText(data)}</span>
-                </div>
-              </div>
-              <button type="button" className="step-skip" onClick={onClear}>
-                다시 입력
-              </button>
-            </>
-          )}
-          {!data && savedFlight && (
-            <>
-              <div className="flight-result-card">
-                <div className="flight-result-row">
-                  <span className="flight-result-label">{label}</span>
-                  <span>{getDisplayText(savedFlight)}</span>
-                </div>
-              </div>
-              <button type="button" className="step-skip" onClick={onClear}>
-                다시 입력
-              </button>
-            </>
+          {(displayFlight || isError) && (
+            <button type="button" className="step-skip" onClick={onClear}>
+              다시 입력
+            </button>
           )}
         </>
       )}
