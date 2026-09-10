@@ -147,3 +147,23 @@
   opacity: 0.6;
   cursor: default;
 }
+
+.trip-manage__member-me {
+  font-weight: 600;
+  color: #71727a;
+}
+
+.trip-manage__member--selectable {
+  cursor: pointer;
+}
+
+.trip-manage__member--selectable .trip-manage__member-id {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trip-manage__member--selectable input[type='radio'] {
+  accent-color: #1f2024;
+  cursor: pointer;
+}
