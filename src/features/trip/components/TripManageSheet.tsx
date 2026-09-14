@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { LuCopy } from 'react-icons/lu'
 import { useCurrentUserId } from '@/features/auth/hooks/use-current-user-id'
 import { useTripMembers } from '../hooks/use-trip-members'
 import { useDeleteTrip } from '../hooks/use-delete-trip'
@@ -18,6 +19,7 @@ const ROLE_LABEL = { OWNER: '소유자', MEMBER: '멤버' } as const
 export function TripManageSheet({ tripId, onClose }: Props) {
   const [mode, setMode] = useState<Mode>('menu')
   const [notice, setNotice] = useState<string | null>(null)
+  const [invitationUrl, setInvitationUrl] = useState<string | null>(null)
   const [newOwnerUserId, setNewOwnerUserId] = useState<number | null>(null)
 
   const currentUserId = useCurrentUserId()
@@ -56,12 +58,21 @@ export function TripManageSheet({ tripId, onClose }: Props) {
     setMode('menu')
   }
 
+  const copyInvitation = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      showNotice('초대 링크가 복사되었습니다!')
+    } catch {
+      showNotice('복사하지 못했어요. 아래 링크를 직접 복사해 주세요.')
+    }
+  }
+
   const handleCreateInvitation = () => {
     linkMutation.mutate(tripId, {
       onSuccess: (token) => {
         const url = `${window.location.origin}/invitations/${token}`
-        void navigator.clipboard.writeText(url)
-        showNotice('초대 링크가 복사되었습니다')
+        setInvitationUrl(url)
+        void copyInvitation(url)
       },
       onError: () => showNotice('초대 링크 생성에 실패했습니다'),
     })
@@ -111,7 +122,21 @@ export function TripManageSheet({ tripId, onClose }: Props) {
             </div>
 
             {!isRoleResolved && <p className="trip-manage__hint">{roleHint()}</p>}
-            {notice && <p className="trip-manage__notice">{notice}</p>}
+            {notice && <p className="trip-manage__notice" role="status">{notice}</p>}
+            {invitationUrl && (
+              <div className="trip-manage__invitation">
+                <span className="trip-manage__invitation-url">{invitationUrl}</span>
+                <button
+                  type="button"
+                  className="trip-manage__copy"
+                  aria-label="초대 링크 복사"
+                  title="초대 링크 복사"
+                  onClick={() => void copyInvitation(invitationUrl)}
+                >
+                  <LuCopy size={18} aria-hidden="true" />
+                </button>
+              </div>
+            )}
 
             <div className="trip-manage__actions">
               {isRoleResolved && isOwner && (

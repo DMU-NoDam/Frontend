@@ -62,6 +62,51 @@
   text-align: center;
 }
 
+.trip-manage__invitation {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 12px;
+  border: 1px solid #e8e9f1;
+  border-radius: 12px;
+  background: #f7f7f8;
+}
+
+.trip-manage__invitation-url {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #1f2024;
+  user-select: all;
+}
+
+.trip-manage__copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #71727a;
+  cursor: pointer;
+}
+
+.trip-manage__copy:hover {
+  background: #e8e9f1;
+  color: #1f2024;
+}
+
+.trip-manage__copy:focus-visible {
+  outline: 2px solid #1f2024;
+  outline-offset: 2px;
+}
+
 .trip-manage__error {
   margin: 0;
   font-size: 12px;
