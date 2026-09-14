@@ -19,9 +19,9 @@
 
 ### 테스트 계정 2개 준비 (멤버/초대 시나리오용)
 
-- 브라우저에서 서로 다른 탭(같은 창도 무방 — `sessionStorage`는 탭별로 분리됨) 2개를 열고 각각 `/login`에서
-  "Test user login"(`VITE_ENABLE_TEST_AUTH=true`일 때만 노출)을 눌러 서로 다른 유저를 만듭니다 → 탭 A = userA,
-  탭 B = userB.
+- 인증 상태는 `localStorage`에 저장되어 같은 브라우저 프로필의 탭끼리 공유되므로, 서로 다른 브라우저 프로필(또는
+  일반 창 + 시크릿 창) 2개에서 각각 `/login`의 "Test user login"(`VITE_ENABLE_TEST_AUTH=true`일 때만 노출)을 눌러
+  서로 다른 유저를 만듭니다 → 창 A = userA, 창 B = userB.
 - OAuth로만 테스트할 경우 다른 브라우저 프로필/시크릿 창으로 2계정을 준비합니다.
 
 ### 상태 재현이 필요할 때
