@@ -1,4 +1,4 @@
-import type { PlaceInfo, PlacePlan, PlanListResponse, RecommendedPlaceItem, RouteInfo, Transport } from '@/features/trip/types/plan-types'
+import type { AddPlaceRequest, ChangePlaceRequest, DatePlan, MovePlaceRequest, PlaceInfo, PlacePlan, PlacePlanPatch, PlanListResponse, RecommendedPlaceItem, RemovePlaceRequest, RouteInfo, Transport, TripThemeType } from '@/features/trip/types/plan-types'
 
 // ── helpers ──────────────────────────────────────────────────
 
@@ -100,7 +100,7 @@ function plan(
   endTime: string,
   placeInfo: PlaceInfo,
   fromTransport: Transport | null = null,
-): PlacePlan {
+): PlacePlanPatch {
   return { id, date, startTime, endTime, placeInfo, fromTransport }
 }
 
@@ -142,13 +142,18 @@ const T_BKK = {
   t4: transport(2004, '14:00:00', '14:25:00', 1500, 3500, 1005, 1006),
   t5: transport(2005, '11:00:00', '11:15:00',  900, 1500, 1007, 1008),
   t6: transport(2006, '13:30:00', '13:35:00',  300,  300, 1008, 1009),
+  // HEALING / LANDMARK 코스의 구간. 하루의 마지막이 아닌 일정에는 나가는 이동이 있어야
+  // 한다 — 비워두면 "서버가 아직 계산 중"이라는 뜻이 되어 폴링이 돈다.
+  t7: transport(2007, '13:00:00', '13:40:00', 2400, 5200, 1011, 1012),
+  t8: transport(2008, '12:00:00', '12:30:00', 1800, 4100, 1013, 1014),
+  t9: transport(2009, '11:00:00', '11:20:00', 1200, 1800, 1021, 1022),
 }
 
 const D1 = '2026-06-15'
 const D2 = '2026-06-16'
 const D3 = '2026-06-17'
 
-const FOOD_PLANS: PlacePlan[] = [
+const FOOD_PLANS: PlacePlanPatch[] = [
   plan(1001, D1, '09:00:00', '11:30:00', BKK.chatuchak,  T_BKK.t1),
   plan(1002, D1, '12:00:00', '14:00:00', BKK.jayFai,     T_BKK.t2),
   plan(1003, D1, '14:30:00', '17:00:00', BKK.orTorKor,   null),
@@ -162,20 +167,20 @@ const FOOD_PLANS: PlacePlan[] = [
   plan(1009, D3, '14:00:00', '16:30:00', BKK.mbk,        null),
 ]
 
-const HEALING_PLANS: PlacePlan[] = [
-  plan(1011, D1, '10:00:00', '13:00:00', BKK.watPho,     null),
+const HEALING_PLANS: PlacePlanPatch[] = [
+  plan(1011, D1, '10:00:00', '13:00:00', BKK.watPho,     T_BKK.t7),
   plan(1012, D1, '14:00:00', '17:00:00', BKK.thaiSpa,    null),
-  plan(1013, D2, '09:00:00', '12:00:00', BKK.bangkokPark,null),
+  plan(1013, D2, '09:00:00', '12:00:00', BKK.bangkokPark,T_BKK.t8),
   plan(1014, D2, '14:00:00', '17:00:00', BKK.thaiSpa,    null),
 ]
 
-const LANDMARK_PLANS: PlacePlan[] = [
-  plan(1021, D1, '08:00:00', '11:00:00', BKK.grandPalace, null),
+const LANDMARK_PLANS: PlacePlanPatch[] = [
+  plan(1021, D1, '08:00:00', '11:00:00', BKK.grandPalace, T_BKK.t9),
   plan(1022, D1, '11:30:00', '13:30:00', BKK.watArun,     null),
   plan(1023, D2, '09:00:00', '12:00:00', BKK.watSaket,    null),
 ]
 
-const ACTIVITY_PLANS: PlacePlan[] = [
+const ACTIVITY_PLANS: PlacePlanPatch[] = [
   plan(1031, D1, '07:00:00', '16:00:00', BKK.ayutthaya,    null),
   plan(1032, D2, '18:00:00', '21:00:00', BKK.muayThai,     null),
   plan(1033, D3, '09:00:00', '13:00:00', BKK.cookingClass, null),
@@ -202,7 +207,7 @@ const J2 = '2026-01-11'
 const J3 = '2026-01-12'
 const J4 = '2026-01-13'
 
-const JEJU_ACTIVITY_PLANS: PlacePlan[] = [
+const JEJU_ACTIVITY_PLANS: PlacePlanPatch[] = [
   plan(2001, J1, '06:00:00', '10:00:00', JJ.sunrise,  T_JJ.t1),
   plan(2002, J1, '11:00:00', '15:00:00', JJ.hallasan, null),
 
@@ -215,21 +220,49 @@ const JEJU_ACTIVITY_PLANS: PlacePlan[] = [
 
 // ── exports ──────────────────────────────────────────────────
 
-const EMPTY = { FOOD: [], HEALING: [], LANDMARK: [], ACTIVITY: [] } as const
+// 실서버는 DatePlan(날짜 x 테마) 단위로 내려준다. mock 데이터는 테마별 한 배열로 적어두고
+// 여기서 날짜별로 쪼개 같은 형태를 만든다 — datePlanId와 version도 이때 붙는다.
+let nextMockDatePlanId = 9000
+
+const toDatePlans = (theme: TripThemeType, plans: PlacePlanPatch[]): DatePlan[] => {
+  const byDate = new Map<string, PlacePlanPatch[]>()
+  for (const plan of plans) {
+    const bucket = byDate.get(plan.date)
+    if (bucket) bucket.push(plan)
+    else byDate.set(plan.date, [plan])
+  }
+
+  return [...byDate.entries()].map(([date, datePlans]) => {
+    const id = nextMockDatePlanId++
+    return {
+      id,
+      date,
+      theme,
+      version: 0, // 편집 이력 없음 (실서버도 이력이 없으면 0을 준다)
+      // orderIndex는 DatePlan 안에서의 순서. mock 데이터가 적힌 순서를 그대로 쓴다.
+      plans: datePlans.map((plan, orderIndex) => ({ ...plan, datePlanId: id, orderIndex })),
+    }
+  })
+}
 
 const MOCK_PLANS: Record<string, PlanListResponse> = {
   '1': {
     message: 'success',
-    body: { FOOD: FOOD_PLANS, HEALING: HEALING_PLANS, LANDMARK: LANDMARK_PLANS, ACTIVITY: ACTIVITY_PLANS },
+    datePlans: [
+      ...toDatePlans('FOOD', FOOD_PLANS),
+      ...toDatePlans('HEALING', HEALING_PLANS),
+      ...toDatePlans('LANDMARK', LANDMARK_PLANS),
+      ...toDatePlans('ACTIVITY', ACTIVITY_PLANS),
+    ],
   },
   '4': {
     message: 'success',
-    body: { FOOD: [], HEALING: [], LANDMARK: [], ACTIVITY: JEJU_ACTIVITY_PLANS },
+    datePlans: toDatePlans('ACTIVITY', JEJU_ACTIVITY_PLANS),
   },
 }
 
 export const mockGetPlans = (tripId: string): Promise<PlanListResponse> =>
-  Promise.resolve(MOCK_PLANS[tripId] ?? { message: 'success', body: { ...EMPTY } })
+  Promise.resolve(MOCK_PLANS[tripId] ?? { message: 'success', datePlans: [] })
 
 const MOCK_RECOMMEND_PLACES: RecommendedPlaceItem[] = [
   { place: BKK.orTorKor,    travelDurationSeconds: 900,  travelDistanceMeters: 1200, startTime: '14:30:00', endTime: '17:00:00' },
@@ -241,21 +274,106 @@ const MOCK_RECOMMEND_PLACES: RecommendedPlaceItem[] = [
 export const mockRecommendPlace = (): Promise<RecommendedPlaceItem[]> =>
   Promise.resolve(MOCK_RECOMMEND_PLACES)
 
-export const mockReplacePlacePlan = (oldPlacePlanId: number, newPlaceId: number): Promise<PlacePlan> => {
-  const allPlaces = Object.values(BKK)
-  const newPlace = allPlaces.find((p) => p.id === newPlaceId) ?? BKK.watPho
-  return Promise.resolve({
-    id: oldPlacePlanId,
-    date: D1,
-    startTime: '14:30:00',
-    endTime: '17:00:00',
-    placeInfo: newPlace,
-    fromTransport: null,
-  })
+// ── PlacePlan 편집 mock (CAS) ────────────────────────────────
+// 실서버처럼 DatePlan 단위로 동작한다: 순서를 고치고 orderIndex를 다시 매긴 뒤 version을
+// 올려 그 DatePlan 전체를 돌려준다. 경로(fromTransport)는 실서버가 비동기로 채우므로
+// 끊긴 구간은 null로 둔다.
+let nextMockPlacePlanId = 8000
+
+const findMockDatePlan = (datePlanId: number): DatePlan => {
+  for (const response of Object.values(MOCK_PLANS))
+    for (const datePlan of response.datePlans)
+      if (datePlan.id === datePlanId) return datePlan
+
+  throw new Error(`[mock] datePlanId=${datePlanId} 를 찾을 수 없습니다`)
 }
 
-export const mockDeletePlacePlan = (): Promise<void> =>
-  Promise.resolve()
+const findMockPlace = (placeId: number): PlaceInfo => {
+  const found = [...Object.values(BKK), ...Object.values(JJ)].find((p) => p.id === placeId)
+  if (!found) throw new Error(`[mock] placeId=${placeId} 를 찾을 수 없습니다`)
+  return found
+}
 
-export const mockSwitchPlacePlan = (): Promise<void> =>
-  Promise.resolve()
+// 위치는 이웃으로 지정된다. previous 뒤, 없으면 next 앞, 둘 다 없으면 previous가 null일 때
+// 맨 앞 / next가 null일 때 맨 뒤.
+const insertIndexOf = (
+  plans: PlacePlan[],
+  previousPlacePlanId: number | null,
+  nextPlacePlanId: number | null,
+): number => {
+  if (previousPlacePlanId !== null) {
+    const i = plans.findIndex((p) => p.id === previousPlacePlanId)
+    if (i >= 0) return i + 1
+  }
+  if (nextPlacePlanId !== null) {
+    const i = plans.findIndex((p) => p.id === nextPlacePlanId)
+    if (i >= 0) return i
+  }
+  return previousPlacePlanId === null ? 0 : plans.length
+}
+
+// 바뀐 순서를 확정한다. orderIndex를 다시 매기고, 끊긴 이동 정보는 지우고, version을 올린다.
+const commitMockDatePlan = (datePlan: DatePlan, plans: PlacePlan[]): Promise<DatePlan> => {
+  datePlan.version += 1
+  datePlan.plans = plans.map((plan, orderIndex) => ({
+    ...plan,
+    orderIndex,
+    // fromTransport는 이 장소에서 "다음 장소로 나가는" 구간이다. 뒤에 오는 장소가 달라졌다면
+    // 그 구간은 더 이상 유효하지 않다 — 실서버도 끊긴 구간은 비워두고 비동기로 다시 채운다.
+    fromTransport: plan.fromTransport?.toPlacePlanId === plans[orderIndex + 1]?.id
+      ? plan.fromTransport
+      : null,
+  }))
+
+  return Promise.resolve(datePlan)
+}
+
+export const mockAddPlace = (req: AddPlaceRequest): Promise<DatePlan> => {
+  const datePlan = findMockDatePlan(req.datePlanId)
+  const plans = [...datePlan.plans]
+  const added: PlacePlan = {
+    id: nextMockPlacePlanId++,
+    datePlanId: datePlan.id,
+    orderIndex: 0, // commit에서 다시 매긴다
+    date: datePlan.date,
+    startTime: '12:00:00',
+    endTime: '14:00:00',
+    placeInfo: findMockPlace(req.placeId),
+    fromTransport: null,
+  }
+
+  plans.splice(insertIndexOf(plans, req.previousPlacePlanId, req.nextPlacePlanId), 0, added)
+  return commitMockDatePlan(datePlan, plans)
+}
+
+export const mockChangePlace = (req: ChangePlaceRequest): Promise<DatePlan> => {
+  const datePlan = findMockDatePlan(req.datePlanId)
+  const placeInfo = findMockPlace(req.placeId)
+  const plans = datePlan.plans.map((plan) =>
+    plan.id === req.placePlanId ? { ...plan, placeInfo } : plan,
+  )
+
+  return commitMockDatePlan(datePlan, plans)
+}
+
+export const mockMovePlace = (req: MovePlaceRequest): Promise<DatePlan> => {
+  const datePlan = findMockDatePlan(req.datePlanId)
+  const target = datePlan.plans.find((plan) => plan.id === req.placePlanId)
+  if (!target) throw new Error(`[mock] placePlanId=${req.placePlanId} 를 찾을 수 없습니다`)
+
+  // 자기 자신을 뺀 목록에서 이웃을 찾아 끼운다 — 포함한 채로 계산하면 한 칸씩 밀린다
+  const plans = datePlan.plans.filter((plan) => plan.id !== req.placePlanId)
+  plans.splice(insertIndexOf(plans, req.previousPlacePlanId, req.nextPlacePlanId), 0, target)
+
+  return commitMockDatePlan(datePlan, plans)
+}
+
+export const mockRemovePlace = (req: RemovePlaceRequest): Promise<DatePlan> => {
+  const datePlan = findMockDatePlan(req.datePlanId)
+  return commitMockDatePlan(
+    datePlan,
+    datePlan.plans.filter((plan) => plan.id !== req.placePlanId),
+  )
+}
+
+
