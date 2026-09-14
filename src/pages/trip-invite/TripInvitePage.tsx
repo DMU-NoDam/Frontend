@@ -1,4 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
+import arubiIcon from '@/assets/Arubi-icon.png'
+import arubiTextIcon from '@/assets/Arubi-text-icon.png'
 import { useAuthStore } from '@/app/store/auth-store'
 import { useInvitationPreview } from '@/features/trip/hooks/use-invitation-preview'
 import { useJoinInvitation } from '@/features/trip/hooks/use-join-invitation'
@@ -29,9 +31,25 @@ export function TripInvitePage() {
   return (
     <main className="invite-page">
       <section className="invite-shell">
+        <div className="invite-brand">
+          <img className="invite-brand-icon" src={arubiIcon} alt="" />
+          <img className="invite-brand-text" src={arubiTextIcon} alt="아루비" />
+        </div>
+
         {isLoading && <p className="invite-message">초대 정보를 불러오는 중...</p>}
 
-        {isError && <p className="invite-message invite-message--error">초대 링크를 찾을 수 없어요.</p>}
+        {isError && (
+          <>
+            <p className="invite-message invite-message--error">초대 링크를 찾을 수 없어요.</p>
+            <button
+              type="button"
+              className="invite-join-btn"
+              onClick={() => navigate('/', { replace: true })}
+            >
+              홈으로 돌아가기
+            </button>
+          </>
+        )}
 
         {preview && (
           <>
