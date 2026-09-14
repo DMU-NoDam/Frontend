@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
 import { LuSparkle } from 'react-icons/lu'
 import { PiStarFourBold } from 'react-icons/pi'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/app/store/auth-store'
 import { useTripCreationStore } from '@/app/store/trip-creation-store'
 import { useCreateTrip } from '@/features/trip/hooks/use-create-trip'
@@ -114,6 +114,12 @@ function PlanningSparkle() {
 }
 
 export function TripCreatePage() {
+  const location = useLocation()
+  // 같은 create 경로에서도 0002로 돌아오면 폼, UUID, 재시도 횟수를 새로 시작한다.
+  return <TripCreateForm key={location.state?.restartTripCreation ? location.key : 'create'} />
+}
+
+function TripCreateForm() {
   useThemeColor('#ffffff', '#ffffff')
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -167,13 +173,21 @@ export function TripCreatePage() {
 
   // navigate-on-done is handled globally by TripGenerationWatcher (root layout)
 
-  // navigate to dashboard after second failure
+  // 재생성까지 실패(2회차)하면 create 첫 입력 화면으로 되돌린다.
   const showPlanningFailureRaw = (isCreateError || isPipelineError || planningStatus === 'timeout' || planningStatus === 'failed') && !isCreating
   useEffect(() => {
-    if (showPlanningFailureRaw && retryCount >= 1) {
-      navigate('/trips')
-    }
-  }, [showPlanningFailureRaw, retryCount, navigate])
+    if (!showPlanningFailureRaw || retryCount < 1) return
+
+    // 서버에 만들어진 trip은 그대로 둔다(삭제 API를 부르지 않는다). 클라이언트의 생성 상태만
+    // 버려서 새로고침으로 이 tripId의 파이프라인이 되살아나지 않게 하고, 첫 입력 화면으로
+    // 돌아간다 — 새 여행은 사용자가 다시 입력하고 생성 버튼을 눌러야 만들어진다.
+    clearTripCreation()
+    resetMutation()
+    sessionStorage.removeItem(PENDING_KEY)
+    // restartTripCreation은 TripCreatePage의 key를 바꿔 폼을 새 인스턴스로 만든다 —
+    // 입력값, UUID, step, 재시도 횟수가 함께 초기화된다 (0002 복귀와 같은 경로).
+    navigate('/trips/create', { replace: true, state: { restartTripCreation: true } })
+  }, [showPlanningFailureRaw, retryCount, clearTripCreation, resetMutation, navigate])
 
   const goNext = async (fields?: (keyof TripCreateFormValues)[]) => {
     if (fields) {
@@ -247,6 +261,19 @@ export function TripCreatePage() {
   const showPlanningOverlay = isCreating || isGenerating
   const showPlanningFailure = showPlanningFailureRaw && retryCount < 1
 
+  if (showPlanningFailure) {
+    return (
+      <main className="trip-create-page trip-create-planning">
+        <div className="trip-create-planning-failure">
+          <p className="trip-create-planning-text trip-create-planning-error">AI 일정 생성이 실패했어요</p>
+          <button type="button" className="trip-create-planning-retry-btn" onClick={handleRetry}>
+            재생성 하기
+          </button>
+        </div>
+      </main>
+    )
+  }
+
   if (showPlanningOverlay) {
     return (
       <main className="trip-create-page trip-create-planning" aria-live="polite">
@@ -267,19 +294,6 @@ export function TripCreatePage() {
             <span>마법처럼 짜고 있어요</span>
           </motion.h1>
         </motion.div>
-      </main>
-    )
-  }
-
-  if (showPlanningFailure) {
-    return (
-      <main className="trip-create-page trip-create-planning">
-        <div className="trip-create-planning-failure">
-          <p className="trip-create-planning-text trip-create-planning-error">AI 일정 생성이 실패했어요</p>
-          <button type="button" className="trip-create-planning-retry-btn" onClick={handleRetry}>
-            재생성 하기
-          </button>
-        </div>
       </main>
     )
   }
