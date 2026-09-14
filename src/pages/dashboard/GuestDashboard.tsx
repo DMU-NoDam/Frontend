@@ -41,13 +41,6 @@ export function GuestDashboard() {
               <LuSparkles className="home-trips__make-icon" aria-hidden="true" />
               나만의 일정 만들기
             </button>
-            <button
-              type="button"
-              className="home-trips__login-btn"
-              onClick={() => navigate('/login')}
-            >
-              로그인
-            </button>
           </div>
         </section>
       </div>
