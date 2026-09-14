@@ -104,7 +104,7 @@ export function TripSelectPage() {
   const { mutate, isPending, isError: isConfirmError } = useConfirmTripTheme()
 
   const cards = useMemo(
-    () => (data ? mapPlanListToThemeCards(data.body) : []),
+    () => (data ? mapPlanListToThemeCards(data.datePlans) : []),
     [data],
   )
 

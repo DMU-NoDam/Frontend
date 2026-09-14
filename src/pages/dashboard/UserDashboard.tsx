@@ -7,6 +7,7 @@ import type { MotionValue } from 'framer-motion'
 import { LuArrowLeft, LuExternalLink, LuSparkles } from 'react-icons/lu'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { useTripPlans } from '@/features/trip/hooks/use-trip-plans'
+import { groupPlansByTheme } from '@/features/trip/api/plan-mapper'
 import {
   getDdayLabel,
   getNextFixedTrip,
@@ -231,8 +232,8 @@ export function UserDashboard() {
     useTripPlans(fixedTrip?.id)
 
   const fixedPlans: PlacePlan[] = useMemo(() => {
-    if (!fixedTrip?.tripThemeType || !plansData?.body) return []
-    return plansData.body[fixedTrip.tripThemeType] ?? []
+    if (!fixedTrip?.tripThemeType || !plansData) return []
+    return groupPlansByTheme(plansData.datePlans)[fixedTrip.tripThemeType] ?? []
   }, [fixedTrip, plansData])
 
   // ── Shared map/schedule state ─────────────────────────────
