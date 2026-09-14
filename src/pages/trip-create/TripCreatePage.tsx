@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useQueryClient } from '@tanstack/react-query'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion } from 'framer-motion'
 import { LuSparkle } from 'react-icons/lu'
@@ -8,6 +9,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/app/store/auth-store'
 import { useTripCreationStore } from '@/app/store/trip-creation-store'
 import { useCreateTrip } from '@/features/trip/hooks/use-create-trip'
+import { tripApi } from '@/features/trip/api/trip-api'
+import { tripKeys } from '@/features/trip/query/trip-keys'
 import { mapFormToRequest } from '@/features/trip/api/trip-mapper'
 import { tripFormSchema } from '@/features/trip/types/trip-schema'
 import type { TripCreateFormValues } from '@/features/trip/types/trip-types'
@@ -122,6 +125,8 @@ export function TripCreatePage() {
 function TripCreateForm() {
   useThemeColor('#ffffff', '#ffffff')
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const failureCleanupStarted = useRef(false)
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
   const [pendingResult] = useState<PendingReadResult>(readPending)
@@ -176,18 +181,30 @@ function TripCreateForm() {
   // 재생성까지 실패(2회차)하면 create 첫 입력 화면으로 되돌린다.
   const showPlanningFailureRaw = (isCreateError || isPipelineError || planningStatus === 'timeout' || planningStatus === 'failed') && !isCreating
   useEffect(() => {
-    if (!showPlanningFailureRaw || retryCount < 1) return
+    if (!showPlanningFailureRaw || retryCount < 1 || failureCleanupStarted.current) return
+    failureCleanupStarted.current = true
 
-    // 서버에 만들어진 trip은 그대로 둔다(삭제 API를 부르지 않는다). 클라이언트의 생성 상태만
-    // 버려서 새로고침으로 이 tripId의 파이프라인이 되살아나지 않게 하고, 첫 입력 화면으로
-    // 돌아간다 — 새 여행은 사용자가 다시 입력하고 생성 버튼을 눌러야 만들어진다.
+    // 재생성까지 실패한 여행은 삭제하고 첫 입력 화면으로 돌아간다.
+    // 생성 상태는 먼저 지워 삭제 중 파이프라인이 다시 시작되지 않게 한다.
     clearTripCreation()
     resetMutation()
     sessionStorage.removeItem(PENDING_KEY)
-    // restartTripCreation은 TripCreatePage의 key를 바꿔 폼을 새 인스턴스로 만든다 —
-    // 입력값, UUID, step, 재시도 횟수가 함께 초기화된다 (0002 복귀와 같은 경로).
-    navigate('/trips/create', { replace: true, state: { restartTripCreation: true } })
-  }, [showPlanningFailureRaw, retryCount, clearTripCreation, resetMutation, navigate])
+
+    const cleanup = async () => {
+      try {
+        if (tripId !== null) {
+          await tripApi.deleteTrip(tripId)
+          void queryClient.invalidateQueries({ queryKey: tripKeys.list() })
+        }
+      } catch (error) {
+        // 삭제 실패가 새 여행 입력을 막지는 않도록 한다.
+        console.error('[trip-create] Failed to delete unsuccessful trip', error)
+      } finally {
+        navigate('/trips/create', { replace: true, state: { restartTripCreation: true } })
+      }
+    }
+    void cleanup()
+  }, [showPlanningFailureRaw, retryCount, tripId, clearTripCreation, resetMutation, navigate, queryClient])
 
   const goNext = async (fields?: (keyof TripCreateFormValues)[]) => {
     if (fields) {
