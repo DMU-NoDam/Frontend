@@ -6,8 +6,10 @@ import { useTripPlans } from '@/features/trip/hooks/use-trip-plans'
 import { useUpdateTripFixed } from '@/features/trip/hooks/use-update-trip-fixed'
 import { useUpdateTrip } from '@/features/trip/hooks/use-update-trip'
 import { useRecommendPlace } from '@/features/trip/hooks/use-recommend-place'
-import { useReplacePlacePlan } from '@/features/trip/hooks/use-replace-place-plan'
-import { useDeletePlacePlan } from '@/features/trip/hooks/use-delete-place-plan'
+import { useChangePlace, useMovePlace, useRemovePlace } from '@/features/trip/hooks/use-plan-edit'
+import { getPlanEditErrorMessage } from '@/features/trip/lib/plan-error'
+import { findEditTarget } from '@/features/trip/lib/plan-target'
+import { groupPlansByTheme } from '@/features/trip/api/plan-mapper'
 import { TripMapSheet, MapPlaceholder } from '@/features/trip/components/TripMapSheet'
 import { TripRouteMap } from '@/features/trip/components/TripRouteMap'
 import { TripScheduleView } from '@/features/trip/components/TripScheduleView'
@@ -39,19 +41,29 @@ export function TripDetailPage() {
   const updateTripFixedMutation = useUpdateTripFixed()
   const updateTripMutation      = useUpdateTrip()
   const recommendMutation       = useRecommendPlace()
-  const replaceMutation         = useReplacePlacePlan(tripId)
-  const deleteMutation          = useDeletePlacePlan(tripId)
+  const changeMutation          = useChangePlace(tripId)
+  const removeMutation          = useRemovePlace(tripId)
+  const moveMutation            = useMovePlace(tripId)
 
   const { data: trips = [], isLoading: isTripsLoading } = useTrips()
   const trip = trips.find((t) => t.id === tripId)
 
-  const { data: plans, isLoading: isPlansLoading, isError: isPlansError } = useTripPlans(
+  // useTripPlans에 폴링 중지 여부로 넘겨야 해서 조회보다 먼저 선언한다
+  const [editMode, setEditMode]                           = useState(false)
+
+  const {
+    data: plans,
+    isLoading: isPlansLoading,
+    isError: isPlansError,
+    isTransportPending,
+  } = useTripPlans(
     trip?.tripThemeType ? tripId : undefined,
+    { pausePolling: editMode },
   )
 
   const selectedPlans: PlacePlan[] = useMemo(() => {
-    if (!trip?.tripThemeType || !plans?.body) return []
-    return plans.body[trip.tripThemeType] ?? []
+    if (!trip?.tripThemeType || !plans) return []
+    return groupPlansByTheme(plans.datePlans)[trip.tripThemeType] ?? []
   }, [trip, plans])
 
   const planDates = useMemo(
@@ -59,7 +71,6 @@ export function TripDetailPage() {
     [selectedPlans],
   )
 
-  const [editMode, setEditMode]                           = useState(false)
   const [nameInput, setNameInput]                         = useState(trip?.name ?? '')
   const [personCountInput, setPersonCountInput]           = useState(String(trip?.personCount ?? ''))
   const [headerError, setHeaderError]                     = useState<string | null>(null)
@@ -86,6 +97,9 @@ export function TripDetailPage() {
   const [recommendTarget, setRecommendTarget]             = useState<PlacePlan | null>(null)
   const [conflictFixedTrips, setConflictFixedTrips]       = useState<TripSummary[]>([])
   const [conflictError, setConflictError]                 = useState<string | null>(null)
+  const [planEditError, setPlanEditError]                 = useState<string | null>(null)
+  // 순서 저장이 실패했을 때 화면 순서를 서버 순서로 되돌리라는 신호
+  const [orderResetSignal, setOrderResetSignal]           = useState(0)
   const [showManageSheet, setShowManageSheet]             = useState(false)
 
   const selectedDate = useMemo(
@@ -237,19 +251,59 @@ export function TripDetailPage() {
   }
 
   const handleDeletePlan = (plan: PlacePlan) => {
-    deleteMutation.mutate(plan.id, {
-      onSuccess: () => {
-        if (editingPlanId === plan.id) setEditingPlanId(null)
+    // 편집은 DatePlan 단위다 — 이 일정이 속한 DatePlan의 id와 version을 함께 보낸다
+    const target = findEditTarget(plans?.datePlans, plan.datePlanId)
+    if (!target) return
+
+    setPlanEditError(null)
+    removeMutation.mutate(
+      { ...target, placePlanId: plan.id },
+      {
+        onSuccess: () => {
+          if (editingPlanId === plan.id) setEditingPlanId(null)
+        },
+        onError: (error) => setPlanEditError(getPlanEditErrorMessage(error)),
       },
-    })
+    )
+  }
+
+  const handleReorderPlan = ({
+    plan,
+    previousPlacePlanId,
+    nextPlacePlanId,
+  }: {
+    plan: PlacePlan
+    previousPlacePlanId: number | null
+    nextPlacePlanId: number | null
+  }) => {
+    const target = findEditTarget(plans?.datePlans, plan.datePlanId)
+    if (!target) return
+
+    setPlanEditError(null)
+    moveMutation.mutate(
+      { ...target, placePlanId: plan.id, previousPlacePlanId, nextPlacePlanId },
+      {
+        onError: (error) => {
+          setPlanEditError(getPlanEditErrorMessage(error))
+          // 화면에만 반영돼 있던 순서를 서버 순서로 되돌린다. 충돌(0003)이면 훅이 최신
+          // 일정을 다시 읽어오므로 그 결과로, 아니면 지금 캐시 순서로 맞춰진다.
+          setOrderResetSignal((n) => n + 1)
+        },
+      },
+    )
   }
 
   const handleRecommendConfirm = () => {
     if (!recommendTarget || !recommendations[selectedRecommendIndex]) return
-    replaceMutation.mutate(
+    const target = findEditTarget(plans?.datePlans, recommendTarget.datePlanId)
+    if (!target) return
+
+    setPlanEditError(null)
+    changeMutation.mutate(
       {
-        oldPlacePlanId: recommendTarget.id,
-        newPlaceId: recommendations[selectedRecommendIndex].place.id,
+        ...target,
+        placePlanId: recommendTarget.id,
+        placeId: recommendations[selectedRecommendIndex].place.id,
       },
       {
         onSuccess: () => {
@@ -259,6 +313,9 @@ export function TripDetailPage() {
           setEditingPlanId(null)
           setEditMode(false)
         },
+        // 실패해도 시트를 닫지 않는다 — 추천 목록은 60초짜리 AI 호출로 받아온 것이라
+        // 버리면 다시 기다려야 한다. 오류만 시트 안에 띄우고 사용자가 판단하게 둔다.
+        onError: (error) => setPlanEditError(getPlanEditErrorMessage(error)),
       },
     )
   }
@@ -406,10 +463,14 @@ export function TripDetailPage() {
             )
           }
           return (
+            <>
+            {planEditError && !showRecommendSheet && (
+              <div className="detail-sheet__edit-error" role="alert">{planEditError}</div>
+            )}
             <TripScheduleView
               plans={selectedPlans}
               selectedDate={selectedDate ?? undefined}
-              onDateChange={(date) => { setUserSelectedDate(date); setFocusedPlanId(null); setFocusedTransportId(null); setEditingPlanId(null) }}
+              onDateChange={(date) => { setUserSelectedDate(date); setFocusedPlanId(null); setFocusedTransportId(null); setEditingPlanId(null); setPlanEditError(null) }}
               onPlaceClick={(plan) => { setFocusedPlanId((prev) => (prev === plan.id ? null : plan.id)); setFocusedTransportId(null) }}
               focusedPlanId={editMode ? editingPlanId : focusedPlanId}
               onTransportClick={(id) => setFocusedTransportId((prev) => (prev === id ? null : id))}
@@ -420,7 +481,12 @@ export function TripDetailPage() {
               onEditCardClick={handleEditCardClick}
               onAIRecommendClick={handleAIRecommendClick}
               onDeletePlan={handleDeletePlan}
+              onReorderPlan={handleReorderPlan}
+              isTransportPending={isTransportPending}
+              reorderDisabled={moveMutation.isPending}
+              resetOrderSignal={orderResetSignal}
             />
+            </>
           )
         }}
       />
@@ -431,9 +497,10 @@ export function TripDetailPage() {
           recommendations={recommendations}
           selectedIndex={selectedRecommendIndex}
           onSelect={setSelectedRecommendIndex}
-          onBack={() => { setShowRecommendSheet(false); setRecommendations([]) }}
+          onBack={() => { setShowRecommendSheet(false); setRecommendations([]); setPlanEditError(null) }}
           onConfirm={handleRecommendConfirm}
-          isConfirming={replaceMutation.isPending}
+          isConfirming={changeMutation.isPending}
+          errorMessage={planEditError}
         />
       )}
 
