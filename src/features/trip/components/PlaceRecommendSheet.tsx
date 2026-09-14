@@ -13,6 +13,7 @@ type Props = {
   onBack: () => void
   onConfirm: () => void
   isConfirming: boolean
+  errorMessage?: string | null
   countryCode?: string
 }
 
@@ -24,6 +25,7 @@ export function PlaceRecommendSheet({
   onBack,
   onConfirm,
   isConfirming,
+  errorMessage,
   countryCode,
 }: Props) {
   const selected = recommendations[selectedIndex]
@@ -83,6 +85,9 @@ export function PlaceRecommendSheet({
       </div>
 
       <div className="place-recommend-sheet__footer">
+        {errorMessage && (
+          <p className="place-recommend-sheet__error" role="alert">{errorMessage}</p>
+        )}
         <button
           type="button"
           className="place-recommend-sheet__confirm-btn"
