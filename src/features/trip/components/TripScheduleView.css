@@ -200,6 +200,21 @@
   background-color: transparent;
 }
 
+.trip-schedule-view__transport-info--pending {
+  animation: trip-schedule-view-pending 1.4s ease-in-out infinite;
+}
+
+@keyframes trip-schedule-view-pending {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-schedule-view__transport-info--pending {
+    animation: none;
+  }
+}
+
 .trip-schedule-view__transport-row--focused .trip-schedule-view__transport-line {
   background: #ff5f9a;
 }
@@ -348,4 +363,60 @@
   color: #8f9098;
   padding: 24px;
   text-align: center;
+}
+
+/* ── 편집 모드: 순서 바꾸기 손잡이 ─────────────────────────── */
+
+/* 드래그 중 뒤가 비치지 않도록 행 자체가 카드 표면이 된다. 손잡이도 이 안에 들어간다 */
+.trip-schedule-view__drag-row {
+  display: flex;
+  align-items: stretch;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: inset 0 0 0 1px #f0f0f0;
+  overflow: hidden;
+}
+
+.trip-schedule-view__drag-row--focused {
+  box-shadow: inset 0 0 0 2px #ffb8d3;
+}
+
+/* 안쪽 카드는 자기 테두리를 내려놓는다 — 표면은 행이 그린다 */
+.trip-schedule-view__drag-row .trip-schedule-view__place-card--clickable,
+.trip-schedule-view__drag-row .trip-schedule-view__edit-card {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+.trip-schedule-view__drag-content {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 그림자가 행 모서리와 맞게 애니메이션되도록 바깥 래퍼도 같은 반경을 쓴다 */
+.trip-schedule-view__item--draggable {
+  border-radius: 18px;
+}
+
+/* touch-action은 손잡이에만 준다 — 카드 본문은 그대로 스크롤되어야 한다 */
+.trip-schedule-view__drag-handle {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #c4c5cc;
+  cursor: grab;
+  touch-action: none;
+}
+
+.trip-schedule-view__drag-handle:active {
+  cursor: grabbing;
+  color: #8f9098;
+  background: #f5f5f7;
 }
