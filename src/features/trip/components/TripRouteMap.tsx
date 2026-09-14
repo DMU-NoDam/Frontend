@@ -9,6 +9,7 @@ import type {
   PolylineInstance,
   PolylineOptions,
 } from '@/shared/hooks/use-google-map'
+import { sortPlansByOrder } from '../lib/plan-order'
 import type { PlacePlan } from '../types/plan-types'
 import './TripRouteMap.css'
 
@@ -176,9 +177,7 @@ export function TripRouteMap({
     clearAll()
     window.google?.maps?.event?.trigger(mapInstance, 'resize')
 
-    const plansForDay = plans
-      .filter((p) => p.date === selectedDate)
-      .sort((a, b) => a.startTime.localeCompare(b.startTime))
+    const plansForDay = sortPlansByOrder(plans.filter((p) => p.date === selectedDate))
 
     if (plansForDay.length === 0) return
 
@@ -294,9 +293,9 @@ export function TripRouteMap({
     if (highlightedTransportId == null || !mapInstanceRef.current || !window.google) return
 
     const fitToSegment = async () => {
-      const plansForDay = plansRef.current
-        .filter((p) => p.date === selectedDateRef.current)
-        .sort((a, b) => a.startTime.localeCompare(b.startTime))
+      const plansForDay = sortPlansByOrder(
+        plansRef.current.filter((p) => p.date === selectedDateRef.current),
+      )
 
       const target = plansForDay.find((p) => p.fromTransport?.id === highlightedTransportId)
       if (!target?.fromTransport) return
