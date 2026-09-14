@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { isAxiosError } from 'axios'
+import { useNavigate } from 'react-router-dom'
 import { tripApi } from '../api/trip-api'
 import { useAuthStore } from '@/app/store/auth-store'
 import { useTripCreationStore } from '@/app/store/trip-creation-store'
@@ -39,9 +41,11 @@ const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 // 사용자가 어느 페이지에 있든 계속 진행된다 — 진행 상태는 컴포넌트 지역 상태가 아니라
 // sessionStorage에 persist되는 공용 store로 읽고 쓴다.
 export function useTripCreationPipeline(): void {
+  const navigate = useNavigate()
   const tripId = useTripCreationStore((s) => s.tripId)
   const startedAt = useTripCreationStore((s) => s.startedAt)
   const attempt = useTripCreationStore((s) => s.attempt)
+  const storedStatus = useTripCreationStore((s) => s.status)
   const setStatus = useTripCreationStore((s) => s.setStatus)
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
@@ -92,21 +96,22 @@ export function useTripCreationPipeline(): void {
     // 비로그인 상태에선 요청하지 않는다. tripId가 sessionStorage에 남아 있어서 로그아웃 후에도
     // /plan/api/{id}/status를 두드렸고, 로그인 흐름과 겹치면서 403을 만들어냈다.
     if (tripId === null || runKey === null || !isAuthenticated) return
+    // 실패/타임아웃으로 멈춘 실행은 새로고침이나 화면 재진입으로 저절로 다시 돌지 않는다.
+    // 재개는 사용자가 '재생성 하기'를 눌러 retry()가 status를 pending으로 되돌릴 때만 일어난다.
+    if (storedStatus !== 'pending') return
     if (startedRunRef.current === runKey) return
     startedRunRef.current = runKey
 
     // 중단 판단을 effect cleanup이 아니라 store를 다시 읽어서 한다 — StrictMode의 effect
     // 이중 실행에서 첫 번째 cleanup이 방금 시작한 체인을 죽여버리는 것을 피하기 위해서다.
     // attempt까지 보므로 재시도가 시작되면 이전 시도의 체인은 여기서 스스로 멈춘다.
-    const isCurrent = () => {
+    const isCurrentRun = () => {
       const creation = useTripCreationStore.getState()
-      return (
-        creation.tripId === tripId &&
-        creation.attempt === attempt &&
-        useAuthStore.getState().isAuthenticated &&
-        !timedOutRef.current
-      )
+      return creation.tripId === tripId && creation.attempt === attempt
     }
+
+    const isCurrent = () =>
+      isCurrentRun() && useAuthStore.getState().isAuthenticated && !timedOutRef.current
 
     const run = async () => {
       // 재개용 1회 조회. 새로고침이나 탭 재진입으로 체인이 끊겼을 때 어디까지 진행됐는지
@@ -147,14 +152,34 @@ export function useTripCreationPipeline(): void {
           `status=${err?.response?.status ?? '(없음)'}, code=${err?.code ?? '(없음)'}`,
         err?.response?.data ?? err,
       )
+      // 재시도가 이미 시작됐다면 이 오류는 이전 실행의 늦은 응답이다 — 로그만 남기고
+      // 새 실행의 상태를 덮어쓰지 않는다.
+      if (!isCurrentRun()) return
+      if (isAxiosError(err) && err.response?.data?.code === '0002') {
+        useTripCreationStore.getState().clear()
+        sessionStorage.removeItem('trip_form_pending')
+        navigate('/trips/create', { replace: true, state: { restartTripCreation: true } })
+        return
+      }
       setIsPipelineError(true)
     })
-  }, [tripId, attempt, runKey, isAuthenticated])
+  }, [tripId, attempt, runKey, storedStatus, isAuthenticated, navigate])
 
   useEffect(() => {
     if (tripId === null) return
+    // 이 인스턴스가 시작하지 않은 실행(새로고침으로 복원된 실패 상태 등)의 status는 건드리지
+    // 않는다 — 지역 state는 마운트 시 전부 false라 persist된 failed를 pending으로 되돌려버린다.
+    if (startedRunRef.current !== runKey) return
 
-    const status = isTimedOut ? 'timeout' : isDone ? 'done' : 'pending'
+    // 파이프라인 오류는 pending이 아니라 failed다 — pending으로 두면 실패해도 로딩 화면이
+    // 계속 걸린다 (TripCreatePage가 pending을 "생성 중"으로 읽는다).
+    const status = isTimedOut
+      ? 'timeout'
+      : isPipelineError
+        ? 'failed'
+        : isDone
+          ? 'done'
+          : 'pending'
     setStatus(status, isPipelineError)
-  }, [tripId, isTimedOut, isDone, isPipelineError, setStatus])
+  }, [tripId, runKey, isTimedOut, isDone, isPipelineError, setStatus])
 }
