@@ -1,17 +1,17 @@
 import type {
+  DatePlan,
   PlacePlan,
   PlanListBody,
   PlanListResponse,
   PlanThemeCard,
+  RawDatePlan,
   RawPlacePlan,
-  RawPlacePlanTimeObj,
   RawPlanListResponse,
   RawRecommendedPlaceItem,
   RawRouteInfo,
   RawRouteStep,
   RawTimeObject,
   RawTransport,
-  RawTransportTimeObj,
   RecommendedPlaceItem,
   RouteInfo,
   RouteStep,
@@ -103,9 +103,11 @@ function mapTransport(raw: RawTransport): Transport {
   }
 }
 
-function mapPlacePlan(raw: RawPlacePlan): PlacePlan {
+function mapPlacePlan(raw: RawPlacePlan, datePlanId: number): PlacePlan {
   return {
     id: raw.id,
+    datePlanId,
+    orderIndex: raw.orderIndex,
     date: raw.date,
     startTime: raw.startTime,
     endTime: raw.endTime,
@@ -114,15 +116,37 @@ function mapPlacePlan(raw: RawPlacePlan): PlacePlan {
   }
 }
 
-export function mapPlanListResponse(raw: RawPlanListResponse): PlanListResponse {
-  // DatePlan은 날짜 x 테마로 하나씩 온다. 같은 테마의 날짜들을 날짜순으로 이어붙여 한 코스로 만든다.
-  // placePlanInfos는 백엔드가 orderIndex 순으로 주므로 그 안에서는 다시 정렬하지 않는다.
-  const body = {} as PlanListBody
-  for (const datePlan of [...raw.body].sort((a, b) => a.date.localeCompare(b.date))) {
-    const plans = (body[datePlan.datePlanTheme] ??= [])
-    plans.push(...datePlan.placePlanInfos.map(mapPlacePlan))
+// 목록 조회와 편집 응답이 같은 DatePlan 형태를 쓰므로 매핑도 한 곳에서 한다.
+// placePlanInfos는 백엔드가 orderIndex 순으로 주므로 여기서 다시 정렬하지 않는다.
+// 화면에서의 정렬은 sortPlansByOrder(lib/plan-order)가 orderIndex로 담당한다.
+export function mapDatePlan(raw: RawDatePlan): DatePlan {
+  return {
+    id: raw.id,
+    date: raw.date,
+    theme: raw.datePlanTheme,
+    version: raw.version,
+    plans: raw.placePlanInfos.map((placePlan) => mapPlacePlan(placePlan, raw.id)),
   }
-  return { message: raw.message, body }
+}
+
+// 캐시에는 DatePlan 형태를 그대로 둔다 — 편집 API가 DatePlan 단위라 응답을 그대로 갈아끼울 수
+// 있고, 요청에 필요한 id와 version이 보존된다. 화면용 테마별 코스는 groupPlansByTheme로 파생한다.
+export function mapPlanListResponse(raw: RawPlanListResponse): PlanListResponse {
+  const datePlans = [...raw.body]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(mapDatePlan)
+
+  return { message: raw.message, datePlans }
+}
+
+// DatePlan은 날짜 x 테마로 하나씩 온다. 같은 테마의 날짜들을 날짜순으로 이어붙여 한 코스로 만든다.
+export function groupPlansByTheme(datePlans: DatePlan[]): PlanListBody {
+  const body = {} as PlanListBody
+  for (const datePlan of [...datePlans].sort((a, b) => a.date.localeCompare(b.date))) {
+    const plans = (body[datePlan.theme] ??= [])
+    plans.push(...datePlan.plans)
+  }
+  return body
 }
 
 // ── Theme card mapping ────────────────────────────────────────
@@ -132,31 +156,6 @@ export function mapPlanListResponse(raw: RawPlanListResponse): PlanListResponse 
 export function mapTimeObject(t: RawTimeObject): string {
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${pad(t.hour)}:${pad(t.minute)}:${pad(t.second)}`
-}
-
-function mapTransportTimeObj(raw: RawTransportTimeObj): Transport {
-  return {
-    id: raw.id,
-    startTime: mapTimeObject(raw.startTime),
-    endTime: mapTimeObject(raw.endTime),
-    takeTime: raw.takeTime,
-    totalDistanceMeters: raw.totalDistanceMeters,
-    fromPlacePlanId: raw.fromPlacePlanId,
-    toPlacePlanId: raw.toPlacePlanId,
-    transportPlanId: raw.transportPlanId,
-    routeInfo: mapRouteInfo(raw.routeInfo),
-  }
-}
-
-export function mapReplacedPlacePlan(raw: RawPlacePlanTimeObj): PlacePlan {
-  return {
-    id: raw.id,
-    date: raw.date,
-    startTime: mapTimeObject(raw.startTime),
-    endTime: mapTimeObject(raw.endTime),
-    placeInfo: raw.placeInfo,
-    fromTransport: raw.fromTransport ? mapTransportTimeObj(raw.fromTransport) : null,
-  }
 }
 
 export function mapRecommendedPlaceItems(raw: RawRecommendedPlaceItem[]): RecommendedPlaceItem[] {
@@ -171,8 +170,10 @@ export function mapRecommendedPlaceItems(raw: RawRecommendedPlaceItem[]): Recomm
 
 // 백엔드가 모든 테마를 만들어주지는 않는다 (지금은 FOOD/HEALING/LANDMARK 3종).
 // 일정이 없는 테마는 빈 카드가 되므로 제외한다.
-export const mapPlanListToThemeCards = (body: PlanListBody): PlanThemeCard[] =>
-  THEME_ORDER.filter((theme) => body[theme]?.length).map((theme) => {
+export const mapPlanListToThemeCards = (datePlans: DatePlan[]): PlanThemeCard[] => {
+  const body = groupPlansByTheme(datePlans)
+
+  return THEME_ORDER.filter((theme) => body[theme]?.length).map((theme) => {
     const plans = body[theme] ?? []
     const dayCount = getUniqueDayCount(plans)
     const meta = THEME_META[theme]
@@ -191,3 +192,4 @@ export const mapPlanListToThemeCards = (body: PlanListBody): PlanThemeCard[] =>
       summary: meta.summary,
     }
   })
+}
