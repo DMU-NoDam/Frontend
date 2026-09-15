@@ -157,7 +157,7 @@ export function TripManageSheet({ tripId, onClose }: Props) {
                       onClick={() => setMode('delegate')}
                       disabled={isBusy}
                     >
-                      소유자 넘기고 나가기
+                      여행 나가기
                     </button>
                   )}
 
@@ -257,7 +257,7 @@ export function TripManageSheet({ tripId, onClose }: Props) {
                 onClick={handleDelegateAndLeave}
                 disabled={isBusy || newOwnerUserId == null}
               >
-                {leaveMutation.isPending ? '나가는 중...' : '넘기고 나가기'}
+                {leaveMutation.isPending ? '나가는 중...' : '여행 나가기'}
               </button>
               <button type="button" className="trip-manage__cancel" onClick={backToMenu} disabled={isBusy}>
                 취소
