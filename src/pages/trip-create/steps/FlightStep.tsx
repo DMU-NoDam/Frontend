@@ -37,11 +37,11 @@ function FlightSection({
 }) {
   const [inputValue, setInputValue] = useState('')
   const { data, isFetching, isError } = useFlightLookup(searchedIata, date)
-  const label = field === 'departFlight' ? '출발' : '도착'
+  const label = field === 'departFlight' ? '도착' : '출발'
 
   const getDisplayText = (flight: FlightInfo) => {
-    const airport = field === 'departFlight' ? flight.departureAirport : flight.arrivalAirport
-    const time = field === 'departFlight' ? flight.departureTime : flight.arrivalTime
+    const airport = field === 'departFlight' ? flight.arrivalAirport : flight.departureAirport
+    const time = field === 'departFlight' ? flight.arrivalTime : flight.departureTime
     return `${flight.flightIata} · ${airport} · ${time}`
   }
 

@@ -78,7 +78,7 @@
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  padding: 16px 0px;
+  padding: 8px 4px;
   text-decoration: none;
 }
 
@@ -374,8 +374,8 @@
 /* ── Flight step ── */
 .flight-section {
   display: grid;
-  gap: 4px;
-  padding: 8px 20px;
+  gap: 12px;
+  padding: 16px 20px 8px;
   border-radius: 14px;
   background: #f7f7f8;
 }
