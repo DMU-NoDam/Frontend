@@ -23,10 +23,10 @@ export function mapFormToRequest(values: TripCreateFormValues): TripCreateReques
     region: values.region,
     selectedPlace: values.selectedPlace.map((p) => p.id),
     departFlight: values.departFlight
-      ? { airport: values.departFlight.departureAirport, time: values.departFlight.departureTime }
+      ? { airport: values.departFlight.arrivalAirport, time: values.departFlight.arrivalTime }
       : undefined,
     arriveFlight: values.arriveFlight
-      ? { airport: values.arriveFlight.arrivalAirport, time: values.arriveFlight.arrivalTime }
+      ? { airport: values.arriveFlight.departureAirport, time: values.arriveFlight.departureTime }
       : undefined,
   }
 
