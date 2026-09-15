@@ -185,6 +185,7 @@ function ReorderableItem({
       dragListener={false}
       dragControls={controls}
       className="trip-schedule-view__item trip-schedule-view__item--no-transport trip-schedule-view__item--draggable"
+      animate={{ scale: 1, boxShadow: '0 0px 0px rgba(0, 0, 0, 0)' }}
       whileDrag={{ scale: 1.02, zIndex: 1, boxShadow: '0 8px 20px rgba(0, 0, 0, 0.12)' }}
       ref={itemRef}
       onDragStart={onDragStart}
