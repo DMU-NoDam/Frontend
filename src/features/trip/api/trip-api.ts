@@ -48,7 +48,7 @@ const getTripStatus = async (tripId: string): Promise<TripStatusResponse> => {
 
 // Trip creation pipeline steps 2–4. 백엔드가 동기로 바뀌어서(89a8429) 작업이 끝나야 응답이 온다 —
 // 전역 timeout 5초로는 AI 일정 생성을 기다리지 못하고 ECONNABORTED로 죽는다.
-const PLAN_STEP_TIMEOUT_MS = 180000
+const PLAN_STEP_TIMEOUT_MS = 300000
 
 // 이미 같은 trip의 단계가 서버에서 돌고 있으면 백엔드 락(TripLockService)이 ALREADY_PROCESSING을
 // 던지는데, 이 ErrorCode의 status가 202라 axios는 성공으로 넘겨준다. 그대로 통과시키면 실행되지도
