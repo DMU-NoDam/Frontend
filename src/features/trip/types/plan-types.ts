@@ -66,6 +66,7 @@ export type PlaceInfo = {
   placeType: PlaceType
   googleId: string
   name: string
+  summary?: string | null
   address: string
   priceType: PriceType | null
   lon: number

@@ -78,6 +78,9 @@ export function PlaceRecommendSheet({
                 onClick={() => onSelect(i)}
               >
                 <span className="place-recommend-sheet__option-name">{item.place.name}</span>
+                {item.place.summary?.trim() && (
+                  <span className="place-recommend-sheet__option-summary">{item.place.summary.trim()}</span>
+                )}
               </button>
             </li>
           ))}
