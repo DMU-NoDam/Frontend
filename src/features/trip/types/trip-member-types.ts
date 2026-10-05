@@ -2,6 +2,7 @@ export type TripMemberRole = 'OWNER' | 'MEMBER'
 
 export type TripMemberInfo = {
   userId: number
+  userName: string
   role: TripMemberRole
   joinedAt: string
 }
