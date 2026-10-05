@@ -50,6 +50,9 @@ export function TripDetailPage() {
 
   // useTripPlans에 폴링 중지 여부로 넘겨야 해서 조회보다 먼저 선언한다
   const [editMode, setEditMode]                           = useState(false)
+  // Day를 바꾸거나 재시도할 때 올린다. useTripPlans가 진입 시와 이 값이 바뀔 때마다 서버에서
+  // 전체 일정을 다시 읽고, 그동안은 이전 일정을 내보내지 않는다.
+  const [plansRequestSeq, setPlansRequestSeq]             = useState(0)
 
   const {
     data: plans,
@@ -58,7 +61,7 @@ export function TripDetailPage() {
     isTransportPending,
   } = useTripPlans(
     trip?.tripThemeType ? tripId : undefined,
-    { pausePolling: editMode },
+    { pausePolling: editMode, refreshKey: plansRequestSeq },
   )
 
   const selectedPlans: PlacePlan[] = useMemo(() => {
@@ -70,6 +73,18 @@ export function TripDetailPage() {
     () => [...new Set(selectedPlans.map((p) => p.date))].sort(),
     [selectedPlans],
   )
+
+  // 마지막으로 받은 날짜 목록. Day 전환 조회 중에도 날짜 탭은 남겨둬야 이어서 다른 Day를
+  // 고를 수 있다 (일정 목록과 지도는 숨긴다). 다른 여행으로 넘어가면 쓰지 않는다.
+  const [lastPlanDates, setLastPlanDates] = useState<{ tripId: string; dates: string[] } | null>(null)
+  if (tripId && planDates.length > 0 && (lastPlanDates?.tripId !== tripId || lastPlanDates.dates !== planDates)) {
+    setLastPlanDates({ tripId, dates: planDates })
+  }
+  const isPlansStatusShown = isPlansLoading || isPlansError
+  const dayTabDates = useMemo(() => {
+    if (!isPlansStatusShown) return planDates
+    return lastPlanDates && lastPlanDates.tripId === tripId ? lastPlanDates.dates : []
+  }, [isPlansStatusShown, planDates, lastPlanDates, tripId])
 
   const [nameInput, setNameInput]                         = useState(trip?.name ?? '')
   const [personCountInput, setPersonCountInput]           = useState(String(trip?.personCount ?? ''))
@@ -104,10 +119,10 @@ export function TripDetailPage() {
 
   const selectedDate = useMemo(
     () =>
-      userSelectedDate && planDates.includes(userSelectedDate)
+      userSelectedDate && dayTabDates.includes(userSelectedDate)
         ? userSelectedDate
-        : (planDates[0] ?? null),
-    [userSelectedDate, planDates],
+        : (dayTabDates[0] ?? null),
+    [userSelectedDate, dayTabDates],
   )
 
   const handleToggleFixed = () => {
@@ -223,6 +238,17 @@ export function TripDetailPage() {
     setShowRecommendSheet(false)
     setRecommendations([])
     setRecommendTarget(null)
+  }
+
+  const handleDateChange = (date: string) => {
+    // 같은 Day를 다시 누른 것은 전환이 아니다 — 다시 조회하지 않는다
+    if (date === selectedDate) return
+    setUserSelectedDate(date)
+    setPlansRequestSeq((n) => n + 1)
+    setFocusedPlanId(null)
+    setFocusedTransportId(null)
+    setEditingPlanId(null)
+    setPlanEditError(null)
   }
 
   const handleEditCardClick = (plan: PlacePlan) => {
@@ -452,16 +478,24 @@ export function TripDetailPage() {
               </div>
             )
           }
-          if (isPlansLoading) {
-            return <div className="detail-sheet__status">일정을 불러오는 중...</div>
-          }
-          if (isPlansError) {
-            return (
-              <div className="detail-sheet__status detail-sheet__status--error">
-                일정을 불러오지 못했어요.
-              </div>
-            )
-          }
+          const statusContent = isPlansLoading
+            ? <div className="detail-sheet__status">일정을 불러오는 중...</div>
+            : isPlansError
+              ? (
+                <div className="detail-sheet__status detail-sheet__status--error" role="alert">
+                  <span>일정을 불러오지 못했어요.</span>
+                  <button
+                    type="button"
+                    className="detail-sheet__retry-btn"
+                    onClick={() => setPlansRequestSeq((n) => n + 1)}
+                  >
+                    다시 시도
+                  </button>
+                </div>
+              )
+              : null
+          // 날짜 탭을 그릴 날짜도 아직 모르면(첫 조회) 상태만 보여준다
+          if (statusContent && dayTabDates.length === 0) return statusContent
           return (
             <>
             {planEditError && !showRecommendSheet && (
@@ -469,8 +503,10 @@ export function TripDetailPage() {
             )}
             <TripScheduleView
               plans={selectedPlans}
+              dates={statusContent ? dayTabDates : undefined}
+              statusContent={statusContent}
               selectedDate={selectedDate ?? undefined}
-              onDateChange={(date) => { setUserSelectedDate(date); setFocusedPlanId(null); setFocusedTransportId(null); setEditingPlanId(null); setPlanEditError(null) }}
+              onDateChange={handleDateChange}
               onPlaceClick={(plan) => { setFocusedPlanId((prev) => (prev === plan.id ? null : plan.id)); setFocusedTransportId(null) }}
               focusedPlanId={editMode ? editingPlanId : focusedPlanId}
               onTransportClick={(id) => setFocusedTransportId((prev) => (prev === id ? null : id))}

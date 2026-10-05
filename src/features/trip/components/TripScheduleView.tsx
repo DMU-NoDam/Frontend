@@ -253,6 +253,10 @@ export type TripScheduleViewProps = {
   reorderDisabled?: boolean
   // 값이 바뀌면 화면 순서를 서버 순서로 되돌린다 (저장 실패 롤백용)
   resetOrderSignal?: number
+  // 넘기면 일정 목록 대신 이 내용(조회 중/실패)을 보여준다. 날짜 탭은 dates로 그대로 남긴다
+  statusContent?: React.ReactNode
+  // 날짜 탭에 쓸 날짜. 생략하면 plans에서 뽑는다
+  dates?: string[]
 }
 
 export function TripScheduleView({
@@ -275,8 +279,10 @@ export function TripScheduleView({
   isTransportPending,
   reorderDisabled,
   resetOrderSignal,
+  statusContent,
+  dates,
 }: TripScheduleViewProps) {
-  const sortedDates = useMemo(() => getSortedDates(plans), [plans])
+  const sortedDates = useMemo(() => dates ?? getSortedDates(plans), [dates, plans])
   const grouped     = useMemo(() => groupByDate(plans),    [plans])
 
   const isControlled = controlledDate !== undefined
@@ -404,6 +410,8 @@ export function TripScheduleView({
       </nav>
 
       <div className="trip-schedule-view__list">
+        {statusContent ?? (
+        <>
         {selectedDate && (
           <header className="trip-schedule-view__section-header">
             <div className="trip-schedule-view__section-left">
@@ -515,6 +523,8 @@ export function TripScheduleView({
               )}
             </div>
           ))
+        )}
+        </>
         )}
       </div>
     </>

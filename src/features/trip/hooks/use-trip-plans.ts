@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { isCancelledError, useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { planApi } from '../api/plan-api'
 import {
@@ -28,24 +28,70 @@ type Options = {
   // 편집 중에는 멈춘다. 편집 모드에서는 경로를 보여주지 않아 폴링할 이유가 없고,
   // 도중에 목록이 새로 오면 드래그하던 순서가 서버 순서로 되돌아간다.
   pausePolling?: boolean
+  // 상세 페이지 전용. 넘기면 마운트할 때와 이 값이 바뀔 때마다 캐시 유효 시간과 관계없이
+  // 서버에서 다시 읽고, 그 조회가 끝나기 전까지는 캐시에 남은 이전 일정을 내보내지 않는다.
+  // 폴링·편집 응답으로 캐시가 바뀌는 것은 이 조회가 아니므로 로딩으로 돌아가지 않는다.
+  refreshKey?: number
 }
 
-export const useTripPlans = (tripId: string | undefined, { pausePolling }: Options = {}) => {
+// refreshKey로 시작한 조회의 결과. key가 지금 요청과 같을 때만 유효하다
+type FreshResult = { key: string; ok: boolean }
+
+export const useTripPlans = (
+  tripId: string | undefined,
+  { pausePolling, refreshKey }: Options = {},
+) => {
   // 창이 닫히도록 안 채워진 작업의 signature. 외부 경로 API가 실패했을 가능성이 크므로
   // 그 작업에 대해서는 더 묻지 않는다. 편집이 새로 일어나면 signature가 달라져 다시 기다린다.
   const [abandonedSignature, setAbandonedSignature] = useState<string | null>(null)
+  const [freshResult, setFreshResult] = useState<FreshResult | null>(null)
+
+  const isFreshMode = refreshKey !== undefined
+  const freshKey = isFreshMode && tripId ? `${tripId}:${refreshKey}` : null
 
   const query = useQuery({
     queryKey: tripKeys.plans(tripId ?? ''),
     queryFn: () => planApi.getPlans(tripId!),
     enabled: Boolean(tripId),
     meta: { globalLoading: true },
+    // 진입 조회는 아래 effect가 직접 한다. 여기서도 하면 캐시가 있을 때 요청이 두 번 나간다
+    ...(isFreshMode && { refetchOnMount: false }),
     // 캐시 상태에서 직접 판단한다 — 아래 isTransportPending을 참조하면 순환이 된다
     refetchInterval: (q) =>
       isWaitingForTransport(q.state.data?.datePlans, Boolean(pausePolling), abandonedSignature)
         ? TRANSPORT_POLL_INTERVAL_MS
         : false,
   })
+
+  const { refetch } = query
+
+  useEffect(() => {
+    if (!freshKey) return
+    let ignore = false
+
+    const fetchLatest = async () => {
+      try {
+        // 데이터가 있으면 진행 중인 조회(폴링, 직전 Day의 조회)를 취소하고 새로 요청한다.
+        // 아직 없으면 방금 시작된 첫 조회를 그대로 기다린다 (react-query가 같은 요청을 재사용).
+        await refetch({ cancelRefetch: true, throwOnError: true })
+      } catch (error) {
+        if (!isCancelledError(error)) throw error
+        // 더 늦게 시작한 조회(편집 실패 후 invalidate 등)가 이 요청을 대체했다. 그 결과를 기다린다
+        await refetch({ cancelRefetch: false, throwOnError: true })
+      }
+    }
+
+    // 빠르게 Day를 바꾸면 앞선 조회의 결과는 버린다 — 마지막 요청의 결과만 반영한다
+    fetchLatest().then(
+      () => { if (!ignore) setFreshResult({ key: freshKey, ok: true }) },
+      () => { if (!ignore) setFreshResult({ key: freshKey, ok: false }) },
+    )
+    return () => { ignore = true }
+  }, [freshKey, refetch])
+
+  const isFreshPending = freshKey !== null && freshResult?.key !== freshKey
+  const isFreshFailed = freshKey !== null && freshResult?.key === freshKey && !freshResult.ok
+  const hideData = isFreshPending || isFreshFailed
 
   const datePlans = query.data?.datePlans
   const signature = datePlans ? signatureOf(datePlans) : ''
@@ -63,5 +109,11 @@ export const useTripPlans = (tripId: string | undefined, { pausePolling }: Optio
     return () => clearTimeout(timer)
   }, [isTransportPending, signature])
 
-  return { ...query, isTransportPending }
+  return {
+    ...query,
+    data: hideData ? undefined : query.data,
+    isLoading: isFreshPending || query.isLoading,
+    isError: isFreshFailed || (!isFreshPending && query.isError),
+    isTransportPending: !hideData && isTransportPending,
+  }
 }

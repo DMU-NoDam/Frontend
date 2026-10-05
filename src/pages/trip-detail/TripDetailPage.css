@@ -224,7 +224,19 @@
 }
 
 .detail-sheet__status--error {
+  flex-direction: column;
+  gap: 12px;
   color: #dc2626;
+}
+
+.detail-sheet__retry-btn {
+  padding: 8px 16px;
+  border: 1px solid #d4d6dd;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #1f2024;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 /* 일정 편집 실패 안내. 목록은 그대로 두고 위에 한 줄로만 알린다 */
