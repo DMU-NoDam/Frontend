@@ -111,7 +111,7 @@ export function TripManageSheet({ tripId, onClose }: Props) {
               {members.map((member) => (
                 <div className="trip-manage__member" key={member.userId}>
                   <span className="trip-manage__member-id">
-                    사용자 #{member.userId}
+                    {member.userName}
                     {member.userId === currentUserId && (
                       <span className="trip-manage__member-me"> (나)</span>
                     )}
@@ -239,7 +239,7 @@ export function TripManageSheet({ tripId, onClose }: Props) {
                       onChange={() => setNewOwnerUserId(member.userId)}
                       disabled={isBusy}
                     />
-                    사용자 #{member.userId}
+                    {member.userName}
                   </span>
                   <span className="trip-manage__member-role">{ROLE_LABEL[member.role]}</span>
                 </label>
