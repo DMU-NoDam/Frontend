@@ -123,6 +123,19 @@
   color: #111827;
 }
 
+.place-recommend-sheet__option-summary {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #6b7280;
+  overflow-wrap: anywhere;
+  /* 소개가 길어도 목록이 늘어나지 않도록 2줄까지만 보여주고 말줄임 처리한다 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
 /* ── Footer ── */
 
 .place-recommend-sheet__footer {
