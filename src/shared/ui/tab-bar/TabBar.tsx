@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { RiHomeFill } from 'react-icons/ri'
 import { LuPlane, LuUser } from 'react-icons/lu'
+import { TbTool } from 'react-icons/tb'
 import './TabBar.css'
 
 type Tab = {
@@ -14,6 +15,7 @@ type Tab = {
 const TABS: Tab[] = [
   { path: '/dashboard', label: '홈', Icon: RiHomeFill },
   { path: '/trips', label: '여행', Icon: LuPlane },
+  { path: '/tools', label: '여행도구', Icon: TbTool },
   { path: '/mypage', label: '마이', Icon: LuUser },
 ]
 
