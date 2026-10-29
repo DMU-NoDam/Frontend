@@ -5,7 +5,7 @@ import './WeatherHeader.css'
 
 type Props = {
   location: TripLocation | null
-  // 날씨를 볼 날짜 (yyyy-MM-dd). 여행 중이면 오늘, 아니면 여행 시작일
+  // 날씨를 볼 날짜 (yyyy-MM-dd). 여행지의 오늘 날씨를 보여주므로 오늘 날짜
   date: string | undefined
   isTripsLoading: boolean
 }
@@ -41,7 +41,7 @@ export function WeatherHeader({ location, date, isTripsLoading }: Props) {
     <header className="weather-header">
       <div className="weather-header__place-row">
         <p className="weather-header__place">{place}</p>
-        <p className="weather-header__date">{formatDateLabel(date)}</p>
+        <p className="weather-header__date">오늘 · {formatDateLabel(date)}</p>
       </div>
 
       {isLoading ? (
@@ -49,7 +49,7 @@ export function WeatherHeader({ location, date, isTripsLoading }: Props) {
       ) : isError ? (
         <p className="weather-header__notice">날씨 정보를 찾을 수 없어요</p>
       ) : !today ? (
-        <p className="weather-header__notice">여행 7일 전부터 날씨를 볼 수 있어요</p>
+        <p className="weather-header__notice">오늘 날씨 정보가 아직 없어요</p>
       ) : (
         <>
           <div className="weather-header__current">
