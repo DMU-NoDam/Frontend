@@ -86,7 +86,7 @@ export function MemoEditorSheet({ tripId, memo, onClose }: Props) {
               onClick={() => setIcon(option.type)}
               disabled={isBusy}
             >
-              <span aria-hidden="true">{option.emoji}</span>
+              <option.Icon aria-hidden="true" />
               <span className="memo-editor__icon-label">{option.label}</span>
             </button>
           ))}
