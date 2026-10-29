@@ -1,4 +1,4 @@
-/* ── Memo editor : 아래에서 올라오는 시트 ─────────────────────── */
+/* ── Memo editor : 화면 가운데 팝업 ─────────────────────────── */
 
 .memo-editor__backdrop {
   position: fixed;
@@ -15,34 +15,25 @@
   cursor: default;
 }
 
+/* 너비는 앱 화면에 맞춘다: 휴대폰은 화면 너비 - 32px, PC는 앱 틀(app-shell 393px) - 32px.
+   팝업은 body에 붙어 app-shell의 CSS 변수를 물려받지 못하므로 393px을 직접 쓴다 */
 .memo-editor {
   position: fixed;
   z-index: 300;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  margin: 0 auto;
-  width: 100%;
-  max-width: 480px;
+  inset: 0;
+  margin: auto;
+  width: min(calc(100% - 32px), 361px);
+  height: fit-content;
   max-height: calc(100dvh - 48px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 8px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  padding: 20px;
   background: #ffffff;
-  border-radius: 24px 24px 0 0;
-  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.18);
-  animation: memo-editor-slide-up 0.26s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.memo-editor__handle {
-  align-self: center;
-  width: 40px;
-  height: 4px;
-  margin-bottom: -6px;
-  border-radius: 4px;
-  background: #e8e9f1;
+  border-radius: 24px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+  animation: memo-editor-pop 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 /* ── Header ──────────────────────────────────────────────── */
@@ -326,9 +317,9 @@
   outline-offset: 2px;
 }
 
-@keyframes memo-editor-slide-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+@keyframes memo-editor-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 @keyframes memo-editor-fade {

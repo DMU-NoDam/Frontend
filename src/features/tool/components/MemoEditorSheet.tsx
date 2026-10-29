@@ -19,7 +19,7 @@ type Props = {
 const TITLE_MAX = 50
 const CONTENT_MAX = 2000
 
-// 아래에서 올라오는 메모 작성/수정 시트
+// 화면 가운데 뜨는 메모 작성/수정 팝업
 export function MemoEditorSheet({ tripId, memo, onClose }: Props) {
   const [icon, setIcon] = useState<MemoIconType>(memo?.icon ?? 'ETC')
   const [title, setTitle] = useState(memo?.title ?? '')
@@ -89,8 +89,6 @@ export function MemoEditorSheet({ tripId, memo, onClose }: Props) {
         aria-labelledby="memo-editor-title"
         onSubmit={handleSubmit}
       >
-        <div className="memo-editor__handle" aria-hidden="true" />
-
         <header className="memo-editor__header">
           <h2 id="memo-editor-title" className="memo-editor__title">
             {memo ? '메모 수정' : '새 메모'}
