@@ -1,0 +1,18 @@
+.exchange-card__pair {
+  font-size: 10px;
+  line-height: 12px;
+  color: #000000;
+}
+
+.exchange-card__main {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 17px;
+  color: #000000;
+}
+
+.exchange-card__sub {
+  font-size: 10px;
+  line-height: 12px;
+  color: #2f3036;
+}
