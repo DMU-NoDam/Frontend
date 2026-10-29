@@ -26,7 +26,8 @@ export function ExchangeRateCard({ target }: Props) {
         {data ? (
           <>
             <strong className="exchange-card__main">
-              {formatMoney(BASE_CURRENCY, BASE_AMOUNT)} = {formatMoney(target, BASE_AMOUNT * data.rate)}
+              {formatMoney(BASE_CURRENCY, BASE_AMOUNT)} ={' '}
+              <span className="exchange-card__target">{formatMoney(target, BASE_AMOUNT * data.rate)}</span>
             </strong>
             <span className="exchange-card__sub">
               1 {target} = {(1 / data.rate).toFixed(2)} {BASE_CURRENCY} · 최근 업데이트{' '}

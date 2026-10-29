@@ -11,6 +11,11 @@
   color: #000000;
 }
 
+/* 환전 결과(여행지 통화) 금액만 강조 */
+.exchange-card__target {
+  color: #ff6f9f;
+}
+
 .exchange-card__sub {
   font-size: 10px;
   line-height: 12px;
