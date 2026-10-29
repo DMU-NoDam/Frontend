@@ -1,8 +1,9 @@
 /* ── 개발용 날씨 장면 선택기 (오른쪽 위) ─────────────────────── */
 
+/* 해(오른쪽 위)와 최고/최저 박스를 가리지 않도록 박스 아래에 둔다 */
 .scene-picker {
   position: absolute;
-  top: 10px;
+  top: 172px;
   right: 12px;
   z-index: 1;
   display: flex;
@@ -27,7 +28,12 @@
   white-space: nowrap;
 }
 
+/* 아래는 시트에 가려지므로 버튼 위쪽으로 펼친다 */
 .scene-picker__menu {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  width: 230px;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
