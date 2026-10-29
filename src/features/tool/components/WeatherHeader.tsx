@@ -1,0 +1,78 @@
+import { useWeather } from '../hooks/use-weather'
+import { getWeatherLabel } from '../lib/weather-code'
+import type { TripLocation } from '../lib/trip-location'
+import './WeatherHeader.css'
+
+type Props = {
+  location: TripLocation | null
+  // 날씨를 볼 날짜 (yyyy-MM-dd). 여행 중이면 오늘, 아니면 여행 시작일
+  date: string | undefined
+  isTripsLoading: boolean
+}
+
+function formatDateLabel(date: string): string {
+  const [year, month, day] = date.split('-').map(Number)
+  // 'yyyy-MM-dd'를 new Date()에 그대로 넣으면 UTC로 해석돼 요일이 하루 밀릴 수 있다
+  return new Date(year, month - 1, day).toLocaleDateString('ko-KR', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long',
+  })
+}
+
+export function WeatherHeader({ location, date, isTripsLoading }: Props) {
+  const { data, isLoading, isError } = useWeather(location?.cityName, date)
+  const today = data?.forecast.find((d) => d.date === date) ?? data?.forecast[0]
+
+  if (!location || !date) {
+    return (
+      <header className="weather-header">
+        <p className="weather-header__place">여행도구</p>
+        <p className="weather-header__notice">
+          {isTripsLoading ? '여행 정보를 확인하고 있어요' : '확정된 여행이 생기면 날씨를 보여드려요'}
+        </p>
+      </header>
+    )
+  }
+
+  const place = location.countryName ? `${location.cityName}, ${location.countryName}` : location.cityName
+
+  return (
+    <header className="weather-header">
+      <div className="weather-header__place-row">
+        <p className="weather-header__place">{place}</p>
+        <p className="weather-header__date">{formatDateLabel(date)}</p>
+      </div>
+
+      {isLoading ? (
+        <p className="weather-header__notice">날씨를 불러오는 중...</p>
+      ) : isError ? (
+        <p className="weather-header__notice">날씨 정보를 찾을 수 없어요</p>
+      ) : !today ? (
+        <p className="weather-header__notice">여행 7일 전부터 날씨를 볼 수 있어요</p>
+      ) : (
+        <>
+          <div className="weather-header__current">
+            <span className="weather-header__temp">{Math.round(today.maxTemperature)}°</span>
+            <span className="weather-header__summary">
+              {getWeatherLabel(today.weatherCode).emoji} {getWeatherLabel(today.weatherCode).label}
+            </span>
+          </div>
+
+          <div className="weather-header__detail-row">
+            <dl className="weather-header__detail">
+              <div>
+                <dt>최고</dt>
+                <dd>{Math.round(today.maxTemperature)}°</dd>
+              </div>
+              <div>
+                <dt>최저</dt>
+                <dd>{Math.round(today.minTemperature)}°</dd>
+              </div>
+            </dl>
+          </div>
+        </>
+      )}
+    </header>
+  )
+}
