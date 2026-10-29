@@ -45,6 +45,13 @@ const LAYERS: Record<Scene, NoiseLayer[]> = {
   ],
 }
 
+// WeatherScene.css 하늘 그라데이션의 [맨 위, 맨 아래] 색. 유리 물방울이 이 하늘을 거꾸로 비춘다
+const PRECIPITATION_SKY: Record<'rain' | 'storm' | 'snow', [string, string]> = {
+  rain: ['#46505b', '#87919b'],
+  storm: ['#1f252c', '#545d67'],
+  snow: ['#9eaab7', '#e9edf1'],
+}
+
 function NoiseLayerSvg({ layer, index }: { layer: NoiseLayer; index: number }) {
   // useId 결과의 특수문자(:, «» 등)가 url(#...) 참조를 깨지 않도록 영숫자만 남긴다
   const filterId = `noise-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`
@@ -98,7 +105,9 @@ export function WeatherScene({ scene }: Props) {
         <NoiseLayerSvg key={`${scene}-${index}`} layer={layer} index={index} />
       ))}
 
-      {precipitation && <PrecipitationCanvas mode={precipitation} still={still} />}
+      {precipitation && (
+        <PrecipitationCanvas mode={precipitation} still={still} sky={PRECIPITATION_SKY[precipitation]} />
+      )}
 
       {scene === 'storm' && <div className="weather-scene__lightning" />}
 
