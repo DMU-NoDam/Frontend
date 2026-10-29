@@ -54,9 +54,20 @@
 }
 
 .weather-header__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-size: 16px;
   font-weight: 600;
   line-height: 22px;
+}
+
+/* SVG에는 text-shadow가 먹지 않으므로 같은 그림자를 drop-shadow로 준다 */
+.weather-header__icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
 }
 
 .weather-header__range {
