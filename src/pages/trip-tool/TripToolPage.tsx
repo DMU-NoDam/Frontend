@@ -7,7 +7,10 @@ import { WeatherHeader } from '@/features/tool/components/WeatherHeader'
 import { ExchangeRateCard } from '@/features/tool/components/ExchangeRateCard'
 import { MemoCard } from '@/features/tool/components/MemoCard'
 import { ChecklistCard } from '@/features/tool/components/ChecklistCard'
+import { WeatherScene } from '@/features/tool/components/weather-scene/WeatherScene'
+import { useDayWeather } from '@/features/tool/hooks/use-weather'
 import { getTripLocation } from '@/features/tool/lib/trip-location'
+import { getWeatherScene, WEATHER_SCENE_TOP_COLOR } from '@/features/tool/lib/weather-scene'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import './TripToolPage.css'
@@ -25,7 +28,6 @@ function getLocalToday(): string {
 }
 
 export function TripToolPage() {
-  useThemeColor('#ff6f9f', '#ffffff')
   const navigate = useNavigate()
   const { data: trips = [], isLoading: isTripsLoading } = useTrips()
 
@@ -40,12 +42,20 @@ export function TripToolPage() {
   // (백엔드는 7일보다 먼 날짜에는 예보를 주지 않는다)
   const weatherDate = trip ? getLocalToday() : undefined
 
+  // 헤더와 같은 조회라 react-query가 한 번만 요청한다
+  const { day: weather } = useDayWeather(location?.cityName, weatherDate)
+  const scene = weather ? getWeatherScene(weather.weatherCode) : null
+  // 상태바 색을 배경 장면의 하늘 색과 이어지게 한다 (날씨가 없으면 기본 분홍)
+  useThemeColor(scene ? WEATHER_SCENE_TOP_COLOR[scene] : '#ff6f9f', '#ffffff')
+
   return (
     <main className="trip-tool-page">
       <TripMapSheet
         collapsedPct={SHEET_COLLAPSED_PCT}
         expandedPct={SHEET_EXPANDED_PCT}
-        mapContent={<div className="trip-tool-page__hero" aria-hidden="true" />}
+        mapContent={
+          scene ? <WeatherScene scene={scene} /> : <div className="trip-tool-page__hero" aria-hidden="true" />
+        }
         overlay={
           <WeatherHeader location={location} date={weatherDate} isTripsLoading={isTripsLoading} />
         }
