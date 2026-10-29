@@ -18,7 +18,7 @@ export function ExchangeRateCard({ target }: Props) {
     <section className="tool-card" aria-labelledby="exchange-card-title">
       <h2 id="exchange-card-title" className="tool-card__title">환율</h2>
 
-      <div className="tool-card__panel">
+      <div className="tool-card__panel exchange-card__panel">
         <span className="exchange-card__pair">
           {getCurrencyName(BASE_CURRENCY)} ({BASE_CURRENCY}) → {getCurrencyName(target)} ({target})
         </span>
