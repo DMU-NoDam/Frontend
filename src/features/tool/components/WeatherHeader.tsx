@@ -1,4 +1,4 @@
-import { useWeather } from '../hooks/use-weather'
+import { useDayWeather } from '../hooks/use-weather'
 import { getWeatherLabel } from '../lib/weather-code'
 import type { TripLocation } from '../lib/trip-location'
 import './WeatherHeader.css'
@@ -21,8 +21,7 @@ function formatDateLabel(date: string): string {
 }
 
 export function WeatherHeader({ location, date, isTripsLoading }: Props) {
-  const { data, isLoading, isError } = useWeather(location?.cityName, date)
-  const today = data?.forecast.find((d) => d.date === date) ?? data?.forecast[0]
+  const { day: today, isLoading, isError } = useDayWeather(location?.cityName, date)
 
   if (!location || !date) {
     return (
