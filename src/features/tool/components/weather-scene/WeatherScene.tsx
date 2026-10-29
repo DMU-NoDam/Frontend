@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import type { WeatherScene as Scene } from '../../lib/weather-scene'
 import { PrecipitationCanvas } from './PrecipitationCanvas'
+import { Sun } from './Sun'
 import './WeatherScene.css'
 
 // 구름/안개 한 층. SVG 노이즈(feTurbulence)의 밝기를 투명도로 바꿔 불규칙한 구름 모양을 만든다.
@@ -91,13 +92,7 @@ export function WeatherScene({ scene }: Props) {
     >
       <div className="weather-scene__sky" />
 
-      {hasSun && (
-        <div className="weather-scene__sun">
-          <div className="weather-scene__sun-glow" />
-          <div className="weather-scene__sun-rays" />
-          <div className="weather-scene__sun-core" />
-        </div>
-      )}
+      {hasSun && <Sun />}
 
       {LAYERS[scene].map((layer, index) => (
         <NoiseLayerSvg key={`${scene}-${index}`} layer={layer} index={index} />
