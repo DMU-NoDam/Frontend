@@ -21,13 +21,21 @@ export type TripLocation = {
 
 const ALL_CITIES: City[] = Object.values(CITIES_BY_COUNTRY).flat()
 
-// 여행 목록 API에는 도시 정보가 없다. 여행 이름은 생성 시 도시 이름으로 만들어지므로
-// ("도쿄", "도쿄과 교토" — buildTripName) 이름 앞부분으로 첫 번째 도시를 찾는다.
-// 사용자가 이름을 바꿨다면 못 찾을 수 있고, 그때는 이름을 그대로 도시명으로 쓴다.
-export function getTripLocation(trip: TripSummary): TripLocation {
-  const city = ALL_CITIES
+// 여행에 저장된 첫 번째 도시 코드로 도시를 찾는다.
+// 도시 코드가 없는 예전 여행은 여행 이름 앞부분으로 찾는다 — 이름은 생성 시 도시 이름으로
+// 만들어지지만("도쿄", "도쿄과 교토" — buildTripName) 사용자가 바꿨다면 못 찾을 수 있고,
+// 그때는 이름을 그대로 도시명으로 쓴다.
+function findCity(trip: TripSummary): City | undefined {
+  const byCode = ALL_CITIES.find((c) => c.id === trip.regionCodes[0])
+  if (byCode) return byCode
+
+  return ALL_CITIES
     .filter((c) => trip.name.startsWith(c.name))
     .sort((a, b) => b.name.length - a.name.length)[0]
+}
+
+export function getTripLocation(trip: TripSummary): TripLocation {
+  const city = findCity(trip)
 
   if (!city) {
     return { cityName: trip.name, countryName: null, currency: DEFAULT_TARGET_CURRENCY }
