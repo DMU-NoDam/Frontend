@@ -9,6 +9,7 @@ import { TripCreatePage } from '@/pages/trip-create/TripCreatePage'
 import { TripDetailPage } from '@/pages/trip-detail/TripDetailPage'
 import { TripSelectPage } from '@/pages/trip-select/TripSelectPage'
 import { TripInvitePage } from '@/pages/trip-invite/TripInvitePage'
+import { TripToolPage } from '@/pages/trip-tool/TripToolPage'
 import { MyPage } from '@/pages/my/mypage'
 import { ServiceDetail } from '@/pages/my/service-detail/servicedetail'
 
@@ -58,6 +59,10 @@ const router = createBrowserRouter([
           {
             path: '/trips/:tripId/detail',
             element: <TripDetailPage />,
+          },
+          {
+            path: '/tools',
+            element: <TripToolPage />,
           },
           {
             path: '/mypage',

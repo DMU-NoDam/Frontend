@@ -14,23 +14,35 @@ type TripMapSheetProps = {
   sheetContent: (motionHeight: MotionValue<number>) => React.ReactNode
   forceExpanded?: boolean
   interactiveContent?: boolean
+  /** Sheet height (% of container) when collapsed / expanded */
+  collapsedPct?: number
+  expandedPct?: number
 }
 
-export function TripMapSheet({ mapContent, overlay, sheetContent, forceExpanded, interactiveContent }: TripMapSheetProps) {
-  const height    = useMotionValue(SHEET_COLLAPSED)
+export function TripMapSheet({
+  mapContent,
+  overlay,
+  sheetContent,
+  forceExpanded,
+  interactiveContent,
+  collapsedPct = SHEET_COLLAPSED,
+  expandedPct = SHEET_EXPANDED,
+}: TripMapSheetProps) {
+  const snapMid   = (collapsedPct + expandedPct) / 2
+  const height    = useMotionValue(collapsedPct)
   const heightPct = useTransform(height, (v) => `${v}%`)
 
   useEffect(() => {
     animate(
       height,
-      forceExpanded ? SHEET_EXPANDED : SHEET_COLLAPSED,
+      forceExpanded ? expandedPct : collapsedPct,
       { type: 'spring', stiffness: 280, damping: 50 },
     )
-  }, [forceExpanded, height])
+  }, [forceExpanded, height, collapsedPct, expandedPct])
 
   const isDragging = useRef(false)
   const startY     = useRef(0)
-  const startH     = useRef(SHEET_COLLAPSED)
+  const startH     = useRef(collapsedPct)
 
   function startDrag(e: React.PointerEvent<HTMLElement>) {
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -44,7 +56,8 @@ export function TripMapSheet({ mapContent, overlay, sheetContent, forceExpanded,
   }
 
   function onContentPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    if ((e.target as HTMLElement).closest('button, a, iframe')) return
+    // 입력칸에서 포인터를 캡처하면 포커스가 들어가지 않는다
+    if ((e.target as HTMLElement).closest('button, a, iframe, input, textarea')) return
     if (interactiveContent && !(e.target as HTMLElement).closest('[data-sheet-drag-handle]')) return
     startDrag(e)
   }
@@ -55,21 +68,21 @@ export function TripMapSheet({ mapContent, overlay, sheetContent, forceExpanded,
     const rootH = root?.clientHeight ?? 500
     const dy    = startY.current - e.clientY
     const delta = (dy / rootH) * 100
-    const next  = Math.max(SHEET_COLLAPSED, Math.min(SHEET_EXPANDED, startH.current + delta))
+    const next  = Math.max(collapsedPct, Math.min(expandedPct, startH.current + delta))
     height.set(next)
   }
 
   function onPointerUp() {
     if (!isDragging.current) return
     isDragging.current = false
-    const target = height.get() >= SHEET_SNAP_MID ? SHEET_EXPANDED : SHEET_COLLAPSED
+    const target = height.get() >= snapMid ? expandedPct : collapsedPct
     animate(height, target, { type: 'spring', stiffness: 280, damping: 50 })
   }
 
   return (
     <div
       className="trip-map-sheet"
-      style={{ '--map-height': `${100 - SHEET_COLLAPSED}%` } as React.CSSProperties}
+      style={{ '--map-height': `${100 - collapsedPct}%` } as React.CSSProperties}
     >
       {/* Map fills full background */}
       <div className="trip-map-sheet__map">

@@ -1,0 +1,60 @@
+.trip-tool-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+}
+
+/* 날씨 헤더 뒤 배경. 흰 글씨가 읽히도록 진한 분홍~노을색 */
+.trip-tool-page__hero {
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(255, 236, 179, 0.85) 0, rgba(255, 236, 179, 0) 38%),
+    linear-gradient(165deg, #ff6f9f 0%, #ff8f93 55%, #ffb38a 100%);
+}
+
+.trip-tool-page__cards {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 16px 24px;
+  scrollbar-width: none;
+  touch-action: pan-y;
+  cursor: auto;
+}
+
+.trip-tool-page__cards::-webkit-scrollbar {
+  display: none;
+}
+
+.trip-tool-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 12px;
+  text-align: center;
+}
+
+.trip-tool-page__empty p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #71727a;
+}
+
+.trip-tool-page__empty button {
+  min-height: 40px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 12px;
+  background: #ff6f9f;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
