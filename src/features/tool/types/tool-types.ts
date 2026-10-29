@@ -64,3 +64,11 @@ export type ExchangeRate = {
   rate: number
   fetchedAt: number
 }
+
+// ── Checklist ────────────────────────────────────────────────
+
+export type ChecklistItem = {
+  id: string
+  label: string
+  checked: boolean
+}
