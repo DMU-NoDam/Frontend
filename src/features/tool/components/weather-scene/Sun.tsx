@@ -12,7 +12,8 @@ const SHAFTS = [
   { angle: 82, width: 50, length: 420, opacity: 0.22, duration: 14, delay: -6 },
 ]
 
-// 렌즈 빛망울: 해 → 화면 왼쪽 아래 방향으로 떨어져 놓인다 (distance는 해로부터의 거리 px)
+// 렌즈 빛망울: 해 → 아래(살짝 왼쪽) 방향으로 떨어져 놓인다 (distance는 해로부터의 거리 px).
+// 왼쪽 위 글씨 영역을 지나가지 않도록 거의 아래쪽으로 떨어뜨린다
 const FLARES = [
   { distance: 120, size: 34, color: '255, 236, 200', opacity: 0.15 },
   { distance: 185, size: 14, color: '200, 235, 255', opacity: 0.22 },
@@ -52,9 +53,8 @@ export function Sun() {
           className="weather-scene__sun-flare"
           style={
             {
-              // 왼쪽 아래 대각선(약 225°) 방향으로 distance만큼 떨어진 위치
-              '--flare-x': `${-flare.distance * 0.78}px`,
-              '--flare-y': `${flare.distance * 0.62}px`,
+              '--flare-x': `${-flare.distance * 0.45}px`,
+              '--flare-y': `${flare.distance * 0.89}px`,
               '--flare-size': `${flare.size}px`,
               '--flare-color': flare.color,
               '--flare-opacity': flare.opacity,
