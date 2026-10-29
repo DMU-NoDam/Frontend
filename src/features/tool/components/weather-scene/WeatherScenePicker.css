@@ -3,7 +3,7 @@
 /* 해(오른쪽 위)와 최고/최저 박스를 가리지 않도록 박스 아래에 둔다 */
 .scene-picker {
   position: absolute;
-  top: 172px;
+  top: 204px;
   right: 12px;
   z-index: 1;
   display: flex;
