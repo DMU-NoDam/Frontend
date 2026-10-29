@@ -36,7 +36,9 @@ export function TripToolPage() {
   )
   const trip = activeTrip ?? getNextFixedTrip(trips)
   const location = trip ? getTripLocation(trip) : null
-  const weatherDate = trip ? (activeTrip ? getLocalToday() : trip.startDate) : undefined
+  // 출발일이 멀어도 날씨를 보여주도록 항상 여행지의 오늘 날씨를 조회한다
+  // (백엔드는 7일보다 먼 날짜에는 예보를 주지 않는다)
+  const weatherDate = trip ? getLocalToday() : undefined
 
   return (
     <main className="trip-tool-page">
