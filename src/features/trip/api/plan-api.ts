@@ -1,4 +1,5 @@
 import { mockAddPlace, mockChangePlace, mockGetPlans, mockMovePlace, mockRecommendPlace, mockRemovePlace } from '@/mocks/plans'
+import { mockConfirmTheme } from '@/mocks/trips'
 import { apiClient } from '@/shared/api/client'
 import type {
   AddPlaceRequest,
@@ -32,6 +33,8 @@ const confirmTheme = async (
   tripId: string,
   theme: TripThemeType,
 ): Promise<TripThemeConfirmResponse> => {
+  if (useMockPlans) return mockConfirmTheme(tripId, theme)
+
   const { data } = await apiClient.patch<TripThemeConfirmResponse>(
     `/trip/api/${tripId}/theme`,
     theme,

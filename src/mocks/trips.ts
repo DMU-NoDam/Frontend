@@ -1,4 +1,8 @@
-import type { TripSummaryApiItem } from '@/features/trip/types/trip-types'
+import type {
+  TripSummaryApiItem,
+  TripThemeType,
+  TripUpdateRequest,
+} from '@/features/trip/types/trip-types'
 
 // 오늘 기준 상대 날짜. 고정 날짜를 쓰면 시간이 지나 mock 여행이 전부 과거가 되고
 // "다가오는 여행" 탭이 빈 화면이 된다.
@@ -118,5 +122,38 @@ const MOCK_TRIPS: TripSummaryApiItem[] = [
   },
 ]
 
+// 매번 복사본을 돌려준다. 같은 배열을 주면 react-query가 바뀐 내용을 알아채지 못한다
 export const mockGetTrips = (): Promise<TripSummaryApiItem[]> =>
-  Promise.resolve(MOCK_TRIPS)
+  Promise.resolve(MOCK_TRIPS.map((trip) => ({ ...trip })))
+
+// 확정·수정·삭제·테마 확정도 mock 목록 안에서 처리한다 (새로고침하면 처음 상태로 돌아간다).
+// 처리하지 않으면 mock 여행 id로 실제 백엔드를 불러 남의 여행을 건드리거나 400이 난다
+const findTrip = (tripId: string) => MOCK_TRIPS.find((trip) => String(trip.id) === tripId)
+
+export const mockUpdateTripFixed = (tripId: string, fixed: boolean): Promise<void> => {
+  const trip = findTrip(tripId)
+  if (trip) trip.fixed = fixed
+  return Promise.resolve()
+}
+
+export const mockUpdateTrip = (tripId: string, request: TripUpdateRequest): Promise<void> => {
+  const trip = findTrip(tripId)
+  if (trip) {
+    if (request.name?.trim()) trip.name = request.name.trim()
+    if (request.personCount != null) trip.personCount = request.personCount
+  }
+  return Promise.resolve()
+}
+
+export const mockDeleteTrip = (tripId: string): Promise<void> => {
+  const index = MOCK_TRIPS.findIndex((trip) => String(trip.id) === tripId)
+  if (index >= 0) MOCK_TRIPS.splice(index, 1)
+  return Promise.resolve()
+}
+
+// 백엔드와 같이 테마는 처음 한 번만 정해진다
+export const mockConfirmTheme = (tripId: string, theme: TripThemeType): Promise<{ message: string; body: null }> => {
+  const trip = findTrip(tripId)
+  if (trip && trip.tripThemeType === null) trip.tripThemeType = theme
+  return Promise.resolve({ message: 'success', body: null })
+}
