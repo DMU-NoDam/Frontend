@@ -35,6 +35,7 @@ export function WeatherHeader({ location, date, isTripsLoading }: Props) {
   }
 
   const place = location.countryName ? `${location.cityName}, ${location.countryName}` : location.cityName
+  const condition = today ? getWeatherLabel(today.weatherCode) : null
 
   return (
     <header className="weather-header">
@@ -47,14 +48,15 @@ export function WeatherHeader({ location, date, isTripsLoading }: Props) {
         <p className="weather-header__notice">날씨를 불러오는 중...</p>
       ) : isError ? (
         <p className="weather-header__notice">날씨 정보를 찾을 수 없어요</p>
-      ) : !today ? (
+      ) : !today || !condition ? (
         <p className="weather-header__notice">오늘 날씨 정보가 아직 없어요</p>
       ) : (
         // 기온 → 날씨 상태 → 최고·최저를 한 덩어리로 묶어 위에서 아래로 한 번에 읽히게 한다
         <div className="weather-header__current">
           <span className="weather-header__temp">{Math.round(today.maxTemperature)}°</span>
           <span className="weather-header__summary">
-            {getWeatherLabel(today.weatherCode).emoji} {getWeatherLabel(today.weatherCode).label}
+            <condition.Icon className="weather-header__icon" aria-hidden="true" />
+            {condition.label}
           </span>
           <dl className="weather-header__range">
             <div>
