@@ -1,4 +1,20 @@
-export type WeatherScene = 'clear' | 'partly' | 'cloudy' | 'fog' | 'rain' | 'snow' | 'storm'
+export const WEATHER_SCENES = ['clear', 'partly', 'cloudy', 'fog', 'rain', 'snow', 'storm'] as const
+
+export type WeatherScene = (typeof WEATHER_SCENES)[number]
+
+export const WEATHER_SCENE_LABEL: Record<WeatherScene, string> = {
+  clear: '맑음',
+  partly: '구름 조금',
+  cloudy: '흐림',
+  fog: '안개',
+  rain: '비',
+  snow: '눈',
+  storm: '뇌우',
+}
+
+export function isWeatherScene(value: string | null): value is WeatherScene {
+  return WEATHER_SCENES.some((scene) => scene === value)
+}
 
 // Open-Meteo WMO weather code → 배경 장면
 // https://open-meteo.com/en/docs (WMO Weather interpretation codes)
