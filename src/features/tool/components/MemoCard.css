@@ -16,6 +16,7 @@
   text-align: left;
   cursor: pointer;
   font: inherit;
+  transition: border-color 0.15s ease;
 }
 
 .memo-card__item:hover {
@@ -36,8 +37,12 @@
   height: 30px;
   border-radius: 50%;
   background: #fff0f5;
-  font-size: 14px;
-  line-height: 1;
+  color: #ff6f9f;
+}
+
+.memo-card__icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .memo-card__text {

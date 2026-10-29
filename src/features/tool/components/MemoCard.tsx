@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMemos } from '../hooks/use-memos'
-import { getMemoEmoji } from '../lib/memo-icon'
+import { getMemoIcon } from '../lib/memo-icon'
 import type { Memo } from '../types/tool-types'
 import { MemoEditorSheet } from './MemoEditorSheet'
 import './ToolCard.css'
@@ -27,22 +27,27 @@ export function MemoCard({ tripId }: Props) {
         <p className="tool-card__status">호텔 예약 번호, 픽업 정보처럼 기억할 내용을 적어두세요.</p>
       ) : (
         <ul className="memo-card__list">
-          {memos.map((memo) => (
-            <li key={memo.id}>
-              <button
-                type="button"
-                className="tool-card__panel memo-card__item"
-                onClick={() => setEditing(memo)}
-                aria-label={`${memo.title} 메모 수정`}
-              >
-                <span className="memo-card__icon" aria-hidden="true">{getMemoEmoji(memo.icon)}</span>
-                <span className="memo-card__text">
-                  <span className="memo-card__title">{memo.title}</span>
-                  {memo.content && <span className="memo-card__content">{memo.content}</span>}
-                </span>
-              </button>
-            </li>
-          ))}
+          {memos.map((memo) => {
+            const Icon = getMemoIcon(memo.icon)
+            return (
+              <li key={memo.id}>
+                <button
+                  type="button"
+                  className="tool-card__panel memo-card__item"
+                  onClick={() => setEditing(memo)}
+                  aria-label={`${memo.title} 메모 수정`}
+                >
+                  <span className="memo-card__icon" aria-hidden="true">
+                    <Icon />
+                  </span>
+                  <span className="memo-card__text">
+                    <span className="memo-card__title">{memo.title}</span>
+                    {memo.content && <span className="memo-card__content">{memo.content}</span>}
+                  </span>
+                </button>
+              </li>
+            )
+          })}
         </ul>
       )}
 
