@@ -1,28 +1,24 @@
-import axios from 'axios'
+import { apiClient } from '@/shared/api/client'
 import type { ExchangeRate } from '../types/tool-types'
 
-type FreeCurrencyLatestResponse = {
-  data: Record<string, number>
+type ExchangeRateResponse = {
+  message: string
+  body: {
+    base: string
+    target: string
+    rate: number
+    // 백엔드가 외부 API에서 환율을 받아온 시각 (epoch millis)
+    updatedAt: number
+  }
 }
 
-const API_KEY = import.meta.env.VITE_FREECURRENCY_API_KEY as string | undefined
-
-// 우리 백엔드가 아닌 외부 API라 토큰 인터셉터가 붙은 apiClient를 쓰지 않는다
+// 외부 환율 API(FreeCurrencyAPI)는 백엔드가 키를 들고 대신 호출하고 1시간 캐시한다
 const getLatestRate = async (base: string, target: string): Promise<ExchangeRate> => {
-  if (!API_KEY) throw new Error('VITE_FREECURRENCY_API_KEY가 설정되지 않았습니다')
-
-  const { data } = await axios.get<FreeCurrencyLatestResponse>(
-    'https://api.freecurrencyapi.com/v1/latest',
-    {
-      params: { apikey: API_KEY, base_currency: base, currencies: target },
-      timeout: 5000,
-    },
-  )
-
-  const rate = data.data[target]
-  if (typeof rate !== 'number') throw new Error(`환율 응답에 ${target}가 없습니다`)
-
-  return { base, target, rate, fetchedAt: Date.now() }
+  const { data } = await apiClient.get<ExchangeRateResponse>('/exchange/public/rate', {
+    params: { base, target },
+  })
+  const { rate, updatedAt } = data.body
+  return { base, target, rate, fetchedAt: updatedAt }
 }
 
 export const exchangeApi = {
