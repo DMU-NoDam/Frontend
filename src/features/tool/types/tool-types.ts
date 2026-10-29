@@ -1,3 +1,38 @@
+// ── Memo ─────────────────────────────────────────────────────
+
+export type MemoIconType =
+  | 'HOTEL'
+  | 'FOOD'
+  | 'TRANSPORT'
+  | 'SHOPPING'
+  | 'SIGHTSEEING'
+  | 'IMPORTANT'
+  | 'IDEA'
+  | 'ETC'
+
+export type Memo = {
+  id: number
+  icon: MemoIconType
+  title: string
+  content: string | null
+}
+
+export type MemoRequest = {
+  icon: MemoIconType
+  title: string
+  content: string
+}
+
+export type MemoResponse = {
+  message: string
+  body: Memo
+}
+
+export type MemoListResponse = {
+  message: string
+  body: Memo[]
+}
+
 // ── Weather ──────────────────────────────────────────────────
 
 export type DailyWeather = {
