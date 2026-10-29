@@ -1,11 +1,16 @@
 /* ── Weather header (여행도구 상단, 배경 위에 뜨는 날씨) ──────── */
 
+/* 밝은 하늘·햇빛·구름 위에서도 흰 글씨가 읽히도록
+   글씨 바로 둘레의 얇은 그림자 + 넓게 퍼지는 옅은 그림자를 함께 준다 */
 .weather-header {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 28px 36px 0;
+  padding: 26px 32px 0;
   color: #ffffff;
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 0 14px rgba(0, 0, 0, 0.25);
 }
 
 .weather-header p {
@@ -14,35 +19,42 @@
 
 .weather-header__place-row {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+  column-gap: 8px;
+  row-gap: 2px;
 }
 
 .weather-header__place {
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 17px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 22px;
 }
 
 .weather-header__date {
-  font-size: 10px;
-  line-height: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  opacity: 0.95;
 }
 
 .weather-header__current {
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .weather-header__temp {
-  font-size: 32px;
+  font-size: 46px;
   font-weight: 600;
-  line-height: 39px;
+  line-height: 50px;
+  letter-spacing: -0.02em;
 }
 
 .weather-header__summary {
-  font-size: 10px;
-  line-height: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 18px;
 }
 
 .weather-header__detail-row {
@@ -50,31 +62,37 @@
   justify-content: flex-end;
 }
 
+/* 배경을 흐리게 비추는 어두운 반투명 유리 */
 .weather-header__detail {
   margin: 0;
-  min-width: 100px;
+  min-width: 108px;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 0.5px solid #ffffff;
-  border-radius: 8px;
-  font-size: 10px;
-  line-height: 16px;
+  background: rgba(0, 0, 0, 0.22);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 0.5px solid rgba(255, 255, 255, 0.45);
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 20px;
 }
 
 .weather-header__detail div {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
+}
+
+.weather-header__detail dt {
+  opacity: 0.9;
 }
 
 .weather-header__detail dd {
   margin: 0;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .weather-header__notice {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1.5;
-  opacity: 0.9;
 }
