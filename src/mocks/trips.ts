@@ -20,6 +20,7 @@ const MOCK_TRIPS: TripSummaryApiItem[] = [
   {
     id: 2,
     name: 'Tokyo Trip',
+    regionCodes: ['jp-tokyo'],
     personCount: 1,
     scheduleType: 'TIGHT',
     tripThemeType: null,

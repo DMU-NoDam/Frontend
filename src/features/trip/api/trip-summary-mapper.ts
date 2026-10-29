@@ -4,5 +4,6 @@ export function mapTripSummary(item: TripSummaryApiItem): TripSummary {
   return {
     ...item,
     id: String(item.id),
+    regionCodes: item.regionCodes ?? [],
   }
 }

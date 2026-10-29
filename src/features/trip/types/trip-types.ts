@@ -19,10 +19,13 @@ export type TripSummaryApiItem = {
   startDate: string
   endDate: string
   fixed: boolean
+  // 여행 생성 때 고른 도시 코드 (예: 'jp-tokyo'). 백엔드에 이 필드가 생기기 전 여행은 빈 배열
+  regionCodes?: string[]
 }
 
-export type TripSummary = Omit<TripSummaryApiItem, 'id'> & {
+export type TripSummary = Omit<TripSummaryApiItem, 'id' | 'regionCodes'> & {
   id: string
+  regionCodes: string[]
 }
 
 export type Trip = TripSummary
