@@ -5,6 +5,7 @@ import { getNextFixedTrip, isTripActive } from '@/features/trip/lib/trip-date'
 import { TripMapSheet } from '@/features/trip/components/TripMapSheet'
 import { WeatherHeader } from '@/features/tool/components/WeatherHeader'
 import { ExchangeRateCard } from '@/features/tool/components/ExchangeRateCard'
+import { MemoCard } from '@/features/tool/components/MemoCard'
 import { getTripLocation } from '@/features/tool/lib/trip-location'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
@@ -49,13 +50,17 @@ export function TripToolPage() {
           <div className="trip-tool-page__cards">
             <ExchangeRateCard target={location?.currency ?? 'JPY'} />
 
-            {!trip && !isTripsLoading && (
-              <div className="trip-tool-page__empty">
-                <p>확정된 여행이 있으면 메모장과 체크리스트를 쓸 수 있어요.</p>
-                <button type="button" onClick={() => navigate('/trips')}>
-                  내 여행 보러 가기
-                </button>
-              </div>
+            {trip ? (
+              <MemoCard tripId={trip.id} />
+            ) : (
+              !isTripsLoading && (
+                <div className="trip-tool-page__empty">
+                  <p>확정된 여행이 있으면 메모장과 체크리스트를 쓸 수 있어요.</p>
+                  <button type="button" onClick={() => navigate('/trips')}>
+                    내 여행 보러 가기
+                  </button>
+                </div>
+              )
             )}
           </div>
         )}

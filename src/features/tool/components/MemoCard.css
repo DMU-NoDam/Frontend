@@ -1,0 +1,216 @@
+/* ── Memo list ───────────────────────────────────────────── */
+
+.memo-card__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.memo-card__item {
+  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.memo-card__item:hover {
+  border-color: #ffb3cc;
+}
+
+.memo-card__item:focus-visible {
+  outline: 2px solid #ff6f9f;
+  outline-offset: 2px;
+}
+
+.memo-card__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #fff0f5;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.memo-card__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.memo-card__title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 15px;
+  color: #000000;
+}
+
+.memo-card__content {
+  font-size: 10px;
+  line-height: 12px;
+  color: #494a50;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Memo editor (팝업) ──────────────────────────────────── */
+
+.memo-editor__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 290;
+  background: rgba(0, 0, 0, 0.45);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.memo-editor__backdrop:disabled {
+  cursor: default;
+}
+
+.memo-editor {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  margin: auto;
+  width: calc(100% - 48px);
+  max-width: 360px;
+  height: fit-content;
+  max-height: calc(100% - 96px);
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+}
+
+.memo-editor__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: #1f2024;
+  text-align: center;
+}
+
+.memo-editor__icons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.memo-editor__icon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+  border: 1px solid #e8e9f1;
+  border-radius: 12px;
+  background: #f8f9fe;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.memo-editor__icon--active {
+  border-color: #ff6f9f;
+  background: #fff0f5;
+}
+
+.memo-editor__icon-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #494a50;
+}
+
+.memo-editor__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #1f2024;
+}
+
+.memo-editor__field input,
+.memo-editor__field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e8e9f1;
+  border-radius: 10px;
+  background: #f8f9fe;
+  font-size: 14px;
+  font-weight: 400;
+  color: #1f2024;
+  resize: vertical;
+}
+
+.memo-editor__field input:focus,
+.memo-editor__field textarea:focus {
+  outline: none;
+  border-color: #ff6f9f;
+}
+
+.memo-editor__error {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #dc2626;
+  text-align: center;
+}
+
+.memo-editor__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.memo-editor__submit,
+.memo-editor__delete,
+.memo-editor__cancel {
+  width: 100%;
+  min-height: 44px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.memo-editor__submit {
+  background: #ff6f9f;
+  color: #ffffff;
+}
+
+.memo-editor__delete {
+  background: #fff0f0;
+  color: #dc2626;
+}
+
+.memo-editor__cancel {
+  background: #f3f4f6;
+  color: #1f2024;
+}
+
+.memo-editor__submit:disabled,
+.memo-editor__delete:disabled,
+.memo-editor__cancel:disabled,
+.memo-editor__icon:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
