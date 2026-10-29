@@ -1,4 +1,4 @@
-import { useWeather } from '../hooks/use-weather'
+import { useDayWeather } from '../hooks/use-weather'
 import { getWeatherLabel } from '../lib/weather-code'
 import type { TripLocation } from '../lib/trip-location'
 import './WeatherHeader.css'
@@ -21,8 +21,7 @@ function formatDateLabel(date: string): string {
 }
 
 export function WeatherHeader({ location, date, isTripsLoading }: Props) {
-  const { data, isLoading, isError } = useWeather(location?.cityName, date)
-  const today = data?.forecast.find((d) => d.date === date) ?? data?.forecast[0]
+  const { day: today, isLoading, isError } = useDayWeather(location?.cityName, date)
 
   if (!location || !date) {
     return (
@@ -36,6 +35,7 @@ export function WeatherHeader({ location, date, isTripsLoading }: Props) {
   }
 
   const place = location.countryName ? `${location.cityName}, ${location.countryName}` : location.cityName
+  const condition = today ? getWeatherLabel(today.weatherCode) : null
 
   return (
     <header className="weather-header">
@@ -48,30 +48,27 @@ export function WeatherHeader({ location, date, isTripsLoading }: Props) {
         <p className="weather-header__notice">날씨를 불러오는 중...</p>
       ) : isError ? (
         <p className="weather-header__notice">날씨 정보를 찾을 수 없어요</p>
-      ) : !today ? (
+      ) : !today || !condition ? (
         <p className="weather-header__notice">오늘 날씨 정보가 아직 없어요</p>
       ) : (
-        <>
-          <div className="weather-header__current">
-            <span className="weather-header__temp">{Math.round(today.maxTemperature)}°</span>
-            <span className="weather-header__summary">
-              {getWeatherLabel(today.weatherCode).emoji} {getWeatherLabel(today.weatherCode).label}
-            </span>
-          </div>
-
-          <div className="weather-header__detail-row">
-            <dl className="weather-header__detail">
-              <div>
-                <dt>최고</dt>
-                <dd>{Math.round(today.maxTemperature)}°</dd>
-              </div>
-              <div>
-                <dt>최저</dt>
-                <dd>{Math.round(today.minTemperature)}°</dd>
-              </div>
-            </dl>
-          </div>
-        </>
+        // 기온 → 날씨 상태 → 최고·최저를 한 덩어리로 묶어 위에서 아래로 한 번에 읽히게 한다
+        <div className="weather-header__current">
+          <span className="weather-header__temp">{Math.round(today.maxTemperature)}°</span>
+          <span className="weather-header__summary">
+            <condition.Icon className="weather-header__icon" aria-hidden="true" />
+            {condition.label}
+          </span>
+          <dl className="weather-header__range">
+            <div>
+              <dt>최고</dt>
+              <dd>{Math.round(today.maxTemperature)}°</dd>
+            </div>
+            <div>
+              <dt>최저</dt>
+              <dd>{Math.round(today.minTemperature)}°</dd>
+            </div>
+          </dl>
+        </div>
       )}
     </header>
   )

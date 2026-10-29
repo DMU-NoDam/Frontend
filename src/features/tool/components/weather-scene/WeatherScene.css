@@ -1,0 +1,305 @@
+/* ── Weather scene (여행도구 상단 배경) ───────────────────────── */
+
+.weather-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.weather-scene__sky,
+.weather-scene__scrim,
+.weather-scene__lightning,
+.weather-scene__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ── Sky ─────────────────────────────────────────────────── */
+
+.weather-scene--clear .weather-scene__sky {
+  background: linear-gradient(180deg, #1665d1 0%, #2f86ee 50%, #7fbaf7 100%);
+}
+
+.weather-scene--partly .weather-scene__sky {
+  background: linear-gradient(180deg, #2a76d6 0%, #4a95ee 55%, #9ac7f5 100%);
+}
+
+.weather-scene--cloudy .weather-scene__sky {
+  background: linear-gradient(180deg, #7f8a97 0%, #a8b1bc 55%, #cfd5dc 100%);
+}
+
+.weather-scene--fog .weather-scene__sky {
+  background: linear-gradient(180deg, #aeb6bf 0%, #c9cfd5 55%, #dfe3e7 100%);
+}
+
+.weather-scene--rain .weather-scene__sky {
+  background: linear-gradient(180deg, #46505b 0%, #66707b 55%, #87919b 100%);
+}
+
+.weather-scene--snow .weather-scene__sky {
+  background: linear-gradient(180deg, #9eaab7 0%, #c4ccd5 55%, #e9edf1 100%);
+}
+
+.weather-scene--storm .weather-scene__sky {
+  background: linear-gradient(180deg, #1f252c 0%, #343c45 55%, #545d67 100%);
+}
+
+/* ── Sun : 썬샤프트(빛내림) ─────────────────────────────────── */
+/* .weather-scene__sun 은 크기 0인 기준점(해 중심)이고 모든 빛은 여기서 뻗어 나간다 */
+
+.weather-scene__sun {
+  position: absolute;
+  top: 12%;
+  right: 18%;
+  width: 0;
+  height: 0;
+}
+
+.weather-scene__sun-haze,
+.weather-scene__sun-glow,
+.weather-scene__sun-core {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* 하늘 위쪽을 넓게 데우는 따뜻한 빛번짐 */
+.weather-scene__sun-haze {
+  width: 640px;
+  height: 640px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 246, 222, 0.42) 0%,
+    rgba(255, 240, 210, 0.18) 28%,
+    rgba(255, 235, 205, 0.06) 50%,
+    rgba(255, 235, 205, 0) 70%
+  );
+}
+
+/* 빛줄기들. 각 줄기는 해 중심에서 아래로 뻗은 쐐기를 angle만큼 돌린 것 */
+.weather-scene__sun-shafts {
+  position: absolute;
+  left: 0;
+  top: 0;
+  mix-blend-mode: screen;
+}
+
+.weather-scene__sun-shaft {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--shaft-width);
+  height: var(--shaft-length);
+  transform-origin: 50% 0;
+  transform: translateX(-50%) rotate(var(--shaft-angle));
+  filter: blur(9px);
+  opacity: 0.75;
+  will-change: transform, opacity;
+  animation: weather-shaft-shimmer var(--shaft-duration) ease-in-out var(--shaft-delay) infinite alternate;
+}
+
+/* 해 쪽은 좁고 멀어질수록 넓어지는 쐐기. 끝으로 갈수록 투명해진다 */
+.weather-scene__sun-shaft-beam {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 252, 235, var(--shaft-opacity)) 0%,
+    rgba(255, 250, 230, calc(var(--shaft-opacity) * 0.55)) 35%,
+    rgba(255, 250, 230, 0) 100%
+  );
+  clip-path: polygon(46% 0, 54% 0, 100% 100%, 0 100%);
+}
+
+/* 빛줄기가 숨 쉬듯 밝아졌다 어두워지며 아주 조금 흔들린다 */
+@keyframes weather-shaft-shimmer {
+  from {
+    opacity: 0.45;
+    transform: translateX(-50%) rotate(calc(var(--shaft-angle) - 1.5deg));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) rotate(calc(var(--shaft-angle) + 1.5deg));
+  }
+}
+
+/* 해 바로 둘레의 밝은 빛 */
+.weather-scene__sun-glow {
+  width: 180px;
+  height: 180px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 250, 0.95) 0%,
+    rgba(255, 252, 235, 0.55) 16%,
+    rgba(255, 245, 215, 0.18) 40%,
+    rgba(255, 245, 215, 0) 70%
+  );
+  animation: weather-sun-breathe 6s ease-in-out infinite alternate;
+}
+
+.weather-scene__sun-core {
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, #ffffff 0%, #ffffff 60%, rgba(255, 255, 250, 0) 100%);
+  box-shadow:
+    0 0 18px 8px rgba(255, 255, 255, 0.9),
+    0 0 60px 24px rgba(255, 248, 225, 0.45);
+}
+
+@keyframes weather-sun-breathe {
+  from { transform: translate(-50%, -50%) scale(0.94); opacity: 0.85; }
+  to   { transform: translate(-50%, -50%) scale(1.06); opacity: 1; }
+}
+
+/* 렌즈 빛망울 */
+.weather-scene__sun-flare {
+  position: absolute;
+  left: var(--flare-x);
+  top: var(--flare-y);
+  width: var(--flare-size);
+  height: var(--flare-size);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgba(var(--flare-color), 0) 35%,
+    rgba(var(--flare-color), var(--flare-opacity)) 70%,
+    rgba(var(--flare-color), 0) 100%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* 맑음: 구름이 없으니 해를 글씨용 어두운 막(scrim) 위에 그려 탁해지지 않게 한다 */
+.weather-scene--clear .weather-scene__sun {
+  z-index: 1;
+}
+
+/* 구름 조금: 해가 구름 뒤에 있으니 빛을 약하게 */
+.weather-scene--partly .weather-scene__sun {
+  top: 14%;
+  right: 22%;
+}
+
+.weather-scene--partly .weather-scene__sun-shafts,
+.weather-scene--partly .weather-scene__sun-flare {
+  opacity: 0.6;
+}
+
+/* ── Clouds / fog : 화면보다 두 배 넓은 층을 좌우로 천천히 흘린다 ─ */
+
+.weather-scene__layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  opacity: var(--layer-opacity, 1);
+  will-change: transform;
+  pointer-events: none;
+  animation: weather-drift var(--layer-duration, 90s) ease-in-out var(--layer-delay, 0s) infinite alternate;
+}
+
+/* 구름은 위쪽에 짙고 아래로 갈수록 옅게 */
+.weather-scene__layer--cloud {
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 95%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 40%, transparent 95%);
+}
+
+/* 안개는 아래쪽(지면 가까이)에 짙게 */
+.weather-scene__layer--fog {
+  -webkit-mask-image: linear-gradient(0deg, #000 0%, #000 35%, transparent 100%);
+  mask-image: linear-gradient(0deg, #000 0%, #000 35%, transparent 100%);
+}
+
+@keyframes weather-drift {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ── Lightning : 몇 초에 한 번 두 번 번쩍인다 ───────────────── */
+
+.weather-scene__lightning {
+  background: radial-gradient(ellipse at 30% 20%, rgba(235, 240, 255, 0.9) 0%, rgba(210, 220, 255, 0.35) 45%, rgba(210, 220, 255, 0) 80%);
+  opacity: 0;
+  animation: weather-lightning 9s linear infinite;
+}
+
+@keyframes weather-lightning {
+  0%, 88%  { opacity: 0; }
+  89%      { opacity: 0.85; }
+  90%      { opacity: 0.1; }
+  91.5%    { opacity: 0.6; }
+  93%, 100% { opacity: 0; }
+}
+
+/* ── Scrim : 위쪽 글씨 가독성 ─────────────────────────────── */
+
+/* 글씨가 있는 왼쪽 위를 둥글게 더 어둡게 + 위쪽 전체를 살짝 어둡게.
+   --scrim-text: 글씨 뒤 둥근 영역의 진하기, --scrim: 위쪽 띠의 진하기 */
+.weather-scene__scrim {
+  background:
+    radial-gradient(
+      ellipse 75% 60% at 22% 22%,
+      rgba(0, 0, 0, var(--scrim-text, 0.22)) 0%,
+      rgba(0, 0, 0, calc(var(--scrim-text, 0.22) * 0.5)) 45%,
+      rgba(0, 0, 0, 0) 75%
+    ),
+    linear-gradient(180deg, rgba(0, 0, 0, var(--scrim, 0.16)) 0%, rgba(0, 0, 0, 0) 55%);
+}
+
+.weather-scene--storm {
+  --scrim-text: 0.12;
+  --scrim: 0.08;
+}
+
+.weather-scene--clear,
+.weather-scene--partly,
+.weather-scene--rain {
+  --scrim-text: 0.2;
+  --scrim: 0.12;
+}
+
+/* 밝은 하늘은 흰 글씨가 묻히므로 더 어둡게 */
+.weather-scene--cloudy {
+  --scrim-text: 0.3;
+  --scrim: 0.18;
+}
+
+.weather-scene--snow,
+.weather-scene--fog {
+  --scrim-text: 0.38;
+  --scrim: 0.22;
+}
+
+/* ── 동작 줄이기 : 모든 움직임을 멈춘다 (번개는 아예 숨김) ────── */
+
+.weather-scene--still .weather-scene__layer,
+.weather-scene--still .weather-scene__sun-glow,
+.weather-scene--still .weather-scene__sun-shaft {
+  animation: none;
+}
+
+.weather-scene--still .weather-scene__lightning {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .weather-scene__layer,
+  .weather-scene__sun-glow,
+  .weather-scene__sun-shaft {
+    animation: none;
+  }
+
+  .weather-scene__lightning {
+    display: none;
+  }
+}

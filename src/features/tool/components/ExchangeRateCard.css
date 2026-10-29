@@ -1,18 +1,31 @@
+/* 글씨를 키운 만큼 줄 사이 간격은 좁혀 카드가 지나치게 커지지 않게 한다 */
+.exchange-card__panel {
+  gap: 8px;
+  padding: 10px 12px;
+}
+
 .exchange-card__pair {
-  font-size: 10px;
-  line-height: 12px;
-  color: #000000;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 15px;
+  color: #494a50;
 }
 
 .exchange-card__main {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
-  line-height: 17px;
-  color: #000000;
+  line-height: 22px;
+  color: #1f2024;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 환전 결과(여행지 통화) 금액만 강조 */
+.exchange-card__target {
+  color: #ff6f9f;
 }
 
 .exchange-card__sub {
-  font-size: 10px;
-  line-height: 12px;
-  color: #2f3036;
+  font-size: 11px;
+  line-height: 15px;
+  color: #494a50;
 }

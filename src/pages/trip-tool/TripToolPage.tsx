@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { lazy, Suspense, useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { getNextFixedTrip, isTripActive } from '@/features/trip/lib/trip-date'
 import { TripMapSheet } from '@/features/trip/components/TripMapSheet'
@@ -7,10 +7,23 @@ import { WeatherHeader } from '@/features/tool/components/WeatherHeader'
 import { ExchangeRateCard } from '@/features/tool/components/ExchangeRateCard'
 import { MemoCard } from '@/features/tool/components/MemoCard'
 import { ChecklistCard } from '@/features/tool/components/ChecklistCard'
+import { WeatherScene } from '@/features/tool/components/weather-scene/WeatherScene'
+import { useDayWeather } from '@/features/tool/hooks/use-weather'
 import { getTripLocation } from '@/features/tool/lib/trip-location'
+import { getWeatherScene, isWeatherScene, WEATHER_SCENE_TOP_COLOR } from '@/features/tool/lib/weather-scene'
+import type { WeatherScene as Scene } from '@/features/tool/lib/weather-scene'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import './TripToolPage.css'
+
+// 개발용 날씨 장면 선택기. 개발 서버에서만 불러와서 빌드에는 코드와 CSS가 포함되지 않는다
+const WeatherScenePicker = import.meta.env.DEV
+  ? lazy(() =>
+      import('@/features/tool/components/weather-scene/WeatherScenePicker').then((m) => ({
+        default: m.WeatherScenePicker,
+      })),
+    )
+  : null
 
 // Figma: 시트가 화면의 2/3 정도를 덮고 위에 날씨가 보인다
 const SHEET_COLLAPSED_PCT = 64
@@ -25,7 +38,6 @@ function getLocalToday(): string {
 }
 
 export function TripToolPage() {
-  useThemeColor('#ff6f9f', '#ffffff')
   const navigate = useNavigate()
   const { data: trips = [], isLoading: isTripsLoading } = useTrips()
 
@@ -40,14 +52,38 @@ export function TripToolPage() {
   // (백엔드는 7일보다 먼 날짜에는 예보를 주지 않는다)
   const weatherDate = trip ? getLocalToday() : undefined
 
+  // 헤더와 같은 조회라 react-query가 한 번만 요청한다
+  const { day: weather } = useDayWeather(location?.cityName, weatherDate)
+
+  // 개발용 장면 미리보기: /tools?scene=rain 처럼 주소로 장면을 고정한다 (빌드에서는 무시)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const sceneParam = searchParams.get('scene')
+  const previewScene = import.meta.env.DEV && isWeatherScene(sceneParam) ? sceneParam : null
+  const setPreviewScene = (next: Scene | null) => {
+    setSearchParams(next ? { scene: next } : {}, { replace: true })
+  }
+
+  const scene = previewScene ?? (weather ? getWeatherScene(weather.weatherCode) : null)
+  // 상태바 색을 배경 장면의 하늘 색과 이어지게 한다 (날씨가 없으면 기본 분홍)
+  useThemeColor(scene ? WEATHER_SCENE_TOP_COLOR[scene] : '#ff6f9f', '#ffffff')
+
   return (
     <main className="trip-tool-page">
       <TripMapSheet
         collapsedPct={SHEET_COLLAPSED_PCT}
         expandedPct={SHEET_EXPANDED_PCT}
-        mapContent={<div className="trip-tool-page__hero" aria-hidden="true" />}
+        mapContent={
+          scene ? <WeatherScene scene={scene} /> : <div className="trip-tool-page__hero" aria-hidden="true" />
+        }
         overlay={
-          <WeatherHeader location={location} date={weatherDate} isTripsLoading={isTripsLoading} />
+          <>
+            <WeatherHeader location={location} date={weatherDate} isTripsLoading={isTripsLoading} />
+            {WeatherScenePicker && (
+              <Suspense fallback={null}>
+                <WeatherScenePicker value={previewScene} onChange={setPreviewScene} />
+              </Suspense>
+            )}
+          </>
         }
         sheetContent={() => (
           <div className="trip-tool-page__cards">
