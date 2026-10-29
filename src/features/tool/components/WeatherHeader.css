@@ -25,19 +25,21 @@
   row-gap: 2px;
 }
 
+/* 글씨 크기는 단계(14 · 16 · 18 · 48)에서 고르고, 휴대폰 최소 기준인 16px 아래로는 날짜만 둔다 */
 .weather-header__place {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
-  line-height: 22px;
+  line-height: 24px;
 }
 
 .weather-header__date {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
-  line-height: 16px;
+  line-height: 20px;
   opacity: 0.95;
 }
 
+/* 기온 → 날씨 상태 → 최고·최저 */
 .weather-header__current {
   display: flex;
   flex-direction: column;
@@ -45,42 +47,37 @@
 }
 
 .weather-header__temp {
-  font-size: 46px;
+  font-size: 48px;
   font-weight: 600;
-  line-height: 50px;
+  line-height: 54px;
   letter-spacing: -0.02em;
 }
 
 .weather-header__summary {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
-  line-height: 18px;
+  line-height: 22px;
 }
 
-.weather-header__detail-row {
+.weather-header__range {
   display: flex;
-  justify-content: flex-end;
+  gap: 14px;
+  margin: 2px 0 0;
+  font-size: 16px;
+  line-height: 22px;
 }
 
-/* 박스 없이 글씨만. 가독성은 .weather-header의 글씨 그림자가 맡는다 */
-.weather-header__detail {
-  margin: 0;
-  min-width: 112px;
-  font-size: 15px;
-  line-height: 24px;
-}
-
-.weather-header__detail div {
+.weather-header__range div {
   display: flex;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 4px;
 }
 
-.weather-header__detail dt {
-  opacity: 0.9;
+.weather-header__range dt {
+  font-weight: 500;
+  opacity: 0.85;
 }
 
-.weather-header__detail dd {
+.weather-header__range dd {
   margin: 0;
   font-weight: 700;
 }
