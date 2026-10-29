@@ -243,20 +243,41 @@
 
 /* ── Scrim : 위쪽 글씨 가독성 ─────────────────────────────── */
 
+/* 글씨가 있는 왼쪽 위를 둥글게 더 어둡게 + 위쪽 전체를 살짝 어둡게.
+   --scrim-text: 글씨 뒤 둥근 영역의 진하기, --scrim: 위쪽 띠의 진하기 */
 .weather-scene__scrim {
-  background: linear-gradient(180deg, rgba(0, 0, 0, var(--scrim, 0.22)) 0%, rgba(0, 0, 0, 0) 60%);
+  background:
+    radial-gradient(
+      ellipse 75% 60% at 22% 22%,
+      rgba(0, 0, 0, var(--scrim-text, 0.22)) 0%,
+      rgba(0, 0, 0, calc(var(--scrim-text, 0.22) * 0.5)) 45%,
+      rgba(0, 0, 0, 0) 75%
+    ),
+    linear-gradient(180deg, rgba(0, 0, 0, var(--scrim, 0.16)) 0%, rgba(0, 0, 0, 0) 55%);
+}
+
+.weather-scene--storm {
+  --scrim-text: 0.12;
+  --scrim: 0.08;
 }
 
 .weather-scene--clear,
 .weather-scene--partly,
-.weather-scene--storm {
+.weather-scene--rain {
+  --scrim-text: 0.2;
   --scrim: 0.12;
 }
 
 /* 밝은 하늘은 흰 글씨가 묻히므로 더 어둡게 */
+.weather-scene--cloudy {
+  --scrim-text: 0.3;
+  --scrim: 0.18;
+}
+
 .weather-scene--snow,
 .weather-scene--fog {
-  --scrim: 0.32;
+  --scrim-text: 0.38;
+  --scrim: 0.22;
 }
 
 /* ── 동작 줄이기 : 모든 움직임을 멈춘다 (번개는 아예 숨김) ────── */
