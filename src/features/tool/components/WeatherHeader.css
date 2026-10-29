@@ -62,24 +62,18 @@
   justify-content: flex-end;
 }
 
-/* 배경을 흐리게 비추는 어두운 반투명 유리 */
+/* 박스 없이 글씨만. 가독성은 .weather-header의 글씨 그림자가 맡는다 */
 .weather-header__detail {
   margin: 0;
-  min-width: 108px;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.22);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-  border: 0.5px solid rgba(255, 255, 255, 0.45);
-  border-radius: 12px;
-  font-size: 12px;
-  line-height: 20px;
+  min-width: 112px;
+  font-size: 15px;
+  line-height: 24px;
 }
 
 .weather-header__detail div {
   display: flex;
   justify-content: space-between;
-  gap: 14px;
+  gap: 16px;
 }
 
 .weather-header__detail dt {
