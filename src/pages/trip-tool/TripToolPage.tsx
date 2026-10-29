@@ -6,6 +6,7 @@ import { TripMapSheet } from '@/features/trip/components/TripMapSheet'
 import { WeatherHeader } from '@/features/tool/components/WeatherHeader'
 import { ExchangeRateCard } from '@/features/tool/components/ExchangeRateCard'
 import { MemoCard } from '@/features/tool/components/MemoCard'
+import { ChecklistCard } from '@/features/tool/components/ChecklistCard'
 import { getTripLocation } from '@/features/tool/lib/trip-location'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
@@ -51,7 +52,10 @@ export function TripToolPage() {
             <ExchangeRateCard target={location?.currency ?? 'JPY'} />
 
             {trip ? (
-              <MemoCard tripId={trip.id} />
+              <>
+                <MemoCard tripId={trip.id} />
+                <ChecklistCard tripId={trip.id} />
+              </>
             ) : (
               !isTripsLoading && (
                 <div className="trip-tool-page__empty">
