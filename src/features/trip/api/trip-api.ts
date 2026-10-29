@@ -1,5 +1,5 @@
 import { mockCreateTrip, mockGetTripStatus, mockRunPlanStep } from '@/mocks/trip'
-import { mockGetTrips } from '@/mocks/trips'
+import { mockDeleteTrip, mockGetTrips, mockUpdateTrip, mockUpdateTripFixed } from '@/mocks/trips'
 import { apiClient } from '@/shared/api/client'
 import { mapTripSummary } from './trip-summary-mapper'
 import type {
@@ -80,17 +80,24 @@ const generateTransportPlans = async (tripId: string): Promise<PlanStepResult> =
   return postPlanStep(`/trip/api/${tripId}/transport-plans`)
 }
 
+// 여행 목록이 mock이면 확정·수정·삭제도 mock 목록에서 처리한다 (mock 여행 id로 실제 백엔드를 부르지 않게)
 const updateTripFixed = async (tripId: string, fixed: boolean): Promise<void> => {
+  if (useMockTrips) return mockUpdateTripFixed(tripId, fixed)
+
   await apiClient.patch(`/trip/api/${tripId}/fixed`, fixed, {
     headers: { 'Content-Type': 'application/json' },
   })
 }
 
 const updateTrip = async (tripId: string, request: TripUpdateRequest): Promise<void> => {
+  if (useMockTrips) return mockUpdateTrip(tripId, request)
+
   await apiClient.put(`/trip/api/${tripId}`, request)
 }
 
 const deleteTrip = async (tripId: string): Promise<void> => {
+  if (useMockTrips) return mockDeleteTrip(tripId)
+
   await apiClient.delete(`/trip/api/${tripId}`)
 }
 
