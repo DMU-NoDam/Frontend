@@ -1,0 +1,80 @@
+/* ── Weather header (여행도구 상단, 배경 위에 뜨는 날씨) ──────── */
+
+.weather-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 28px 36px 0;
+  color: #ffffff;
+}
+
+.weather-header p {
+  margin: 0;
+}
+
+.weather-header__place-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weather-header__place {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 17px;
+}
+
+.weather-header__date {
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.weather-header__current {
+  display: flex;
+  flex-direction: column;
+}
+
+.weather-header__temp {
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 39px;
+}
+
+.weather-header__summary {
+  font-size: 10px;
+  line-height: 12px;
+}
+
+.weather-header__detail-row {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.weather-header__detail {
+  margin: 0;
+  min-width: 100px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 0.5px solid #ffffff;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.weather-header__detail div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weather-header__detail dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.weather-header__notice {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  opacity: 0.9;
+}
