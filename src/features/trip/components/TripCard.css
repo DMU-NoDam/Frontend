@@ -27,6 +27,20 @@
   background: #8f9098;
 }
 
+/* 도시 사진 배경 */
+.trip-card__photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 다녀온 여행 — 사진도 회색으로 */
+.trip-card--past .trip-card__photo {
+  filter: grayscale(1) brightness(0.85);
+}
+
 .trip-card__overlay {
   position: absolute;
   inset: 0;
@@ -36,6 +50,16 @@
     rgba(0, 0, 0, 0.55) 100%
   );
   pointer-events: none;
+}
+
+/* 사진 위에서는 아래쪽 글씨가 묻히지 않도록 조금 더 진하게 */
+.trip-card--photo .trip-card__overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.15) 40%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
 }
 
 .trip-card__badges {
