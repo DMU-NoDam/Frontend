@@ -6,9 +6,17 @@ const COUNTRY_NAME: Record<string, string> = {
   JP: '일본',
 }
 
+const COUNTRY_CURRENCY: Record<string, string> = {
+  JP: 'JPY',
+}
+
+// 지금은 일본 도시만 고를 수 있어서, 도시를 못 찾으면 엔화로 보여준다
+const DEFAULT_TARGET_CURRENCY = 'JPY'
+
 export type TripLocation = {
   cityName: string
   countryName: string | null
+  currency: string
 }
 
 const ALL_CITIES: City[] = Object.values(CITIES_BY_COUNTRY).flat()
@@ -22,11 +30,12 @@ export function getTripLocation(trip: TripSummary): TripLocation {
     .sort((a, b) => b.name.length - a.name.length)[0]
 
   if (!city) {
-    return { cityName: trip.name, countryName: null }
+    return { cityName: trip.name, countryName: null, currency: DEFAULT_TARGET_CURRENCY }
   }
 
   return {
     cityName: city.name,
     countryName: COUNTRY_NAME[city.countryCode] ?? null,
+    currency: COUNTRY_CURRENCY[city.countryCode] ?? DEFAULT_TARGET_CURRENCY,
   }
 }

@@ -19,3 +19,13 @@ export type WeatherResponse = {
   message: string
   body: WeatherForecast
 }
+
+// ── Exchange rate ────────────────────────────────────────────
+
+export type ExchangeRate = {
+  base: string
+  target: string
+  // 1 base = rate target
+  rate: number
+  fetchedAt: number
+}
