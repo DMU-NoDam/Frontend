@@ -9,6 +9,10 @@ export function getCurrencyName(code: string): string {
   return CURRENCY_INFO[code]?.name ?? code
 }
 
+export function getCurrencySymbol(code: string): string {
+  return CURRENCY_INFO[code]?.symbol ?? code
+}
+
 export function formatMoney(code: string, amount: number): string {
   const symbol = CURRENCY_INFO[code]?.symbol ?? `${code} `
   return `${symbol}${Math.round(amount).toLocaleString('ko-KR')}`

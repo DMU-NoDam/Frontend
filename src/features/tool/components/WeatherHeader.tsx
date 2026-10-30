@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { useDayWeather } from '../hooks/use-weather'
 import { getWeatherLabel } from '../lib/weather-code'
 import type { TripLocation } from '../lib/trip-location'
@@ -5,6 +6,8 @@ import './WeatherHeader.css'
 
 type Props = {
   location: TripLocation | null
+  // 맨 위에 보여줄 여행 칩 (여행이 있을 때만)
+  tripSwitcher?: ReactNode
   // 날씨를 볼 날짜 (yyyy-MM-dd). 여행지의 오늘 날씨를 보여주므로 오늘 날짜
   date: string | undefined
   isTripsLoading: boolean
@@ -20,7 +23,7 @@ function formatDateLabel(date: string): string {
   })
 }
 
-export function WeatherHeader({ location, date, isTripsLoading }: Props) {
+export function WeatherHeader({ location, tripSwitcher, date, isTripsLoading }: Props) {
   const { day: today, isLoading, isError } = useDayWeather(location?.cityName, date)
 
   if (!location || !date) {
@@ -39,6 +42,7 @@ export function WeatherHeader({ location, date, isTripsLoading }: Props) {
 
   return (
     <header className="weather-header">
+      {tripSwitcher}
       <div className="weather-header__place-row">
         <p className="weather-header__place">{place}</p>
         <p className="weather-header__date">오늘 · {formatDateLabel(date)}</p>
