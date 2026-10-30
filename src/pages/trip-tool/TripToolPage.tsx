@@ -1,9 +1,10 @@
 import { lazy, Suspense, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTrips } from '@/features/trip/hooks/use-trips'
-import { getNextFixedTrip, isTripActive } from '@/features/trip/lib/trip-date'
+import { getUpcomingFixedTrips, isTripActive } from '@/features/trip/lib/trip-date'
 import { TripMapSheet } from '@/features/trip/components/TripMapSheet'
 import { WeatherHeader } from '@/features/tool/components/WeatherHeader'
+import { TripSwitcher } from '@/features/tool/components/TripSwitcher'
 import { ExchangeRateCard } from '@/features/tool/components/ExchangeRateCard'
 import { MemoCard } from '@/features/tool/components/MemoCard'
 import { ChecklistCard } from '@/features/tool/components/ChecklistCard'
@@ -41,13 +42,30 @@ export function TripToolPage() {
   const navigate = useNavigate()
   const { data: trips = [], isLoading: isTripsLoading } = useTrips()
 
-  // 홈과 같은 규칙: 진행 중인 확정 여행 → 없으면 가장 가까운 확정 여행
-  const activeTrip = useMemo(
-    () => trips.find((t) => t.fixed && isTripActive(t.startDate, t.endDate)),
-    [trips],
-  )
-  const trip = activeTrip ?? getNextFixedTrip(trips)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // 고를 수 있는 여행: 아직 끝나지 않은 확정 여행
+  const upcomingTrips = useMemo(() => getUpcomingFixedTrips(trips), [trips])
+  // 고른 여행(?trip=)이 없거나 목록에 없으면 홈과 같은 규칙: 진행 중인 확정 여행 → 가장 가까운 확정 여행
+  const selectedTripId = searchParams.get('trip')
+  const trip =
+    upcomingTrips.find((t) => t.id === selectedTripId) ??
+    upcomingTrips.find((t) => isTripActive(t.startDate, t.endDate)) ??
+    upcomingTrips[0]
   const location = trip ? getTripLocation(trip) : null
+
+  // 다른 query parameter(scene 등)는 그대로 둔다
+  const updateSearchParam = (key: string, value: string | null) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (value === null) next.delete(key)
+        else next.set(key, value)
+        return next
+      },
+      { replace: true },
+    )
+  }
   // 출발일이 멀어도 날씨를 보여주도록 항상 여행지의 오늘 날씨를 조회한다
   // (백엔드는 7일보다 먼 날짜에는 예보를 주지 않는다)
   const weatherDate = trip ? getLocalToday() : undefined
@@ -56,12 +74,9 @@ export function TripToolPage() {
   const { day: weather } = useDayWeather(location?.cityName, weatherDate)
 
   // 개발용 장면 미리보기: /tools?scene=rain 처럼 주소로 장면을 고정한다 (빌드에서는 무시)
-  const [searchParams, setSearchParams] = useSearchParams()
   const sceneParam = searchParams.get('scene')
   const previewScene = import.meta.env.DEV && isWeatherScene(sceneParam) ? sceneParam : null
-  const setPreviewScene = (next: Scene | null) => {
-    setSearchParams(next ? { scene: next } : {}, { replace: true })
-  }
+  const setPreviewScene = (next: Scene | null) => updateSearchParam('scene', next)
 
   const scene = previewScene ?? (weather ? getWeatherScene(weather.weatherCode) : null)
   // 상태바 색을 배경 장면의 하늘 색과 이어지게 한다 (날씨가 없으면 기본 분홍)
@@ -77,7 +92,20 @@ export function TripToolPage() {
         }
         overlay={
           <>
-            <WeatherHeader location={location} date={weatherDate} isTripsLoading={isTripsLoading} />
+            <WeatherHeader
+              location={location}
+              tripSwitcher={
+                trip && (
+                  <TripSwitcher
+                    trips={upcomingTrips}
+                    selected={trip}
+                    onSelect={(tripId) => updateSearchParam('trip', tripId)}
+                  />
+                )
+              }
+              date={weatherDate}
+              isTripsLoading={isTripsLoading}
+            />
             {WeatherScenePicker && (
               <Suspense fallback={null}>
                 <WeatherScenePicker value={previewScene} onChange={setPreviewScene} />
@@ -92,7 +120,8 @@ export function TripToolPage() {
             {trip ? (
               <>
                 <MemoCard tripId={trip.id} />
-                <ChecklistCard tripId={trip.id} />
+                {/* 여행을 바꾸면 입력 중이던 준비물도 비운다 */}
+                <ChecklistCard key={trip.id} tripId={trip.id} />
               </>
             ) : (
               !isTripsLoading && (
