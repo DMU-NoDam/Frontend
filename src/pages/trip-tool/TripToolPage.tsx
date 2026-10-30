@@ -71,14 +71,16 @@ export function TripToolPage() {
   const weatherDate = trip ? getLocalToday() : undefined
 
   // 헤더와 같은 조회라 react-query가 한 번만 요청한다
-  const { day: weather } = useDayWeather(location?.cityName, weatherDate)
+  const { day: weather, current: currentWeather } = useDayWeather(location?.cityName, weatherDate)
 
   // 개발용 장면 미리보기: /tools?scene=rain 처럼 주소로 장면을 고정한다 (빌드에서는 무시)
   const sceneParam = searchParams.get('scene')
   const previewScene = import.meta.env.DEV && isWeatherScene(sceneParam) ? sceneParam : null
   const setPreviewScene = (next: Scene | null) => updateSearchParam('scene', next)
 
-  const scene = previewScene ?? (weather ? getWeatherScene(weather.weatherCode) : null)
+  // 배경 장면도 헤더와 같이 지금 날씨 기준 (없으면 하루 예보)
+  const sceneWeatherCode = currentWeather?.weatherCode ?? weather?.weatherCode
+  const scene = previewScene ?? (sceneWeatherCode !== undefined ? getWeatherScene(sceneWeatherCode) : null)
   // 상태바 색을 배경 장면의 하늘 색과 이어지게 한다 (날씨가 없으면 기본 분홍)
   useThemeColor(scene ? WEATHER_SCENE_TOP_COLOR[scene] : '#ff6f9f', '#ffffff')
 
