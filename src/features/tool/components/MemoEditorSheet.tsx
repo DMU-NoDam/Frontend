@@ -107,7 +107,7 @@ export function MemoEditorSheet({ tripId, memo, onClose }: Props) {
         <fieldset className="memo-editor__section">
           <legend className="memo-editor__label">종류</legend>
           <div className="memo-editor__icons">
-            {MEMO_ICONS.map(({ type, Icon, label }) => (
+            {MEMO_ICONS.map(({ type, image, label }) => (
               <label
                 key={type}
                 className={clsx('memo-editor__icon', icon === type && 'memo-editor__icon--active')}
@@ -121,7 +121,9 @@ export function MemoEditorSheet({ tripId, memo, onClose }: Props) {
                   onChange={() => setIcon(type)}
                   disabled={isBusy}
                 />
-                <Icon className="memo-editor__icon-svg" aria-hidden="true" />
+                <span className="memo-editor__icon-tile" aria-hidden="true">
+                  <img className="memo-editor__icon-image" src={image} alt="" />
+                </span>
                 <span>{label}</span>
               </label>
             ))}
