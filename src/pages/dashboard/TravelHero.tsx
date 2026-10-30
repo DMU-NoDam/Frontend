@@ -1,143 +1,102 @@
-import { motion } from 'framer-motion'
-import { LuPlane, LuMapPin } from 'react-icons/lu'
+import { useEffect, useState } from 'react'
+import { useReducedMotion } from 'framer-motion'
+import { LuPlane } from 'react-icons/lu'
+import fukuokaPhoto from '@/assets/city/jp-fukuoka.jpg'
+import hiroshimaPhoto from '@/assets/city/jp-hiroshima.jpg'
+import nagoyaPhoto from '@/assets/city/jp-nagoya.jpg'
+import nahaPhoto from '@/assets/city/jp-naha.jpg'
+import osakaPhoto from '@/assets/city/jp-osaka.jpg'
+import sapporoPhoto from '@/assets/city/jp-sapporo.jpg'
+import tokyoPhoto from '@/assets/city/jp-tokyo.jpg'
 import './TravelHero.css'
 
-type Chip = {
-  label: string
-  top: string
-  left: string
-  entranceDelay: number
-  floatDelay: number
+// 홈 상단 배경: 여행 스크랩북. 큰 도시 이름 위아래로 탑승권·도장·사진 조각·메모지를 붙여 두고,
+// 몇 초마다 다음 도시로 넘어가며 이름·공항 코드·도장·사진이 함께 바뀐다. 장식이라 스크린 리더에서는 숨긴다.
+
+type Destination = {
+  en: string
+  ko: string
+  airport: string
+  photo: string
 }
 
-// 여행지 칩 — 화면에 흩어져 float
-const CHIPS: Chip[] = [
-  { label: '🗼 도쿄',  top: '15%', left: '15%',  entranceDelay: 0.7, floatDelay: 0 },
-  { label: '🌴 발리',  top: '12%', left: '61%', entranceDelay: 0.9, floatDelay: 1.0 },
-  { label: '🏔️ 제주', top: '70%', left: '20%',  entranceDelay: 1.1, floatDelay: 1.8 },
+// 앱에서 고를 수 있는 공항 도시 중 사진이 있는 곳
+const DESTINATIONS: Destination[] = [
+  { en: 'TOKYO', ko: '도쿄', airport: 'NRT', photo: tokyoPhoto },
+  { en: 'OSAKA', ko: '오사카', airport: 'KIX', photo: osakaPhoto },
+  { en: 'SAPPORO', ko: '삿포로', airport: 'CTS', photo: sapporoPhoto },
+  { en: 'FUKUOKA', ko: '후쿠오카', airport: 'FUK', photo: fukuokaPhoto },
+  { en: 'NAHA', ko: '나하', airport: 'OKA', photo: nahaPhoto },
+  { en: 'NAGOYA', ko: '나고야', airport: 'NGO', photo: nagoyaPhoto },
+  { en: 'HIROSHIMA', ko: '히로시마', airport: 'HIJ', photo: hiroshimaPhoto },
 ]
 
-type StarDot = {
-  top: string
-  left: string
-  delay: number
-  size: number
+const ROTATE_MS = 4000
+
+type Props = {
+  // 위에 겹쳐 뜨는 배지만큼 내린다 (회원 홈은 지도 위 배지, 비회원 홈은 헤더가 따로 있다)
+  topInset?: number
 }
 
-// 하늘의 별 — 흰 원형 점이 반짝임
-const STAR_DOTS: StarDot[] = [
-  { top: '6%',  left: '44%', delay: 0.0, size: 4 },
-  { top: '22%', left: '27%', delay: 0.5, size: 3 },
-  { top: '9%',  left: '82%', delay: 0.8, size: 4 },
-  { top: '56%', left: '40%', delay: 1.2, size: 3 },
-  { top: '46%', left: '90%', delay: 0.3, size: 4 },
-  { top: '74%', left: '19%', delay: 0.6, size: 3 },
-]
+export function TravelHero({ topInset = 84 }: Props) {
+  const reduceMotion = useReducedMotion() ?? false
+  const [index, setIndex] = useState(0)
 
-export function TravelHero() {
+  // 움직임 줄이기 설정이면 첫 도시에 멈춰 둔다
+  useEffect(() => {
+    if (reduceMotion) return
+    const id = setInterval(() => setIndex((i) => (i + 1) % DESTINATIONS.length), ROTATE_MS)
+    return () => clearInterval(id)
+  }, [reduceMotion])
+
+  const dest = DESTINATIONS[index]
+
   return (
     <div className="travel-hero" aria-hidden="true">
+      <div className="scrapbook" style={{ top: topInset }}>
+        <p className="scrapbook__eyebrow">
+          NEXT STOP <span key={`ko-${index}`} className="scrapbook__swap">{dest.ko}</span>
+        </p>
 
-      {/* 여행 루트 — SVG 곡선이 왼쪽에서 오른쪽으로 그려짐 */}
-      <svg className="travel-hero__svg" viewBox="0 0 375 200" preserveAspectRatio="none">
-        <motion.path
-          d="M 38,118 Q 190,38 337,98"
-          fill="none"
-          stroke="rgba(255,255,255,0.6)"
-          strokeWidth="1.5"
-          strokeDasharray="7 5"
-          initial={{ pathLength: 0, opacity: 0 }}
-          animate={{ pathLength: 1, opacity: 1 }}
-          transition={{ duration: 1.6, ease: 'easeInOut', delay: 0.3 }}
-        />
-      </svg>
+        {/* 바뀔 때마다 key가 바뀌어 등장 애니메이션을 다시 재생한다 */}
+        <p key={`word-${index}`} className="scrapbook__word">{dest.en}</p>
 
-      {/* 출발지 핀 */}
-      <motion.div
-        className="travel-hero__pin"
-        style={{ top: '57%', left: '8.5%' }}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 1.8 }}
-      >
-        <motion.div
-          className="travel-hero__pin-ring"
-          animate={{ scale: [1, 2.4], opacity: [0.55, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeOut', delay: 2.3 }}
-        />
-        <LuMapPin size={14} color="rgba(255,255,255,0.95)" />
-      </motion.div>
+        <div key={`stamp-${index}`} className="scrapbook__stamp">
+          <b>{dest.en}</b>
+          <i>JAPAN</i>
+          <i>BON VOYAGE</i>
+        </div>
 
-      {/* 도착지 핀 */}
-      <motion.div
-        className="travel-hero__pin"
-        style={{ top: '47%', left: '88.5%' }}
-        initial={{ opacity: 0, scale: 0 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 2.1 }}
-      >
-        <motion.div
-          className="travel-hero__pin-ring"
-          animate={{ scale: [1, 2.4], opacity: [0.55, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeOut', delay: 2.7 }}
-        />
-        <LuMapPin size={14} color="rgba(255,255,255,0.95)" />
-      </motion.div>
+        <div className="scrapbook__ticket">
+          <div className="scrapbook__ticket-main">
+            <span className="scrapbook__ticket-air">ARUBI AIR · BOARDING PASS</span>
+            <span className="scrapbook__ticket-route">
+              ICN <span className="scrapbook__ticket-arrow">→</span>{' '}
+              <span key={`code-${index}`} className="scrapbook__swap">{dest.airport}</span>
+            </span>
+          </div>
+          <span className="scrapbook__ticket-stub">SEAT 12A</span>
+        </div>
+        <span className="scrapbook__tape scrapbook__tape--ticket" />
 
-      {/* 여행지 칩 — glassmorphism + floating */}
-      {CHIPS.map(({ label, top, left, entranceDelay, floatDelay }, i) => (
-        <motion.div
-          key={i}
-          className="travel-hero__chip"
-          style={{ top, left }}
-          initial={{ opacity: 0, scale: 0.75 }}
-          animate={{ opacity: 1, scale: 1, y: [0, -7, 0] }}
-          transition={{
-            opacity: { duration: 0.35, delay: entranceDelay },
-            scale:   { type: 'spring', stiffness: 300, damping: 22, delay: entranceDelay },
-            y: { duration: 3.5, delay: floatDelay, repeat: Infinity, ease: 'easeInOut' },
-          }}
-        >
-          {label}
-        </motion.div>
-      ))}
+        <svg className="scrapbook__route" viewBox="0 0 393 340" preserveAspectRatio="none">
+          <path d="M 226 176 C 262 186, 250 214, 286 218" />
+        </svg>
+        <LuPlane className="scrapbook__plane" />
 
-      {/* 별 — 흰 점이 stagger로 반짝임 */}
-      {STAR_DOTS.map(({ top, left, delay, size }, i) => (
-        <motion.div
-          key={i}
-          className="travel-hero__star"
-          style={{ top, left, width: size, height: size }}
-          animate={{ opacity: [0.2, 1, 0.2], scale: [0.7, 1.4, 0.7] }}
-          transition={{
-            duration: 2.5 + delay * 0.4,
-            delay,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
-        />
-      ))}
+        <figure className="scrapbook__photo">
+          <img key={dest.photo} src={dest.photo} alt="" />
+        </figure>
+        <span className="scrapbook__tape scrapbook__tape--photo" />
 
-      {/* 비행기 — 루트를 따라 왼쪽에서 오른쪽으로 비행 후 반복 */}
-      <motion.div
-        className="travel-hero__plane"
-        style={{ top: '55%', left: '-28px' }}
-        animate={{
-          x:       [0,   90,  200, 335, 430],
-          y:       [0,  -40,  -30, -14,   0],
-          opacity: [0,    1,    1,   1,   0],
-        }}
-        transition={{
-          duration:    4.2,
-          delay:       1.5,
-          repeat:      Infinity,
-          repeatDelay: 3.8,
-          ease:        'easeInOut',
-        }}
-      >
-        <LuPlane size={20} color="rgba(255,255,255,0.95)" style={{ transform: 'rotate(-8deg)' }} />
-      </motion.div>
+        <p className="scrapbook__note">
+          어디로
+          <br />
+          떠나볼까?
+        </p>
 
+        <p className="scrapbook__doodle">♡ 꼭 가보기!</p>
+      </div>
     </div>
   )
 }

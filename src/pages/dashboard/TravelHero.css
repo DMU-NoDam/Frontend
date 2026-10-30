@@ -1,75 +1,317 @@
+/* ── Travel hero : 여행 스크랩북 + 큰 도시 이름 ─────────────────── */
+
+/* 글꼴은 필요한 글자만 남긴 woff (src/assets/fonts, SIL OFL 1.1 라이선스 전문 동봉)
+   - Arubi Pen     : Nanum Pen Script 부분 — 메모지·낙서 문구에 쓰는 한글만 들어 있다
+   - Arubi Display : Anton 부분 — 영문 대문자·숫자·기호
+   문구를 바꾸면 글꼴에 없는 글자는 기본 글꼴로 보이므로, 글꼴 파일도 다시 만들어야 한다 */
+@font-face {
+  font-family: 'Arubi Pen';
+  src: url('../../assets/fonts/arubi-pen.woff') format('woff');
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Arubi Display';
+  src: url('../../assets/fonts/arubi-display.woff') format('woff');
+  font-display: swap;
+}
+
+/* 종이 결·그레인은 페이지 배경(.home-page)에 깔려 있어 여기는 투명하다 */
 .travel-hero {
+  position: relative;
   width: 100%;
   height: 100%;
-  position: relative;
   overflow: hidden;
   user-select: none;
-  caret-color: transparent;
 }
 
-.travel-hero * {
-  caret-color: transparent;
+/* 붙인 조각들의 좌표계 (393px 화면 기준) */
+.scrapbook {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 340px;
 }
 
-/* 루트 SVG — 전체 영역을 덮는 절대 레이어 */
-@media (min-width: 300px) {
-  .travel-hero {
-    top: 32px;
+/* ── 큰 도시 이름 ──────────────────────────────────────────── */
+
+.scrapbook__eyebrow {
+  position: absolute;
+  top: 0;
+  left: 20px;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.24em;
+  color: #5b1a37;
+}
+
+.scrapbook__eyebrow span {
+  margin-left: 6px;
+  letter-spacing: 0.04em;
+}
+
+/* 화면 폭을 넘치면 넘치는 대로 잘리게 둔다 (잡지 표지처럼) */
+.scrapbook__word {
+  position: absolute;
+  top: 24px;
+  left: 16px;
+  margin: 0;
+  font-family: 'Arubi Display', 'Impact', sans-serif;
+  font-size: 104px;
+  line-height: 0.92;
+  letter-spacing: 0.005em;
+  white-space: nowrap;
+  color: #5b1a37;
+  transform: rotate(-2deg);
+  transform-origin: left center;
+  animation: scrap-word-in 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes scrap-word-in {
+  from {
+    opacity: 0;
+    transform: rotate(-2deg) translateY(18px);
   }
 }
 
-.travel-hero__svg {
+.scrapbook__swap {
+  display: inline-block;
+  animation: scrap-fade-in 0.4s ease-out;
+}
+
+@keyframes scrap-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ── 도장 : 잉크가 고르지 않게 노이즈로 군데군데 지운다 ────────── */
+
+.scrapbook__stamp {
+  position: absolute;
+  top: 8px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 92px;
+  height: 92px;
+  border: 3px solid currentColor;
+  border-radius: 50%;
+  color: rgba(214, 51, 108, 0.85);
+  font-family: 'Arubi Display', 'Impact', sans-serif;
+  text-align: center;
+  transform: rotate(12deg);
+  mix-blend-mode: multiply;
+  -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.6'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.6'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation: scrap-stamp-in 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.scrapbook__stamp::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+
+.scrapbook__stamp b {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.scrapbook__stamp i {
+  font-size: 9px;
+  font-style: normal;
+  letter-spacing: 0.16em;
+}
+
+/* 쾅 찍히는 느낌 */
+@keyframes scrap-stamp-in {
+  from {
+    opacity: 0;
+    transform: rotate(12deg) scale(1.35);
+  }
+}
+
+/* ── 탑승권 ────────────────────────────────────────────────── */
+
+.scrapbook__ticket {
+  position: absolute;
+  top: 122px;
+  left: 18px;
+  display: grid;
+  grid-template-columns: 1fr 34px;
+  width: 210px;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #fffaf3;
+  box-shadow: 0 4px 10px rgba(91, 26, 55, 0.16);
+  transform: rotate(-4deg);
+}
+
+.scrapbook__ticket-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-right: 2px dashed #e7c7d3;
+}
+
+.scrapbook__ticket-air {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #b0607f;
+}
+
+.scrapbook__ticket-route {
+  font-family: 'Arubi Display', 'Impact', sans-serif;
+  font-size: 32px;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: #5b1a37;
+}
+
+.scrapbook__ticket-arrow {
+  font-size: 22px;
+  color: #d6336c;
+}
+
+.scrapbook__ticket-stub {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  writing-mode: vertical-rl;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #b0607f;
+}
+
+/* ── 마스킹테이프 ──────────────────────────────────────────── */
+
+.scrapbook__tape {
+  position: absolute;
+  height: 18px;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 111, 159, 0.7) 0 6px,
+    rgba(255, 255, 255, 0.6) 6px 12px
+  );
+}
+
+.scrapbook__tape--ticket {
+  top: 112px;
+  left: 176px;
+  width: 64px;
+  transform: rotate(20deg);
+}
+
+.scrapbook__tape--photo {
+  top: 214px;
+  left: 22px;
+  width: 58px;
+  transform: rotate(-14deg);
+}
+
+/* ── 손으로 그린 점선 경로 + 비행기 ───────────────────────────── */
+
+.scrapbook__route {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
+  overflow: visible;
 }
 
-/* 여행지 칩 — glassmorphism (밝은 핑크 배경용) */
-.travel-hero__chip {
-  position: absolute;
-  display: inline-flex;
-  align-items: center;
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #be185d;
-  white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(190, 24, 93, 0.12);
+.scrapbook__route path {
+  fill: none;
+  stroke: #d6336c;
+  stroke-width: 2;
+  stroke-dasharray: 2 7;
+  stroke-linecap: round;
 }
 
-/* 위치 핀 컨테이너 */
-.travel-hero__pin {
+.scrapbook__plane {
   position: absolute;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: 206px;
+  left: 284px;
+  width: 20px;
+  height: 20px;
+  color: #d6336c;
+  transform: rotate(20deg);
 }
 
-/* 핀 주변 파동 링 */
-.travel-hero__pin-ring {
+/* ── 찢은 사진 조각 ────────────────────────────────────────── */
+
+.scrapbook__photo {
   position: absolute;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  top: 222px;
+  left: 30px;
+  width: 150px;
+  height: 108px;
+  margin: 0;
+  padding: 6px;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(91, 26, 55, 0.16);
+  transform: rotate(3deg);
+  clip-path: polygon(
+    0 3%, 6% 0, 14% 2%, 22% 0, 31% 2%, 40% 0, 52% 2%, 63% 0, 74% 2%, 86% 0, 100% 2%,
+    99% 20%, 100% 41%, 98% 62%, 100% 84%, 99% 100%, 85% 98%, 70% 100%, 55% 98%,
+    40% 100%, 25% 98%, 10% 100%, 0 98%, 2% 75%, 0 52%, 2% 30%
+  );
 }
 
-/* 별 — 흰 원형 점 */
-.travel-hero__star {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.95);
+.scrapbook__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.9);
+  animation: scrap-fade-in 0.5s ease-out;
 }
 
-/* 비행기 컨테이너 */
-.travel-hero__plane {
+/* ── 메모지 · 낙서 ─────────────────────────────────────────── */
+
+.scrapbook__note {
   position: absolute;
-  pointer-events: none;
+  top: 236px;
+  right: 24px;
+  width: 124px;
+  margin: 0;
+  padding: 12px 10px 14px;
+  background: #fff4a8;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Arubi Pen', cursive;
+  font-size: 26px;
+  line-height: 1;
+  text-align: center;
+  color: #4a3a20;
+  transform: rotate(-4deg);
+}
+
+.scrapbook__doodle {
+  position: absolute;
+  top: 312px;
+  left: 196px;
+  margin: 0;
+  font-family: 'Arubi Pen', cursive;
+  font-size: 24px;
+  color: #d6336c;
+  transform: rotate(-3deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrapbook__word,
+  .scrapbook__swap,
+  .scrapbook__stamp,
+  .scrapbook__photo img {
+    animation: none;
+  }
 }

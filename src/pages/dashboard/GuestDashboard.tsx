@@ -17,7 +17,8 @@ export function GuestDashboard() {
 
       <div className="home-feed">
         <div className="home-map">
-          <TravelHero />
+          {/* 배지는 위 헤더에 따로 있으므로 조금만 내린다 */}
+          <TravelHero topInset={12} />
         </div>
 
         <section
