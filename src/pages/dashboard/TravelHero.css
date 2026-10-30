@@ -25,12 +25,14 @@
   user-select: none;
 }
 
-/* 붙인 조각들의 좌표계 (393px 화면 기준) */
+/* 붙인 조각들의 좌표계 (393 x 340 기준). 가운데 정렬하고, 공간이 모자라면
+   TravelHero가 transform: scale()로 통째로 줄인다 */
 .scrapbook {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
+  width: 393px;
   height: 340px;
+  transform-origin: top center;
 }
 
 /* ── 큰 도시 이름 ──────────────────────────────────────────── */

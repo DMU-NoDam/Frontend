@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import { LuPlane } from 'react-icons/lu'
 import fukuokaPhoto from '@/assets/city/jp-fukuoka.jpg'
@@ -33,6 +33,12 @@ const DESTINATIONS: Destination[] = [
 
 const ROTATE_MS = 4000
 
+// 조각 배치의 기준 크기 (393px 화면에서 배지 아래 340px 높이)
+const DESIGN_WIDTH = 393
+const DESIGN_HEIGHT = 340
+// 아래 시트의 둥근 모서리와 겹치지 않게 남기는 여백
+const BOTTOM_GAP = 28
+
 type Props = {
   // 위에 겹쳐 뜨는 배지만큼 내린다 (회원 홈은 지도 위 배지, 비회원 홈은 헤더가 따로 있다)
   topInset?: number
@@ -41,6 +47,21 @@ type Props = {
 export function TravelHero({ topInset = 84 }: Props) {
   const reduceMotion = useReducedMotion() ?? false
   const [index, setIndex] = useState(0)
+  const heroRef = useRef<HTMLDivElement>(null)
+  // 화면이 낮거나 좁으면 시트에 가려지지 않도록 조각 전체를 비율대로 줄인다
+  const [scale, setScale] = useState(1)
+
+  useEffect(() => {
+    const hero = heroRef.current
+    if (!hero) return
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      const available = height - topInset - BOTTOM_GAP
+      setScale(Math.max(0.5, Math.min(1, width / DESIGN_WIDTH, available / DESIGN_HEIGHT)))
+    })
+    observer.observe(hero)
+    return () => observer.disconnect()
+  }, [topInset])
 
   // 움직임 줄이기 설정이면 첫 도시에 멈춰 둔다
   useEffect(() => {
@@ -52,8 +73,8 @@ export function TravelHero({ topInset = 84 }: Props) {
   const dest = DESTINATIONS[index]
 
   return (
-    <div className="travel-hero" aria-hidden="true">
-      <div className="scrapbook" style={{ top: topInset }}>
+    <div ref={heroRef} className="travel-hero" aria-hidden="true">
+      <div className="scrapbook" style={{ top: topInset, transform: `translateX(-50%) scale(${scale})` }}>
         <p className="scrapbook__eyebrow">
           NEXT STOP <span key={`ko-${index}`} className="scrapbook__swap">{dest.ko}</span>
         </p>
