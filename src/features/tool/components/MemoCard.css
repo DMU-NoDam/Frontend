@@ -28,21 +28,24 @@
   outline-offset: 2px;
 }
 
+/* 흰 타일 + 옅은 그림자 위에 3D 아이콘 */
 .memo-card__icon {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: #fff0f5;
-  color: #ff6f9f;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(17, 24, 39, 0.04),
+    0 2px 6px rgba(17, 24, 39, 0.08);
 }
 
-.memo-card__icon svg {
-  width: 16px;
-  height: 16px;
+.memo-card__icon img {
+  width: 24px;
+  height: 24px;
 }
 
 .memo-card__text {

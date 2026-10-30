@@ -120,48 +120,70 @@
 .memo-editor__icons {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  row-gap: 14px;
+  column-gap: 8px;
+  padding-top: 4px;
 }
 
+/* 흰 타일 + 아래 이름 */
 .memo-editor__icon {
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 64px;
-  border: 1.5px solid #e8e9f1;
-  border-radius: 14px;
-  background: #ffffff;
+  gap: 8px;
   color: #71727a;
   font-size: 12px;
   font-weight: 600;
   line-height: 16px;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  transition: color 0.15s ease;
 }
 
-.memo-editor__icon:hover {
-  border-color: #ffb3cc;
+.memo-editor__icon-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(17, 24, 39, 0.05),
+    0 3px 10px rgba(17, 24, 39, 0.1);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-.memo-editor__icon--active,
-.memo-editor__icon--active:hover {
-  border-color: #ff6f9f;
-  background: #fff0f5;
-  color: #ff6f9f;
+.memo-editor__icon:hover .memo-editor__icon-tile {
+  transform: translateY(-1px);
+}
+
+/* 고른 종류는 타일 둘레를 분홍으로 */
+.memo-editor__icon--active {
+  color: #1f2024;
+}
+
+.memo-editor__icon--active .memo-editor__icon-tile {
+  box-shadow:
+    0 0 0 2px #ff6f9f,
+    0 3px 10px rgba(17, 24, 39, 0.1);
 }
 
 /* 키보드로 고를 때 포커스 표시 (실제 라디오는 숨겨져 있다) */
-.memo-editor__icon:has(.memo-editor__radio:focus-visible) {
+.memo-editor__icon:has(.memo-editor__radio:focus-visible) .memo-editor__icon-tile {
   outline: 2px solid #ff6f9f;
-  outline-offset: 2px;
+  outline-offset: 3px;
 }
 
-.memo-editor__icon-svg {
-  width: 22px;
-  height: 22px;
+.memo-editor__icon-image {
+  width: 34px;
+  height: 34px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .memo-editor__icon:hover .memo-editor__icon-tile {
+    transform: none;
+  }
 }
 
 .memo-editor__radio {
