@@ -77,11 +77,6 @@
   }
 }
 
-.scrapbook__swap {
-  display: inline-block;
-  animation: scrap-fade-in 0.4s ease-out;
-}
-
 @keyframes scrap-fade-in {
   from {
     opacity: 0;
@@ -344,7 +339,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .scrapbook__word,
-  .scrapbook__swap,
   .scrapbook__stamp,
   .scrapbook__photo img {
     animation: none;

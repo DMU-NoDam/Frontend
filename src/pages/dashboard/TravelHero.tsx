@@ -1,41 +1,59 @@
 import { useEffect, useRef, useState } from 'react'
-import { useReducedMotion } from 'framer-motion'
 import { LuPlane } from 'react-icons/lu'
 import fukuokaPhoto from '@/assets/city/jp-fukuoka.jpg'
 import hiroshimaPhoto from '@/assets/city/jp-hiroshima.jpg'
+import kyotoPhoto from '@/assets/city/jp-kyoto.jpg'
 import nagoyaPhoto from '@/assets/city/jp-nagoya.jpg'
 import nahaPhoto from '@/assets/city/jp-naha.jpg'
 import osakaPhoto from '@/assets/city/jp-osaka.jpg'
 import sapporoPhoto from '@/assets/city/jp-sapporo.jpg'
 import tokyoPhoto from '@/assets/city/jp-tokyo.jpg'
+import { getTripStatusLabel } from '@/features/trip/lib/trip-date'
+import type { TripSummary } from '@/features/trip/types/trip-types'
 import './TravelHero.css'
 
-// 홈 상단 배경: 여행 스크랩북. 큰 도시 이름 위아래로 탑승권·도장·사진 조각·메모지를 붙여 두고,
-// 몇 초마다 다음 도시로 넘어가며 이름·공항 코드·도장·사진이 함께 바뀐다. 장식이라 스크린 리더에서는 숨긴다.
+// 홈 상단 배경: 여행 스크랩북. 큰 도시 이름 위아래로 탑승권·도장·사진 조각·메모지를 붙여 둔다.
+// 도시는 하나로 고정한다: 만들어 둔 여행이 있으면 가장 가까운 여행의 도시, 없으면 날짜로 정한 '오늘의 도시'.
+// 장식이라 스크린 리더에서는 숨긴다.
 
 type Destination = {
+  code: string
   en: string
   ko: string
   airport: string
   photo: string
 }
 
-// 앱에서 고를 수 있는 공항 도시 중 사진이 있는 곳
+// 사진이 있는 도시 (교토는 공항이 없어 간사이공항으로 들어간다)
 const DESTINATIONS: Destination[] = [
-  { en: 'TOKYO', ko: '도쿄', airport: 'NRT', photo: tokyoPhoto },
-  { en: 'OSAKA', ko: '오사카', airport: 'KIX', photo: osakaPhoto },
-  { en: 'SAPPORO', ko: '삿포로', airport: 'CTS', photo: sapporoPhoto },
-  { en: 'FUKUOKA', ko: '후쿠오카', airport: 'FUK', photo: fukuokaPhoto },
-  { en: 'NAHA', ko: '나하', airport: 'OKA', photo: nahaPhoto },
-  { en: 'NAGOYA', ko: '나고야', airport: 'NGO', photo: nagoyaPhoto },
-  { en: 'HIROSHIMA', ko: '히로시마', airport: 'HIJ', photo: hiroshimaPhoto },
+  { code: 'jp-tokyo', en: 'TOKYO', ko: '도쿄', airport: 'NRT', photo: tokyoPhoto },
+  { code: 'jp-osaka', en: 'OSAKA', ko: '오사카', airport: 'KIX', photo: osakaPhoto },
+  { code: 'jp-sapporo', en: 'SAPPORO', ko: '삿포로', airport: 'CTS', photo: sapporoPhoto },
+  { code: 'jp-fukuoka', en: 'FUKUOKA', ko: '후쿠오카', airport: 'FUK', photo: fukuokaPhoto },
+  { code: 'jp-naha', en: 'NAHA', ko: '나하', airport: 'OKA', photo: nahaPhoto },
+  { code: 'jp-nagoya', en: 'NAGOYA', ko: '나고야', airport: 'NGO', photo: nagoyaPhoto },
+  { code: 'jp-hiroshima', en: 'HIROSHIMA', ko: '히로시마', airport: 'HIJ', photo: hiroshimaPhoto },
+  { code: 'jp-kyoto', en: 'KYOTO', ko: '교토', airport: 'KIX', photo: kyotoPhoto },
 ]
 
-const ROTATE_MS = 4000
+// 오늘의 도시: 날짜가 같으면 같은 도시, 다음 날이면 다음 도시
+function getTodayDestination(): Destination {
+  const now = new Date()
+  const dayNumber = Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / 86_400_000)
+  return DESTINATIONS[dayNumber % DESTINATIONS.length]
+}
+
+// 'yyyy-MM-dd' → '11.02'
+function formatTicketDate(date: string): string {
+  const [, month, day] = date.split('-')
+  return `${month}.${day}`
+}
 
 // 조각 배치의 기준 크기 (393px 화면에서 배지 아래 350px 높이)
 const DESIGN_WIDTH = 393
 const DESIGN_HEIGHT = 350
+// 아래 시트의 둥근 모서리와 겹치지 않게 남기는 여백
+const BOTTOM_GAP = 28
 
 // 큰 도시 이름: 좌우 16px 안쪽 폭에 들어가게 글자 수로 크기를 정한다 (Anton 대문자 한 글자 ≈ 0.5em)
 const WORD_MAX_WIDTH = DESIGN_WIDTH - 32
@@ -49,17 +67,15 @@ function getWordSize(word: string): number {
 function getStampWordSize(word: string): number {
   return Math.min(15, Math.floor(58 / (word.length * 0.5)))
 }
-// 아래 시트의 둥근 모서리와 겹치지 않게 남기는 여백
-const BOTTOM_GAP = 28
 
 type Props = {
+  // 가장 가까운 여행 (확정 전 포함). 없으면 오늘의 도시를 보여준다
+  trip?: TripSummary
   // 위에 겹쳐 뜨는 배지만큼 내린다 (회원 홈은 지도 위 배지, 비회원 홈은 헤더가 따로 있다)
   topInset?: number
 }
 
-export function TravelHero({ topInset = 84 }: Props) {
-  const reduceMotion = useReducedMotion() ?? false
-  const [index, setIndex] = useState(0)
+export function TravelHero({ trip, topInset = 84 }: Props) {
   const heroRef = useRef<HTMLDivElement>(null)
   // 화면이 낮거나 좁으면 시트에 가려지지 않도록 조각 전체를 비율대로 줄인다
   const [scale, setScale] = useState(1)
@@ -76,28 +92,30 @@ export function TravelHero({ topInset = 84 }: Props) {
     return () => observer.disconnect()
   }, [topInset])
 
-  // 움직임 줄이기 설정이면 첫 도시에 멈춰 둔다
-  useEffect(() => {
-    if (reduceMotion) return
-    const id = setInterval(() => setIndex((i) => (i + 1) % DESTINATIONS.length), ROTATE_MS)
-    return () => clearInterval(id)
-  }, [reduceMotion])
-
-  const dest = DESTINATIONS[index]
+  // 여행 도시가 사진 있는 도시 목록에 없으면(요코하마 등) 오늘의 도시로 대신한다
+  const tripDestination = trip && DESTINATIONS.find((d) => d.code === trip.regionCodes[0])
+  const dest = tripDestination ?? getTodayDestination()
 
   return (
     <div ref={heroRef} className="travel-hero" aria-hidden="true">
       <div className="scrapbook" style={{ top: topInset, transform: `translateX(-50%) scale(${scale})` }}>
         <p className="scrapbook__eyebrow">
-          NEXT STOP <span key={`ko-${index}`} className="scrapbook__swap">{dest.ko}</span>
+          {tripDestination && trip ? (
+            <>
+              NEXT STOP <span>{dest.ko} · {getTripStatusLabel(trip)}</span>
+            </>
+          ) : (
+            <>
+              TODAY&apos;S CITY <span>{dest.ko}</span>
+            </>
+          )}
         </p>
 
-        {/* 바뀔 때마다 key가 바뀌어 등장 애니메이션을 다시 재생한다 */}
-        <p key={`word-${index}`} className="scrapbook__word" style={{ fontSize: getWordSize(dest.en) }}>
+        <p className="scrapbook__word" style={{ fontSize: getWordSize(dest.en) }}>
           {dest.en}
         </p>
 
-        <div key={`stamp-${index}`} className="scrapbook__stamp">
+        <div className="scrapbook__stamp">
           <b style={{ fontSize: getStampWordSize(dest.en) }}>{dest.en}</b>
           <i>JAPAN</i>
           <i>BON VOYAGE</i>
@@ -107,11 +125,13 @@ export function TravelHero({ topInset = 84 }: Props) {
           <div className="scrapbook__ticket-main">
             <span className="scrapbook__ticket-air">ARUBI AIR · BOARDING PASS</span>
             <span className="scrapbook__ticket-route">
-              ICN <span className="scrapbook__ticket-arrow">→</span>{' '}
-              <span key={`code-${index}`} className="scrapbook__swap">{dest.airport}</span>
+              ICN <span className="scrapbook__ticket-arrow">→</span> {dest.airport}
             </span>
           </div>
-          <span className="scrapbook__ticket-stub">SEAT 12A</span>
+          {/* 내 여행이면 출발일, 아니면 좌석 번호 */}
+          <span className="scrapbook__ticket-stub">
+            {tripDestination && trip ? formatTicketDate(trip.startDate) : 'SEAT 12A'}
+          </span>
         </div>
         <span className="scrapbook__tape scrapbook__tape--ticket" />
 
@@ -121,7 +141,7 @@ export function TravelHero({ topInset = 84 }: Props) {
         <LuPlane className="scrapbook__plane" />
 
         <figure className="scrapbook__photo">
-          <img key={dest.photo} src={dest.photo} alt="" />
+          <img src={dest.photo} alt="" />
         </figure>
         <span className="scrapbook__tape scrapbook__tape--photo" />
 

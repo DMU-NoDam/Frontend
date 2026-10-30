@@ -11,6 +11,7 @@ import { groupPlansByTheme } from '@/features/trip/api/plan-mapper'
 import {
   getDdayLabel,
   getNextFixedTrip,
+  getNextTrip,
   isTripActive,
 } from '@/features/trip/lib/trip-date'
 import {
@@ -221,6 +222,8 @@ export function UserDashboard() {
     [activeTrip, trips],
   )
   const fixedTrip = activeTrip ?? upcomingTrip
+  // 확정 여행이 없을 때 상단 스크랩북에 보여줄 가장 가까운 여행 (확정 전 포함)
+  const nextTrip = useMemo(() => getNextTrip(trips), [trips])
 
   // ── Current location — only while activeTrip is ongoing ──
   const { position: currentLocation } = useCurrentLocation({
@@ -296,7 +299,7 @@ export function UserDashboard() {
                 />
               )
               : <MapPlaceholder />
-            : <TravelHero />
+            : <TravelHero trip={nextTrip} />
         }
         overlay={
           <div className="home-map-overlay">
