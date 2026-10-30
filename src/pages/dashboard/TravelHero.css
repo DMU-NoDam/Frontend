@@ -83,12 +83,62 @@
   }
 }
 
+/* ── 여권 사증 면 : 도장이 찍히는 종이 ─────────────────────────── */
+
+.scrapbook__passport {
+  position: absolute;
+  top: 226px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 168px;
+  height: 118px;
+  padding: 8px 10px 10px;
+  border-radius: 4px;
+  /* 여권 속지의 옅은 지폐 무늬 */
+  background:
+    repeating-radial-gradient(circle at 100% 0, transparent 0 7px, rgba(214, 51, 108, 0.07) 7px 8px),
+    repeating-radial-gradient(circle at 0 100%, transparent 0 9px, rgba(91, 26, 55, 0.05) 9px 10px),
+    #fbf5ee;
+  box-shadow: 0 4px 10px rgba(91, 26, 55, 0.16);
+  transform: rotate(-3deg);
+}
+
+.scrapbook__passport-head {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #9b4a6c;
+}
+
+.scrapbook__passport-head span {
+  margin-left: 4px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+/* 아래쪽 기입란 줄 */
+.scrapbook__passport-lines {
+  height: 14px;
+  background: repeating-linear-gradient(180deg, transparent 0 6px, rgba(91, 26, 55, 0.14) 6px 7px);
+}
+
+/* 여권 왼쪽 위 모서리에 대각선으로 */
+.scrapbook__tape--passport {
+  top: 222px;
+  left: 4px;
+  width: 58px;
+  transform: rotate(-36deg);
+}
+
 /* ── 도장 : 잉크가 고르지 않게 노이즈로 군데군데 지운다 ────────── */
 
 .scrapbook__stamp {
   position: absolute;
-  top: 236px;
-  left: 44px;
+  top: 246px;
+  left: 54px;
   display: flex;
   flex-direction: column;
   align-items: center;

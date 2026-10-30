@@ -157,6 +157,15 @@ export function TravelHero({ trip, topInset = 84 }: Props) {
         <LuPlane className="scrapbook__plane" />
 
 
+        {/* 도장이 찍힌 여권 사증 면 */}
+        <div className="scrapbook__passport">
+          <span className="scrapbook__passport-head">
+            PASSPORT <span>VISAS · 사증</span>
+          </span>
+          <span className="scrapbook__passport-lines" />
+        </div>
+        <span className="scrapbook__tape scrapbook__tape--passport" />
+
         <div className="scrapbook__stamp">
           <b style={{ fontSize: getStampWordSize(dest.en) }}>{dest.en}</b>
           <i>JAPAN</i>
