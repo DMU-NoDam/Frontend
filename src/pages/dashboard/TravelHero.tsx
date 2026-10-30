@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { LuPlane } from 'react-icons/lu'
-import fukuokaPhoto from '@/assets/city/jp-fukuoka.jpg'
-import hiroshimaPhoto from '@/assets/city/jp-hiroshima.jpg'
-import kyotoPhoto from '@/assets/city/jp-kyoto.jpg'
-import nagoyaPhoto from '@/assets/city/jp-nagoya.jpg'
-import nahaPhoto from '@/assets/city/jp-naha.jpg'
-import osakaPhoto from '@/assets/city/jp-osaka.jpg'
-import sapporoPhoto from '@/assets/city/jp-sapporo.jpg'
-import tokyoPhoto from '@/assets/city/jp-tokyo.jpg'
+import fukuokaSticker from '@/assets/city-sticker/jp-fukuoka.svg'
+import hiroshimaSticker from '@/assets/city-sticker/jp-hiroshima.svg'
+import kyotoSticker from '@/assets/city-sticker/jp-kyoto.svg'
+import nagoyaSticker from '@/assets/city-sticker/jp-nagoya.svg'
+import nahaSticker from '@/assets/city-sticker/jp-naha.svg'
+import osakaSticker from '@/assets/city-sticker/jp-osaka.svg'
+import sapporoSticker from '@/assets/city-sticker/jp-sapporo.svg'
+import tokyoSticker from '@/assets/city-sticker/jp-tokyo.svg'
 import { getTripStatusLabel } from '@/features/trip/lib/trip-date'
 import type { TripSummary } from '@/features/trip/types/trip-types'
 import './TravelHero.css'
 
-// 홈 상단 배경: 여행 스크랩북. 큰 도시 이름 위아래로 탑승권·도장·사진 조각·메모지를 붙여 둔다.
+// 홈 상단 배경: 여행 스크랩북. 큰 도시 이름 위아래로 탑승권·도장·도시 스티커·메모지를 붙여 둔다.
 // 도시는 하나로 고정한다: 만들어 둔 여행이 있으면 가장 가까운 여행의 도시, 없으면 날짜로 정한 '오늘의 도시'.
 // 장식이라 스크린 리더에서는 숨긴다.
 
@@ -21,19 +21,20 @@ type Destination = {
   en: string
   ko: string
   airport: string
-  photo: string
+  // 그 도시의 랜드마크·음식 스티커 (Microsoft Fluent Emoji Flat, MIT — src/assets/city-sticker)
+  sticker: string
 }
 
-// 사진이 있는 도시 (교토는 공항이 없어 간사이공항으로 들어간다)
+// 스티커가 있는 도시 (교토는 공항이 없어 간사이공항으로 들어간다)
 const DESTINATIONS: Destination[] = [
-  { code: 'jp-tokyo', en: 'TOKYO', ko: '도쿄', airport: 'NRT', photo: tokyoPhoto },
-  { code: 'jp-osaka', en: 'OSAKA', ko: '오사카', airport: 'KIX', photo: osakaPhoto },
-  { code: 'jp-sapporo', en: 'SAPPORO', ko: '삿포로', airport: 'CTS', photo: sapporoPhoto },
-  { code: 'jp-fukuoka', en: 'FUKUOKA', ko: '후쿠오카', airport: 'FUK', photo: fukuokaPhoto },
-  { code: 'jp-naha', en: 'NAHA', ko: '나하', airport: 'OKA', photo: nahaPhoto },
-  { code: 'jp-nagoya', en: 'NAGOYA', ko: '나고야', airport: 'NGO', photo: nagoyaPhoto },
-  { code: 'jp-hiroshima', en: 'HIROSHIMA', ko: '히로시마', airport: 'HIJ', photo: hiroshimaPhoto },
-  { code: 'jp-kyoto', en: 'KYOTO', ko: '교토', airport: 'KIX', photo: kyotoPhoto },
+  { code: 'jp-tokyo', en: 'TOKYO', ko: '도쿄', airport: 'NRT', sticker: tokyoSticker }, // 도쿄타워
+  { code: 'jp-osaka', en: 'OSAKA', ko: '오사카', airport: 'KIX', sticker: osakaSticker }, // 오사카성
+  { code: 'jp-sapporo', en: 'SAPPORO', ko: '삿포로', airport: 'CTS', sticker: sapporoSticker }, // 눈축제 눈사람
+  { code: 'jp-fukuoka', en: 'FUKUOKA', ko: '후쿠오카', airport: 'FUK', sticker: fukuokaSticker }, // 하카타 라멘
+  { code: 'jp-naha', en: 'NAHA', ko: '나하', airport: 'OKA', sticker: nahaSticker }, // 히비스커스
+  { code: 'jp-nagoya', en: 'NAGOYA', ko: '나고야', airport: 'NGO', sticker: nagoyaSticker }, // 새우튀김
+  { code: 'jp-hiroshima', en: 'HIROSHIMA', ko: '히로시마', airport: 'HIJ', sticker: hiroshimaSticker }, // 도리이
+  { code: 'jp-kyoto', en: 'KYOTO', ko: '교토', airport: 'KIX', sticker: kyotoSticker }, // 말차
 ]
 
 // 오늘의 도시: 날짜가 같으면 같은 도시, 다음 날이면 다음 도시
@@ -92,7 +93,7 @@ export function TravelHero({ trip, topInset = 84 }: Props) {
     return () => observer.disconnect()
   }, [topInset])
 
-  // 여행 도시가 사진 있는 도시 목록에 없으면(요코하마 등) 오늘의 도시로 대신한다
+  // 여행 도시가 스티커 있는 도시 목록에 없으면(요코하마 등) 오늘의 도시로 대신한다
   const tripDestination = trip && DESTINATIONS.find((d) => d.code === trip.regionCodes[0])
   const dest = tripDestination ?? getTodayDestination()
 
@@ -123,14 +124,24 @@ export function TravelHero({ trip, topInset = 84 }: Props) {
 
         <div className="scrapbook__ticket">
           <div className="scrapbook__ticket-main">
-            <span className="scrapbook__ticket-air">ARUBI AIR · BOARDING PASS</span>
+            <span className="scrapbook__ticket-air">BOARDING PASS</span>
             <span className="scrapbook__ticket-route">
               ICN <span className="scrapbook__ticket-arrow">→</span> {dest.airport}
             </span>
           </div>
           {/* 내 여행이면 출발일, 아니면 좌석 번호 */}
           <span className="scrapbook__ticket-stub">
-            {tripDestination && trip ? formatTicketDate(trip.startDate) : 'SEAT 12A'}
+            {tripDestination && trip ? (
+              <>
+                <small>DEP</small>
+                <b>{formatTicketDate(trip.startDate)}</b>
+              </>
+            ) : (
+              <>
+                <small>SEAT</small>
+                <b>12A</b>
+              </>
+            )}
           </span>
         </div>
         <span className="scrapbook__tape scrapbook__tape--ticket" />
@@ -140,10 +151,10 @@ export function TravelHero({ trip, topInset = 84 }: Props) {
         </svg>
         <LuPlane className="scrapbook__plane" />
 
-        <figure className="scrapbook__photo">
-          <img src={dest.photo} alt="" />
+        <figure className="scrapbook__sticker-paper">
+          <img className="scrapbook__sticker" src={dest.sticker} alt="" />
         </figure>
-        <span className="scrapbook__tape scrapbook__tape--photo" />
+        <span className="scrapbook__tape scrapbook__tape--sticker" />
 
         <p className="scrapbook__note">
           어디로

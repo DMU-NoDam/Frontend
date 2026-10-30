@@ -142,8 +142,8 @@
   top: 130px;
   left: 18px;
   display: grid;
-  grid-template-columns: 1fr 34px;
-  width: 210px;
+  grid-template-columns: 1fr 64px;
+  width: 236px;
   height: 80px;
   overflow: hidden;
   border-radius: 6px;
@@ -180,15 +180,28 @@
   color: #d6336c;
 }
 
+/* 오른쪽 칸 : 작은 제목(DEP / SEAT) + 큰 값(출발일 / 좌석) */
 .scrapbook__ticket-stub {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  writing-mode: vertical-rl;
-  font-size: 8px;
+  gap: 2px;
+}
+
+.scrapbook__ticket-stub small {
+  font-size: 9px;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.2em;
   color: #b0607f;
+}
+
+.scrapbook__ticket-stub b {
+  font-family: 'Arubi Display', 'Impact', sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1;
+  color: #d6336c;
 }
 
 /* ── 마스킹테이프 ──────────────────────────────────────────── */
@@ -205,16 +218,17 @@
 
 .scrapbook__tape--ticket {
   top: 120px;
-  left: 176px;
+  left: 200px;
   width: 64px;
   transform: rotate(20deg);
 }
 
-.scrapbook__tape--photo {
-  top: 222px;
-  left: 22px;
-  width: 58px;
-  transform: rotate(-14deg);
+/* 스티커 종이 왼쪽 위 모서리에 대각선으로 */
+.scrapbook__tape--sticker {
+  top: 226px;
+  left: 18px;
+  width: 64px;
+  transform: rotate(-38deg);
 }
 
 /* ── 손으로 그린 점선 경로 + 비행기 ───────────────────────────── */
@@ -245,32 +259,36 @@
   transform: rotate(80deg);
 }
 
-/* ── 찢은 사진 조각 ────────────────────────────────────────── */
+/* ── 종이에 붙인 도시 스티커 ─────────────────────────────────── */
 
-.scrapbook__photo {
+/* 탑승권과 같은 아이보리 종이라 스티커의 흰 테두리가 보인다 */
+.scrapbook__sticker-paper {
   position: absolute;
-  top: 230px;
-  left: 30px;
-  width: 150px;
-  height: 108px;
+  top: 228px;
+  left: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 132px;
+  height: 112px;
   margin: 0;
-  padding: 6px;
-  background: #ffffff;
+  border-radius: 3px;
+  background: #fffaf3;
   box-shadow: 0 4px 10px rgba(91, 26, 55, 0.16);
   transform: rotate(3deg);
-  clip-path: polygon(
-    0 3%, 6% 0, 14% 2%, 22% 0, 31% 2%, 40% 0, 52% 2%, 63% 0, 74% 2%, 86% 0, 100% 2%,
-    99% 20%, 100% 41%, 98% 62%, 100% 84%, 99% 100%, 85% 98%, 70% 100%, 55% 98%,
-    40% 100%, 25% 98%, 10% 100%, 0 98%, 2% 75%, 0 52%, 2% 30%
-  );
 }
 
-.scrapbook__photo img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: saturate(0.9);
+/* 흰 테두리로 오려 낸 스티커 + 종이에 붙은 그림자 */
+.scrapbook__sticker {
+  width: 82px;
+  height: 82px;
+  transform: rotate(-8deg);
+  filter:
+    drop-shadow(3px 0 0 #ffffff)
+    drop-shadow(-3px 0 0 #ffffff)
+    drop-shadow(0 3px 0 #ffffff)
+    drop-shadow(0 -3px 0 #ffffff)
+    drop-shadow(0 2px 3px rgba(91, 26, 55, 0.28));
   animation: scrap-fade-in 0.5s ease-out;
 }
 
@@ -340,7 +358,7 @@
 @media (prefers-reduced-motion: reduce) {
   .scrapbook__word,
   .scrapbook__stamp,
-  .scrapbook__photo img {
+  .scrapbook__sticker {
     animation: none;
   }
 }
