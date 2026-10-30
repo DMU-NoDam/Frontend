@@ -12,7 +12,7 @@ import { getTripStatusLabel } from '@/features/trip/lib/trip-date'
 import type { TripSummary } from '@/features/trip/types/trip-types'
 import './TravelHero.css'
 
-// 홈 상단 배경: 여행 스크랩북. 큰 도시 이름 위아래로 탑승권·도장·도시 스티커·메모지를 붙여 둔다.
+// 홈 상단 배경: 여행 스크랩북. 큰 도시 이름 아래로 탑승권·우표 스티커·도장·메모지를 붙여 둔다.
 // 도시는 하나로 고정한다: 만들어 둔 여행이 있으면 가장 가까운 여행의 도시, 없으면 날짜로 정한 '오늘의 도시'.
 // 장식이라 스크린 리더에서는 숨긴다.
 
@@ -116,10 +116,15 @@ export function TravelHero({ trip, topInset = 84 }: Props) {
           {dest.en}
         </p>
 
-        <div className="scrapbook__stamp">
-          <b style={{ fontSize: getStampWordSize(dest.en) }}>{dest.en}</b>
-          <i>JAPAN</i>
-          <i>BON VOYAGE</i>
+        {/* 그림 + 도시 이름이 들어간 우표 모양 스티커, 탑승권 옆에 비스듬히 */}
+        <div className="scrapbook__postage">
+          <div className="scrapbook__postage-paper">
+            <div className="scrapbook__postage-inner">
+              <img src={dest.sticker} alt="" />
+              <b style={{ fontSize: getStampWordSize(dest.en) }}>{dest.en}</b>
+              <i>JAPAN · {dest.airport}</i>
+            </div>
+          </div>
         </div>
 
         <div className="scrapbook__ticket">
@@ -151,10 +156,12 @@ export function TravelHero({ trip, topInset = 84 }: Props) {
         </svg>
         <LuPlane className="scrapbook__plane" />
 
-        <figure className="scrapbook__sticker-paper">
-          <img className="scrapbook__sticker" src={dest.sticker} alt="" />
-        </figure>
-        <span className="scrapbook__tape scrapbook__tape--sticker" />
+
+        <div className="scrapbook__stamp">
+          <b style={{ fontSize: getStampWordSize(dest.en) }}>{dest.en}</b>
+          <i>JAPAN</i>
+          <i>BON VOYAGE</i>
+        </div>
 
         <p className="scrapbook__note">
           어디로

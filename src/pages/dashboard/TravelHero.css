@@ -87,8 +87,8 @@
 
 .scrapbook__stamp {
   position: absolute;
-  top: 128px;
-  right: 22px;
+  top: 236px;
+  left: 44px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -100,7 +100,7 @@
   color: rgba(214, 51, 108, 0.85);
   font-family: 'Arubi Display', 'Impact', sans-serif;
   text-align: center;
-  transform: rotate(12deg);
+  transform: rotate(-10deg);
   mix-blend-mode: multiply;
   -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.6'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.6'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
@@ -131,7 +131,7 @@
 @keyframes scrap-stamp-in {
   from {
     opacity: 0;
-    transform: rotate(12deg) scale(1.35);
+    transform: rotate(-10deg) scale(1.35);
   }
 }
 
@@ -223,13 +223,6 @@
   transform: rotate(20deg);
 }
 
-/* 스티커 종이 왼쪽 위 모서리에 대각선으로 */
-.scrapbook__tape--sticker {
-  top: 226px;
-  left: 18px;
-  width: 64px;
-  transform: rotate(-38deg);
-}
 
 /* ── 손으로 그린 점선 경로 + 비행기 ───────────────────────────── */
 
@@ -259,44 +252,71 @@
   transform: rotate(80deg);
 }
 
-/* ── 종이에 붙인 도시 스티커 ─────────────────────────────────── */
+/* ── 우표 모양 도시 스티커 ─────────────────────────────────── */
 
-/* 탑승권과 같은 아이보리 종이라 스티커의 흰 테두리가 보인다 */
-.scrapbook__sticker-paper {
+/* 그림자는 톱니 모양을 따라가도록 바깥 요소에 filter로 준다 */
+.scrapbook__postage {
   position: absolute;
-  top: 228px;
-  left: 34px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 132px;
-  height: 112px;
-  margin: 0;
-  border-radius: 3px;
-  background: #fffaf3;
-  box-shadow: 0 4px 10px rgba(91, 26, 55, 0.16);
-  transform: rotate(3deg);
+  top: 120px;
+  right: 18px;
+  transform: rotate(9deg);
+  filter: drop-shadow(0 4px 6px rgba(91, 26, 55, 0.22));
+  animation: scrap-fade-in 0.5s ease-out;
 }
 
-/* 흰 테두리로 오려 낸 스티커 + 종이에 붙은 그림자 */
-.scrapbook__sticker {
-  width: 82px;
-  height: 82px;
-  transform: rotate(-8deg);
-  filter:
-    drop-shadow(3px 0 0 #ffffff)
-    drop-shadow(-3px 0 0 #ffffff)
-    drop-shadow(0 3px 0 #ffffff)
-    drop-shadow(0 -3px 0 #ffffff)
-    drop-shadow(0 2px 3px rgba(91, 26, 55, 0.28));
-  animation: scrap-fade-in 0.5s ease-out;
+/* 흰 종이 가장자리에 우표 구멍(톱니)을 낸다 */
+.scrapbook__postage-paper {
+  --hole: 4px;
+  padding: calc(var(--hole) * 2);
+  background: #ffffff;
+  -webkit-mask:
+    radial-gradient(var(--hole), #0000 98%, #000) round calc(-1.5 * var(--hole)) calc(-1.5 * var(--hole)) /
+      calc(3 * var(--hole)) calc(3 * var(--hole)),
+    linear-gradient(#000 0 0) no-repeat 50% / calc(100% - 3 * var(--hole)) calc(100% - 3 * var(--hole));
+  mask:
+    radial-gradient(var(--hole), #0000 98%, #000) round calc(-1.5 * var(--hole)) calc(-1.5 * var(--hole)) /
+      calc(3 * var(--hole)) calc(3 * var(--hole)),
+    linear-gradient(#000 0 0) no-repeat 50% / calc(100% - 3 * var(--hole)) calc(100% - 3 * var(--hole));
+}
+
+.scrapbook__postage-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 84px;
+  padding: 8px 4px 7px;
+  border: 1.5px solid #f3b6c9;
+  background: #fff0f5;
+  color: #5b1a37;
+}
+
+.scrapbook__postage-inner img {
+  width: 52px;
+  height: 52px;
+}
+
+.scrapbook__postage-inner b {
+  margin-top: 4px;
+  font-family: 'Arubi Display', 'Impact', sans-serif;
+  /* font-size는 TravelHero가 이름 길이에 맞춰 준다 (최대 15px) */
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: 0.04em;
+}
+
+.scrapbook__postage-inner i {
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #b0607f;
 }
 
 /* ── 메모지 · 낙서 ─────────────────────────────────────────── */
 
 .scrapbook__note {
   position: absolute;
-  top: 236px;
+  top: 248px;
   right: 24px;
   width: 124px;
   margin: 0;
@@ -313,7 +333,7 @@
 
 .scrapbook__checklist {
   position: absolute;
-  top: 316px;
+  top: 330px;
   left: 200px;
   display: flex;
   align-items: center;
@@ -358,7 +378,7 @@
 @media (prefers-reduced-motion: reduce) {
   .scrapbook__word,
   .scrapbook__stamp,
-  .scrapbook__sticker {
+  .scrapbook__postage {
     animation: none;
   }
 }
