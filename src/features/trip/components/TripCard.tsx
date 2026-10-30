@@ -1,5 +1,6 @@
 import clsx from 'clsx'
 import { LuMoon, LuUsers } from 'react-icons/lu'
+import { getCityPhoto } from '../lib/city-photo'
 import type { TripSummary } from '../types/trip-types'
 import './TripCard.css'
 
@@ -37,13 +38,16 @@ export function TripCard({ trip, isPast = false }: Props) {
   // 여행 목록 응답에는 일정 생성 진행도가 없다(planCreated 삭제됨). 생성 중 표시는
   // TripGenerationWatcher의 전체화면 오버레이가 담당하므로 카드에서는 확정 여부만 보여준다.
   const status = trip.fixed ? '확정' : '확정 전'
+  const photo = getCityPhoto(trip)
 
   return (
     <article
-      className={clsx('trip-card', isPast && 'trip-card--past')}
-      data-variant={isPast ? undefined : variant}
+      className={clsx('trip-card', isPast && 'trip-card--past', photo && 'trip-card--photo')}
+      // 사진이 있으면 그라데이션 대신 사진을 깐다
+      data-variant={isPast || photo ? undefined : variant}
       aria-label={trip.name}
     >
+      {photo && <img className="trip-card__photo" src={photo} alt="" loading="lazy" decoding="async" />}
       <div className="trip-card__overlay" aria-hidden="true" />
       <div className="trip-card__badges">
         <span
