@@ -19,6 +19,7 @@ export const mockGetWeather = (cityName: string, date: string): Promise<WeatherF
     forecast: [
       { date, maxTemperature: 26, minTemperature: 18, weatherCode: 0, sourceType: 'FORECAST' },
     ],
+    current: { temperature: 23, weatherCode: 0 },
     message: '날씨 예보 조회 성공',
   })
 }

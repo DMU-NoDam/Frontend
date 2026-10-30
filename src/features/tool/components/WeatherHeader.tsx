@@ -24,7 +24,7 @@ function formatDateLabel(date: string): string {
 }
 
 export function WeatherHeader({ location, tripSwitcher, date, isTripsLoading }: Props) {
-  const { day: today, isLoading, isError } = useDayWeather(location?.cityName, date)
+  const { day: today, current, isLoading, isError } = useDayWeather(location?.cityName, date)
 
   if (!location || !date) {
     return (
@@ -38,7 +38,8 @@ export function WeatherHeader({ location, tripSwitcher, date, isTripsLoading }: 
   }
 
   const place = location.countryName ? `${location.cityName}, ${location.countryName}` : location.cityName
-  const condition = today ? getWeatherLabel(today.weatherCode) : null
+  // 날씨 상태는 지금 날씨 기준, 지금 날씨가 없으면 하루 예보 기준
+  const condition = today ? getWeatherLabel(current?.weatherCode ?? today.weatherCode) : null
 
   return (
     <header className="weather-header">
@@ -55,9 +56,14 @@ export function WeatherHeader({ location, tripSwitcher, date, isTripsLoading }: 
       ) : !today || !condition ? (
         <p className="weather-header__notice">오늘 날씨 정보가 아직 없어요</p>
       ) : (
-        // 기온 → 날씨 상태 → 최고·최저를 한 덩어리로 묶어 위에서 아래로 한 번에 읽히게 한다
+        // 지금 기온 → 날씨 상태 → 최고·최저를 한 덩어리로 묶어 위에서 아래로 한 번에 읽히게 한다.
+        // 지금 기온이 없으면(기후 정보 등) 최고기온을 큰 숫자로 쓰지 않고 최고·최저만 보여준다
         <div className="weather-header__current">
-          <span className="weather-header__temp">{Math.round(today.maxTemperature)}°</span>
+          {current && (
+            <span className="weather-header__temp" aria-label={`지금 ${Math.round(current.temperature)}도`}>
+              {Math.round(current.temperature)}°
+            </span>
+          )}
           <span className="weather-header__summary">
             <condition.Icon className="weather-header__icon" aria-hidden="true" />
             {condition.label}
