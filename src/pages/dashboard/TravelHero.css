@@ -25,13 +25,13 @@
   user-select: none;
 }
 
-/* 붙인 조각들의 좌표계 (393 x 340 기준). 가운데 정렬하고, 공간이 모자라면
+/* 붙인 조각들의 좌표계 (393 x 350 기준). 가운데 정렬하고, 공간이 모자라면
    TravelHero가 transform: scale()로 통째로 줄인다 */
 .scrapbook {
   position: absolute;
   left: 50%;
   width: 393px;
-  height: 340px;
+  height: 350px;
   transform-origin: top center;
 }
 
@@ -53,14 +53,14 @@
   letter-spacing: 0.04em;
 }
 
-/* 화면 폭을 넘치면 넘치는 대로 잘리게 둔다 (잡지 표지처럼) */
+/* 긴 이름도 화면 폭 안에 들어오게 글자 크기를 줄인다 */
 .scrapbook__word {
   position: absolute;
   top: 24px;
   left: 16px;
   margin: 0;
   font-family: 'Arubi Display', 'Impact', sans-serif;
-  font-size: 104px;
+  /* font-size는 TravelHero가 이름 길이에 맞춰 준다 (최대 104px) */
   line-height: 0.92;
   letter-spacing: 0.005em;
   white-space: nowrap;
@@ -92,8 +92,8 @@
 
 .scrapbook__stamp {
   position: absolute;
-  top: 8px;
-  right: 16px;
+  top: 128px;
+  right: 22px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -121,7 +121,7 @@
 }
 
 .scrapbook__stamp b {
-  font-size: 15px;
+  /* font-size는 TravelHero가 이름 길이에 맞춰 준다 (최대 15px) */
   font-weight: 400;
   letter-spacing: 0.06em;
 }
@@ -144,7 +144,7 @@
 
 .scrapbook__ticket {
   position: absolute;
-  top: 122px;
+  top: 130px;
   left: 18px;
   display: grid;
   grid-template-columns: 1fr 34px;
@@ -209,14 +209,14 @@
 }
 
 .scrapbook__tape--ticket {
-  top: 112px;
+  top: 120px;
   left: 176px;
   width: 64px;
   transform: rotate(20deg);
 }
 
 .scrapbook__tape--photo {
-  top: 214px;
+  top: 222px;
   left: 22px;
   width: 58px;
   transform: rotate(-14deg);
@@ -242,19 +242,19 @@
 
 .scrapbook__plane {
   position: absolute;
-  top: 206px;
-  left: 284px;
+  top: 262px;
+  left: 212px;
   width: 20px;
   height: 20px;
   color: #d6336c;
-  transform: rotate(20deg);
+  transform: rotate(80deg);
 }
 
 /* ── 찢은 사진 조각 ────────────────────────────────────────── */
 
 .scrapbook__photo {
   position: absolute;
-  top: 222px;
+  top: 230px;
   left: 30px;
   width: 150px;
   height: 108px;
@@ -298,15 +298,48 @@
   transform: rotate(-4deg);
 }
 
-.scrapbook__doodle {
+.scrapbook__checklist {
   position: absolute;
-  top: 312px;
-  left: 196px;
+  top: 316px;
+  left: 200px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0;
   font-family: 'Arubi Pen', cursive;
-  font-size: 24px;
-  color: #d6336c;
+  font-size: 23px;
+  line-height: 1;
+  white-space: nowrap;
+  color: #5b1a37;
   transform: rotate(-3deg);
+}
+
+/* 손으로 그린 체크박스 : 살짝 비뚤어진 네모 */
+.scrapbook__check {
+  position: relative;
+  width: 15px;
+  height: 15px;
+  border: 2px solid #d6336c;
+  border-radius: 3px 5px 2px 4px;
+  transform: rotate(-6deg);
+}
+
+/* 두 번째 항목 앞은 조금 띄운다 */
+.scrapbook__check + .scrapbook__check {
+  margin-left: 8px;
+}
+
+/* 체크 표시 : 칸 밖으로 삐져나오게 */
+.scrapbook__check--done::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: -6px;
+  width: 8px;
+  height: 15px;
+  border-right: 2.5px solid #d6336c;
+  border-bottom: 2.5px solid #d6336c;
+  transform: rotate(40deg);
 }
 
 @media (prefers-reduced-motion: reduce) {

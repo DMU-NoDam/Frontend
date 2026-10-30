@@ -33,9 +33,22 @@ const DESTINATIONS: Destination[] = [
 
 const ROTATE_MS = 4000
 
-// 조각 배치의 기준 크기 (393px 화면에서 배지 아래 340px 높이)
+// 조각 배치의 기준 크기 (393px 화면에서 배지 아래 350px 높이)
 const DESIGN_WIDTH = 393
-const DESIGN_HEIGHT = 340
+const DESIGN_HEIGHT = 350
+
+// 큰 도시 이름: 좌우 16px 안쪽 폭에 들어가게 글자 수로 크기를 정한다 (Anton 대문자 한 글자 ≈ 0.5em)
+const WORD_MAX_WIDTH = DESIGN_WIDTH - 32
+const WORD_MAX_SIZE = 104
+
+function getWordSize(word: string): number {
+  return Math.min(WORD_MAX_SIZE, Math.floor(WORD_MAX_WIDTH / (word.length * 0.5)))
+}
+
+// 도장 가운데 이름도 원 안쪽(약 58px)에 들어가게
+function getStampWordSize(word: string): number {
+  return Math.min(15, Math.floor(58 / (word.length * 0.5)))
+}
 // 아래 시트의 둥근 모서리와 겹치지 않게 남기는 여백
 const BOTTOM_GAP = 28
 
@@ -80,10 +93,12 @@ export function TravelHero({ topInset = 84 }: Props) {
         </p>
 
         {/* 바뀔 때마다 key가 바뀌어 등장 애니메이션을 다시 재생한다 */}
-        <p key={`word-${index}`} className="scrapbook__word">{dest.en}</p>
+        <p key={`word-${index}`} className="scrapbook__word" style={{ fontSize: getWordSize(dest.en) }}>
+          {dest.en}
+        </p>
 
         <div key={`stamp-${index}`} className="scrapbook__stamp">
-          <b>{dest.en}</b>
+          <b style={{ fontSize: getStampWordSize(dest.en) }}>{dest.en}</b>
           <i>JAPAN</i>
           <i>BON VOYAGE</i>
         </div>
@@ -100,8 +115,8 @@ export function TravelHero({ topInset = 84 }: Props) {
         </div>
         <span className="scrapbook__tape scrapbook__tape--ticket" />
 
-        <svg className="scrapbook__route" viewBox="0 0 393 340" preserveAspectRatio="none">
-          <path d="M 226 176 C 262 186, 250 214, 286 218" />
+        <svg className="scrapbook__route" viewBox="0 0 393 350" preserveAspectRatio="none">
+          <path d="M 200 214 C 210 238, 200 254, 218 266" />
         </svg>
         <LuPlane className="scrapbook__plane" />
 
@@ -116,7 +131,13 @@ export function TravelHero({ topInset = 84 }: Props) {
           떠나볼까?
         </p>
 
-        <p className="scrapbook__doodle">♡ 꼭 가보기!</p>
+        {/* 손글씨 준비물 체크리스트 (여행도구 탭의 체크리스트와 같은 이야기) */}
+        <p className="scrapbook__checklist">
+          <span className="scrapbook__check scrapbook__check--done" />
+          여권
+          <span className="scrapbook__check" />
+          엔화 환전
+        </p>
       </div>
     </div>
   )
