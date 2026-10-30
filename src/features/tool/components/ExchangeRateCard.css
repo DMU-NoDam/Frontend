@@ -4,11 +4,95 @@
   padding: 10px 12px;
 }
 
+/* 통화 쌍 + 방향 바꾸기 버튼 */
+.exchange-card__pair-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .exchange-card__pair {
   font-size: 11px;
   font-weight: 500;
   line-height: 15px;
   color: #494a50;
+}
+
+.exchange-card__swap {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: -4px -4px -4px 0;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: #fff0f5;
+  color: #ff6f9f;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.exchange-card__swap svg {
+  width: 16px;
+  height: 16px;
+}
+
+.exchange-card__swap:hover {
+  background: #ffe1ec;
+}
+
+.exchange-card__swap:focus-visible {
+  outline: 2px solid #ff6f9f;
+  outline-offset: 2px;
+}
+
+/* 금액 입력 칸 : 통화 기호 + 숫자 */
+.exchange-card__field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  background: #ffffff;
+  border: 1px solid #e8e9f1;
+  border-radius: 8px;
+  cursor: text;
+  transition: border-color 0.15s ease;
+}
+
+.exchange-card__field:focus-within {
+  border-color: #ff6f9f;
+}
+
+.exchange-card__symbol {
+  flex-shrink: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #71727a;
+}
+
+/* 휴대폰 브라우저가 입력할 때 화면을 확대하지 않도록 16px */
+.exchange-card__input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 22px;
+  color: #1f2024;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+}
+
+.exchange-card__input::placeholder {
+  color: #c5c6cc;
 }
 
 .exchange-card__main {
@@ -19,7 +103,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* 환전 결과(여행지 통화) 금액만 강조 */
+/* 환전 결과 금액만 강조 */
 .exchange-card__target {
   color: #ff6f9f;
 }
