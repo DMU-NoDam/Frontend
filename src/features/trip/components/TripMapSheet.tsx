@@ -13,9 +13,10 @@ type TripMapSheetProps = {
   overlay?: React.ReactNode
   sheetContent: (motionHeight: MotionValue<number>) => React.ReactNode
   forceExpanded?: boolean
+  interactiveContent?: boolean
 }
 
-export function TripMapSheet({ mapContent, overlay, sheetContent, forceExpanded }: TripMapSheetProps) {
+export function TripMapSheet({ mapContent, overlay, sheetContent, forceExpanded, interactiveContent }: TripMapSheetProps) {
   const height    = useMotionValue(SHEET_COLLAPSED)
   const heightPct = useTransform(height, (v) => `${v}%`)
 
@@ -43,7 +44,8 @@ export function TripMapSheet({ mapContent, overlay, sheetContent, forceExpanded 
   }
 
   function onContentPointerDown(e: React.PointerEvent<HTMLDivElement>) {
-    if ((e.target as HTMLElement).closest('button')) return
+    if ((e.target as HTMLElement).closest('button, a, iframe')) return
+    if (interactiveContent && !(e.target as HTMLElement).closest('[data-sheet-drag-handle]')) return
     startDrag(e)
   }
 
@@ -100,7 +102,7 @@ export function TripMapSheet({ mapContent, overlay, sheetContent, forceExpanded 
         </button>
 
         <div
-          className="trip-map-sheet__content"
+          className={`trip-map-sheet__content${interactiveContent ? ' trip-map-sheet__content--interactive' : ''}`}
           onPointerDown={onContentPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}

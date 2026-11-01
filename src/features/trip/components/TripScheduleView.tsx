@@ -91,12 +91,28 @@ function PlaceCard({
   index,
   focused,
   onClick,
+  onLongPress,
 }: {
   plan: PlacePlan
   index: number
   focused?: boolean
   onClick?: () => void
+  onLongPress?: () => void
 }) {
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pressStart = useRef<{ x: number; y: number; pointerId: number } | null>(null)
+  const suppressClick = useRef(false)
+
+  function cancelPress() {
+    if (pressTimer.current !== null) clearTimeout(pressTimer.current)
+    pressTimer.current = null
+    pressStart.current = null
+  }
+
+  useEffect(() => () => {
+    if (pressTimer.current !== null) clearTimeout(pressTimer.current)
+  }, [])
+
   const { placeInfo } = plan
   const focusedClass = focused ? ' trip-schedule-view__place-card--focused' : ''
   const inner = (
@@ -112,12 +128,56 @@ function PlaceCard({
       </div>
     </>
   )
-  if (onClick) {
+  if (onClick || onLongPress) {
     return (
       <button
         type="button"
-        className={`trip-schedule-view__place-card trip-schedule-view__place-card--clickable${focusedClass}`}
-        onClick={onClick}
+        className={`trip-schedule-view__place-card trip-schedule-view__place-card--clickable${focusedClass}${onLongPress ? ' trip-schedule-view__place-card--long-press' : ''}`}
+        title={onLongPress ? '길게 눌러 장소 정보 보기 (키보드: Shift+Enter)' : undefined}
+        aria-keyshortcuts={onLongPress ? 'Shift+Enter' : undefined}
+        onPointerDown={(event) => {
+          if (!onLongPress) return
+          cancelPress()
+          if (!event.isPrimary || event.button !== 0) return
+          suppressClick.current = false
+          pressStart.current = { x: event.clientX, y: event.clientY, pointerId: event.pointerId }
+          pressTimer.current = setTimeout(() => {
+            pressTimer.current = null
+            suppressClick.current = true
+            onLongPress()
+          }, 500)
+        }}
+        onPointerMove={(event) => {
+          const start = pressStart.current
+          if (!start || event.pointerId !== start.pointerId) return
+          if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 10) {
+            suppressClick.current = true
+            cancelPress()
+          }
+        }}
+        onPointerUp={cancelPress}
+        onPointerCancel={cancelPress}
+        onPointerLeave={cancelPress}
+        onLostPointerCapture={cancelPress}
+        onBlur={cancelPress}
+        onContextMenu={(event) => {
+          if (onLongPress) event.preventDefault()
+        }}
+        onKeyDown={(event) => {
+          if (onLongPress && event.shiftKey && event.key === 'Enter') {
+            event.preventDefault()
+            cancelPress()
+            if (!event.repeat) onLongPress()
+          }
+        }}
+        onClick={(event) => {
+          // 길게 누른 뒤 발생하는 click으로 지도 포커싱이 다시 토글되지 않게 한다.
+          if (event.detail !== 0 && suppressClick.current) {
+            event.preventDefault()
+            return
+          }
+          onClick?.()
+        }}
       >
         {inner}
       </button>
@@ -231,6 +291,7 @@ export type TripScheduleViewProps = {
   selectedDate?: string
   onDateChange?: (date: string) => void
   onPlaceClick?: (plan: PlacePlan) => void
+  onPlaceLongPress?: (plan: PlacePlan) => void
   focusedPlanId?: number | null
   onTransportClick?: (transportId: number) => void
   focusedTransportId?: number | null
@@ -251,6 +312,8 @@ export type TripScheduleViewProps = {
   isTransportPending?: boolean
   // 저장 중에는 다음 순서 변경을 받지 않는다
   reorderDisabled?: boolean
+  // 드래그를 시작/끝낼 때 알린다. 호출부는 드래그 중에 일정 재조회를 멈춘다
+  onDragStateChange?: (dragging: boolean) => void
   // 값이 바뀌면 화면 순서를 서버 순서로 되돌린다 (저장 실패 롤백용)
   resetOrderSignal?: number
   // 넘기면 일정 목록 대신 이 내용(조회 중/실패)을 보여준다. 날짜 탭은 dates로 그대로 남긴다
@@ -266,6 +329,7 @@ export function TripScheduleView({
   selectedDate: controlledDate,
   onDateChange,
   onPlaceClick,
+  onPlaceLongPress,
   focusedPlanId,
   onTransportClick,
   focusedTransportId,
@@ -278,6 +342,7 @@ export function TripScheduleView({
   onReorderPlan,
   isTransportPending,
   reorderDisabled,
+  onDragStateChange,
   resetOrderSignal,
   statusContent,
   dates,
@@ -314,18 +379,45 @@ export function TripScheduleView({
 
   // 드래그 중에는 화면 순서를 지역 상태로 들고 간다. 서버 데이터(plansForDay)가 새로 오면
   // 그때 다시 맞춘다 — TripDetailPage가 서버 값으로 input을 되돌리는 것과 같은 패턴이다.
-  // (아직 서버에 보내지 않는다. 순서 저장은 Phase 7에서 move-place로 붙인다)
   const [orderedPlans, setOrderedPlans] = useState(plansForDay)
-  const [prevPlansForDay, setPrevPlansForDay] = useState(plansForDay)
-  if (plansForDay !== prevPlansForDay) {
-    setPrevPlansForDay(plansForDay)
-    setOrderedPlans(plansForDay)
+
+  // 서버 일정의 "내용" 지문. 다른 멤버의 편집을 따라잡으려고 주기적으로 다시 읽으면 내용이
+  // 같아도 새 배열이 올 수 있어서, 참조로 비교하면 폴링 주기마다 지역 순서가 서버 순서로
+  // 되돌아간다. 편집 모드에서 그리는 것은 순서와 장소뿐이므로 그 둘만 본다.
+  const serverSignature = useMemo(
+    () => plansForDay.map((plan) => `${plan.id}:${plan.placeInfo.id}`).join(','),
+    [plansForDay],
+  )
+
+  // 렌더 중에 읽어야 하므로(아래 지문 비교) ref가 아니라 state로 둔다. 드래그 시작과 끝에
+  // 한 번씩만 바뀌어서 프레임마다 다시 그리지는 않는다.
+  const [isDragging, setIsDragging] = useState(false)
+  // 드래그 도중에 들어온 서버 변경. 끌고 있는 카드를 서버 순서가 밀어내면 조작이 끊기므로
+  // 손을 뗀 뒤에 반영한다.
+  const [pendingServerSync, setPendingServerSync] = useState(false)
+
+  const [prevServerSignature, setPrevServerSignature] = useState(serverSignature)
+  if (serverSignature !== prevServerSignature) {
+    setPrevServerSignature(serverSignature)
+    if (isDragging) setPendingServerSync(true)
+    else setOrderedPlans(plansForDay)
   }
 
   // 저장에 실패하면 호출부가 이 값을 올린다. 화면에만 반영돼 있던 순서를 서버 순서로 되돌린다.
   const [prevResetSignal, setPrevResetSignal] = useState(resetOrderSignal)
   if (resetOrderSignal !== prevResetSignal) {
     setPrevResetSignal(resetOrderSignal)
+    setPendingServerSync(false)
+    setOrderedPlans(plansForDay)
+  }
+
+  // 편집 모드를 드나들면 드래그 상태를 초기화한다. 드래그 도중에 모드가 바뀌면 onDragEnd가
+  // 오지 않아서, 보류 상태가 남으면 그 뒤로 서버 변경이 화면에 반영되지 않는다.
+  const [prevEditMode, setPrevEditMode] = useState(editMode)
+  if (editMode !== prevEditMode) {
+    setPrevEditMode(editMode)
+    setIsDragging(false)
+    setPendingServerSync(false)
     setOrderedPlans(plansForDay)
   }
 
@@ -342,6 +434,13 @@ export function TripScheduleView({
   const applyOrder = (next: PlacePlan[]) => {
     orderedPlansRef.current = next
     setOrderedPlans(next)
+  }
+
+  // 드래그 때문에 미뤄둔 서버 변경을 지금 반영한다
+  const applyPendingServerSync = () => {
+    if (!pendingServerSync) return
+    setPendingServerSync(false)
+    applyOrder(plansForDay)
   }
 
   // 최종 목록에서 자기 앞/뒤에 있는 항목이 그대로 previous/next가 된다. 자기 자신은 이미
@@ -467,14 +566,25 @@ export function TripScheduleView({
                   itemRef={registerItemRef(plan.id)}
                   onMoveByOffset={(offset) => movePlanByOffset(plan.id, offset)}
                   onDragStart={() => {
+                    setIsDragging(true)
+                    onDragStateChange?.(true)
                     dragStartIdsRef.current = orderedPlansRef.current.map((p) => p.id)
                   }}
                   onDragEnd={() => {
+                    setIsDragging(false)
+                    onDragStateChange?.(false)
                     const before = dragStartIdsRef.current
                     const after = orderedPlansRef.current
                     dragStartIdsRef.current = null
-                    // 제자리에 놓았으면 보낼 것이 없다
-                    if (before && before.join() === after.map((p) => p.id).join()) return
+                    // 제자리에 놓았으면 보낼 것이 없다 — 미뤄둔 서버 변경만 반영한다
+                    if (before && before.join() === after.map((p) => p.id).join()) {
+                      applyPendingServerSync()
+                      return
+                    }
+                    // 여기서는 미뤄둔 변경을 직접 반영하지 않는다. 저장이 성공하면 응답으로 온
+                    // DatePlan이, 실패하면 resetOrderSignal이 서버 상태로 맞춰준다 — 지금
+                    // 반영하면 아직 저장 전인 서버 순서로 한 번 되돌아가 보인다.
+                    setPendingServerSync(false)
                     notifyReorder(plan, after)
                   }}
                 >
@@ -510,6 +620,7 @@ export function TripScheduleView({
                 index={i}
                 focused={plan.id === focusedPlanId}
                 onClick={onPlaceClick ? () => onPlaceClick(plan) : undefined}
+                onLongPress={onPlaceLongPress ? () => onPlaceLongPress(plan) : undefined}
               />
               {plan.fromTransport ? (
                 <TransportRow

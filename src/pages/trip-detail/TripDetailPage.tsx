@@ -14,6 +14,7 @@ import { TripMapSheet, MapPlaceholder } from '@/features/trip/components/TripMap
 import { TripRouteMap } from '@/features/trip/components/TripRouteMap'
 import { TripScheduleView } from '@/features/trip/components/TripScheduleView'
 import { PlaceRecommendSheet } from '@/features/trip/components/PlaceRecommendSheet'
+import { PlaceDetailsPanel } from '@/features/trip/components/PlaceDetailsPanel'
 import { TripManageSheet } from '@/features/trip/components/TripManageSheet'
 import type { PlacePlan, RecommendedPlaceItem } from '@/features/trip/types/plan-types'
 import type { TripSummary } from '@/features/trip/types/trip-types'
@@ -50,6 +51,9 @@ export function TripDetailPage() {
 
   // useTripPlans에 폴링 중지 여부로 넘겨야 해서 조회보다 먼저 선언한다
   const [editMode, setEditMode]                           = useState(false)
+  // 드래그하는 동안에는 일정 재조회를 멈춘다. 끌고 있는 도중에 목록이 새로 오면 프레임이
+  // 끊긴다 — 손을 뗀 뒤 TripScheduleView가 반영한다.
+  const [isReordering, setIsReordering]                   = useState(false)
   // Day를 바꾸거나 재시도할 때 올린다. useTripPlans가 진입 시와 이 값이 바뀔 때마다 서버에서
   // 전체 일정을 다시 읽고, 그동안은 이전 일정을 내보내지 않는다.
   const [plansRequestSeq, setPlansRequestSeq]             = useState(0)
@@ -61,7 +65,8 @@ export function TripDetailPage() {
     isTransportPending,
   } = useTripPlans(
     trip?.tripThemeType ? tripId : undefined,
-    { pausePolling: editMode, refreshKey: plansRequestSeq },
+    // live: 다른 멤버의 편집을 알려주는 수단이 없어서 주기적으로 다시 읽는다
+    { live: true, pausePolling: editMode && isReordering, refreshKey: plansRequestSeq },
   )
 
   const selectedPlans: PlacePlan[] = useMemo(() => {
@@ -104,6 +109,7 @@ export function TripDetailPage() {
 
   const [userSelectedDate, setUserSelectedDate]           = useState<string | null>(null)
   const [focusedPlanId, setFocusedPlanId]                 = useState<number | null>(null)
+  const [detailsPlanId, setDetailsPlanId]                     = useState<number | null>(null)
   const [focusedTransportId, setFocusedTransportId]       = useState<number | null>(null)
   const [editingPlanId, setEditingPlanId]                 = useState<number | null>(null)
   const [showRecommendSheet, setShowRecommendSheet]       = useState(false)
@@ -124,6 +130,9 @@ export function TripDetailPage() {
         : (dayTabDates[0] ?? null),
     [userSelectedDate, dayTabDates],
   )
+  const detailsPlan = !editMode && !isPlansStatusShown
+    ? selectedPlans.find((plan) => plan.id === detailsPlanId && plan.date === selectedDate) ?? null
+    : null
 
   const handleToggleFixed = () => {
     if (!tripId || !trip) return
@@ -209,10 +218,12 @@ export function TripDetailPage() {
   }
 
   const handleEditToggle = () => {
+    setDetailsPlanId(null)
     if (editMode) {
       // 저장 버튼: trip info 저장 후 편집 모드 종료
       handleSaveTripInfo()
       setEditMode(false)
+      setIsReordering(false)
       setEditingPlanId(null)
       setShowRecommendSheet(false)
       setRecommendations([])
@@ -223,17 +234,20 @@ export function TripDetailPage() {
       setPersonCountInput(String(trip?.personCount ?? ''))
       setHeaderError(null)
       setEditMode(true)
+      setIsReordering(false)
       setFocusedPlanId(null)
       setFocusedTransportId(null)
     }
   }
 
   const handleEditCancel = () => {
+    setDetailsPlanId(null)
     // 취소: input 원복 후 편집 모드 종료
     setNameInput(trip?.name ?? '')
     setPersonCountInput(String(trip?.personCount ?? ''))
     setHeaderError(null)
     setEditMode(false)
+    setIsReordering(false)
     setEditingPlanId(null)
     setShowRecommendSheet(false)
     setRecommendations([])
@@ -243,6 +257,7 @@ export function TripDetailPage() {
   const handleDateChange = (date: string) => {
     // 같은 Day를 다시 누른 것은 전환이 아니다 — 다시 조회하지 않는다
     if (date === selectedDate) return
+    setDetailsPlanId(null)
     setUserSelectedDate(date)
     setPlansRequestSeq((n) => n + 1)
     setFocusedPlanId(null)
@@ -437,7 +452,8 @@ export function TripDetailPage() {
       </header>
 
       <TripMapSheet
-        forceExpanded={editMode}
+        forceExpanded={editMode || detailsPlan !== null}
+        interactiveContent={detailsPlan !== null}
         mapContent={
           selectedPlans.length > 0
             ? (
@@ -498,6 +514,7 @@ export function TripDetailPage() {
           if (statusContent && dayTabDates.length === 0) return statusContent
           return (
             <>
+            <div className="detail-sheet__schedule" inert={detailsPlan !== null}>
             {planEditError && !showRecommendSheet && (
               <div className="detail-sheet__edit-error" role="alert">{planEditError}</div>
             )}
@@ -507,7 +524,15 @@ export function TripDetailPage() {
               statusContent={statusContent}
               selectedDate={selectedDate ?? undefined}
               onDateChange={handleDateChange}
-              onPlaceClick={(plan) => { setFocusedPlanId((prev) => (prev === plan.id ? null : plan.id)); setFocusedTransportId(null) }}
+              onPlaceClick={(plan) => {
+                setFocusedPlanId((prev) => (prev === plan.id ? null : plan.id))
+                setFocusedTransportId(null)
+              }}
+              onPlaceLongPress={(plan) => {
+                setFocusedPlanId(plan.id)
+                setFocusedTransportId(null)
+                setDetailsPlanId(plan.id)
+              }}
               focusedPlanId={editMode ? editingPlanId : focusedPlanId}
               onTransportClick={(id) => setFocusedTransportId((prev) => (prev === id ? null : id))}
               focusedTransportId={focusedTransportId}
@@ -520,8 +545,17 @@ export function TripDetailPage() {
               onReorderPlan={handleReorderPlan}
               isTransportPending={isTransportPending}
               reorderDisabled={moveMutation.isPending}
+              onDragStateChange={setIsReordering}
               resetOrderSignal={orderResetSignal}
             />
+            </div>
+            {detailsPlan && (
+              <PlaceDetailsPanel
+                key={`${detailsPlan.id}:${detailsPlan.placeInfo.googleId}:${detailsPlan.placeInfo.lat}:${detailsPlan.placeInfo.lon}`}
+                place={detailsPlan.placeInfo}
+                onClose={() => setDetailsPlanId(null)}
+              />
+            )}
             </>
           )
         }}

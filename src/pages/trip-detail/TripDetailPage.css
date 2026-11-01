@@ -385,3 +385,10 @@
   opacity: 0.6;
   cursor: default;
 }
+.detail-sheet__schedule {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}

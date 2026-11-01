@@ -110,6 +110,7 @@
 /* ── Content area ────────────────────────────────────────── */
 
 .trip-map-sheet__content {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -121,4 +122,10 @@
 
 .trip-map-sheet__content:active {
   cursor: grabbing;
+}
+
+.trip-map-sheet__content--interactive,
+.trip-map-sheet__content--interactive:active {
+  touch-action: auto;
+  cursor: default;
 }
