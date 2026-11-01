@@ -1,6 +1,7 @@
-import { isCancelledError, useQuery } from '@tanstack/react-query'
+import { isCancelledError, useIsMutating, useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { planApi } from '../api/plan-api'
+import { isPlanEditMeta } from '../lib/plan-edit-meta'
 import {
   TRANSPORT_POLL_INTERVAL_MS,
   TRANSPORT_POLL_WINDOW_MS,
@@ -8,6 +9,11 @@ import {
 } from '../lib/plan-transport'
 import { tripKeys } from '../query/trip-keys'
 import type { DatePlan } from '../types/plan-types'
+
+// 다른 멤버의 편집을 서버가 알려주는 수단이 없어서(WebSocket/SSE 없음), 주기적으로 다시 읽는
+// 것이 같이 편집하는 것처럼 보이게 하는 유일한 방법이다. 응답에 경로 polygon까지 들어 있어
+// 가볍지 않으니 간격을 더 좁히지는 않는다.
+const LIVE_POLL_INTERVAL_MS = 5000
 
 // 편집이 일어나면 그 DatePlan의 version이 오른다. 경로가 채워지는 것만으로는 version이
 // 바뀌지 않으므로, 이 값은 "기다리는 중인 작업"을 가리키는 식별자가 된다.
@@ -25,8 +31,11 @@ const isWaitingForTransport = (
   abandonedSignature !== (datePlans ? signatureOf(datePlans) : '')
 
 type Options = {
-  // 편집 중에는 멈춘다. 편집 모드에서는 경로를 보여주지 않아 폴링할 이유가 없고,
-  // 도중에 목록이 새로 오면 드래그하던 순서가 서버 순서로 되돌아간다.
+  // 켜면 다른 멤버의 편집을 따라잡기 위해 주기적으로 다시 읽는다. 같이 편집하는 화면(상세)
+  // 에서만 켠다 — 혼자 보는 화면에서는 무거운 응답을 주기적으로 받을 이유가 없다.
+  live?: boolean
+  // 드래그하는 동안 멈춘다. 끌고 있는 도중에 목록이 새로 오면 프레임이 끊긴다.
+  // (순서가 되돌아가는 것은 TripScheduleView가 반영을 미뤄서 막는다)
   pausePolling?: boolean
   // 상세 페이지 전용. 넘기면 마운트할 때와 이 값이 바뀔 때마다 캐시 유효 시간과 관계없이
   // 서버에서 다시 읽고, 그 조회가 끝나기 전까지는 캐시에 남은 이전 일정을 내보내지 않는다.
@@ -39,12 +48,19 @@ type FreshResult = { key: string; ok: boolean }
 
 export const useTripPlans = (
   tripId: string | undefined,
-  { pausePolling, refreshKey }: Options = {},
+  { live, pausePolling, refreshKey }: Options = {},
 ) => {
   // 창이 닫히도록 안 채워진 작업의 signature. 외부 경로 API가 실패했을 가능성이 크므로
   // 그 작업에 대해서는 더 묻지 않는다. 편집이 새로 일어나면 signature가 달라져 다시 기다린다.
   const [abandonedSignature, setAbandonedSignature] = useState<string | null>(null)
   const [freshResult, setFreshResult] = useState<FreshResult | null>(null)
+
+  // 내 편집이 날아가는 동안에도 멈춘다. 먼저 출발한 조회의 낡은 응답이 편집 응답 뒤에
+  // 도착하면 화면이 편집 전 상태로 한 번 되돌아간다.
+  const isPlanEditing = useIsMutating({
+    predicate: (mutation) => isPlanEditMeta(mutation.options.meta),
+  }) > 0
+  const paused = Boolean(pausePolling) || isPlanEditing
 
   const isFreshMode = refreshKey !== undefined
   const freshKey = isFreshMode && tripId ? `${tripId}:${refreshKey}` : null
@@ -57,10 +73,14 @@ export const useTripPlans = (
     // 진입 조회는 아래 effect가 직접 한다. 여기서도 하면 캐시가 있을 때 요청이 두 번 나간다
     ...(isFreshMode && { refetchOnMount: false }),
     // 캐시 상태에서 직접 판단한다 — 아래 isTransportPending을 참조하면 순환이 된다
-    refetchInterval: (q) =>
-      isWaitingForTransport(q.state.data?.datePlans, Boolean(pausePolling), abandonedSignature)
-        ? TRANSPORT_POLL_INTERVAL_MS
-        : false,
+    refetchInterval: (q) => {
+      if (paused) return false
+      // 끊긴 이동 구간이 채워지기를 기다리는 중이면 그 간격을 따른다
+      if (isWaitingForTransport(q.state.data?.datePlans, paused, abandonedSignature)) {
+        return TRANSPORT_POLL_INTERVAL_MS
+      }
+      return live ? LIVE_POLL_INTERVAL_MS : false
+    },
   })
 
   const { refetch } = query
@@ -95,11 +115,7 @@ export const useTripPlans = (
 
   const datePlans = query.data?.datePlans
   const signature = datePlans ? signatureOf(datePlans) : ''
-  const isTransportPending = isWaitingForTransport(
-    datePlans,
-    Boolean(pausePolling),
-    abandonedSignature,
-  )
+  const isTransportPending = isWaitingForTransport(datePlans, paused, abandonedSignature)
 
   // 창이 다 지나면 포기한다. 그 전에 구간이 채워지면 isTransportPending이 꺼지면서 타이머도 정리된다.
   useEffect(() => {

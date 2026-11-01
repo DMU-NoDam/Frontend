@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { planApi } from '../api/plan-api'
+import { PLAN_EDIT_META } from '../lib/plan-edit-meta'
 import { getPlanEditErrorKind, shouldRefetchAfter } from '../lib/plan-error'
 import { tripKeys } from '../query/trip-keys'
 import type {
@@ -36,7 +37,9 @@ function usePlanEditMutation<TRequest>(
 
   return useMutation({
     mutationFn,
-    meta,
+    // PLAN_EDIT_META: 이 요청이 날아가는 동안 상시 폴링을 멈추게 한다 (use-trip-plans).
+    // 편집 전에 출발한 조회가 늦게 도착하면 방금 바꾼 순서가 한 번 되돌아가 보인다.
+    meta: { ...PLAN_EDIT_META, ...meta },
     onSuccess: (updated: DatePlan) => {
       if (!tripId) return
       replaceDatePlan(queryClient, tripId, updated)
