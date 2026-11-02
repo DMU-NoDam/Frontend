@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useReducedMotion } from 'framer-motion'
 import clsx from 'clsx'
-import { LuPlane } from 'react-icons/lu'
+import { LuArrowUpLeft, LuPlane } from 'react-icons/lu'
 import fukuokaSticker from '@/assets/city-sticker/jp-fukuoka.svg'
 import hiroshimaSticker from '@/assets/city-sticker/jp-hiroshima.svg'
 import kyotoSticker from '@/assets/city-sticker/jp-kyoto.svg'
@@ -15,8 +14,8 @@ import type { TripSummary } from '@/features/trip/types/trip-types'
 import './TravelHero.css'
 
 // 홈 상단 배경: 여행 스크랩북. 큰 도시 이름 아래로 탑승권·우표 스티커·도장·메모지를 붙여 둔다.
-// 도시는 하나로 고정한다: 만들어 둔 여행이 있으면 가장 가까운 여행의 도시, 없으면 날짜로 정한 '오늘의 도시'.
-// 탑승권은 내 여행마다 한 장씩 겹쳐 쌓고, 여러 장이면 몇 초마다(또는 누르면) 맨 위 장을 넘긴다.
+// 탑승권은 내 여행마다 한 장씩 겹쳐 쌓고(없으면 날짜로 정한 '오늘의 도시' 한 장), 맨 위 장의 여행으로
+// 큰 이름·우표·도장·머리글을 맞춘다. 여러 장이면 눌러서 넘기고, 넘기면 나머지도 그 여행으로 바뀐다.
 // 들어올 때는 조각들이 차례로 붙는 등장 연출이 한 번 재생된다 (TravelHero.css).
 // 장식이라 스크린 리더에서는 숨긴다.
 
@@ -73,9 +72,8 @@ function getStampWordSize(word: string): number {
   return Math.min(15, Math.floor(58 / (word.length * 0.5)))
 }
 
-// 탑승권 묶음: 겹쳐 보이는 최대 장수, 넘기는 간격, 맨 위 장이 빠지는 시간 (CSS 전환과 맞춘다)
+// 탑승권 묶음: 겹쳐 보이는 최대 장수, 맨 위 장이 빠지는 시간 (CSS 전환과 맞춘다)
 const STACK_VISIBLE = 3
-const STACK_ROTATE_MS = 4000
 const STACK_LEAVE_MS = 450
 
 type TicketItem = {
@@ -92,7 +90,6 @@ type Props = {
 }
 
 export function TravelHero({ trips = [], topInset = 84 }: Props) {
-  const reduceMotion = useReducedMotion() ?? false
   const heroRef = useRef<HTMLDivElement>(null)
   // 화면이 낮거나 좁으면 시트에 가려지지 않도록 조각 전체를 비율대로 줄인다
   const [scale, setScale] = useState(1)
@@ -114,14 +111,15 @@ export function TravelHero({ trips = [], topInset = 84 }: Props) {
     const dest = DESTINATIONS.find((d) => d.code === trip.regionCodes[0])
     return dest ? [{ trip, dest }] : []
   })
-  const lead = tripTickets[0]
-  const dest = lead?.dest ?? getTodayDestination()
-  const tickets: TicketItem[] = tripTickets.length > 0 ? tripTickets : [{ trip: null, dest }]
+  const tickets: TicketItem[] =
+    tripTickets.length > 0 ? tripTickets : [{ trip: null, dest: getTodayDestination() }]
   const ticketCount = tickets.length
 
-  // ── 탑승권 넘기기 ──
+  // ── 탑승권 넘기기 (눌렀을 때만) ──
   const [stackTop, setStackTop] = useState(0)
   const [leaving, setLeaving] = useState(false)
+  // 한 번이라도 넘겼으면 '탭' 힌트를 숨기고, 바뀌는 조각에 등장 연출 대신 짧은 교체 효과를 쓴다
+  const [flipped, setFlipped] = useState(false)
   const leavingRef = useRef(false)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
@@ -132,18 +130,18 @@ export function TravelHero({ trips = [], topInset = 84 }: Props) {
     leaveTimer.current = setTimeout(() => {
       setStackTop((top) => (top + 1) % ticketCount)
       setLeaving(false)
+      setFlipped(true)
       leavingRef.current = false
     }, STACK_LEAVE_MS)
   }, [ticketCount])
 
-  // 움직임 줄이기 설정이면 저절로 넘기지 않는다 (눌러서 넘기기는 된다)
-  useEffect(() => {
-    if (reduceMotion || ticketCount < 2) return
-    const id = setInterval(cycleStack, STACK_ROTATE_MS)
-    return () => clearInterval(id)
-  }, [cycleStack, reduceMotion, ticketCount])
-
   useEffect(() => () => clearTimeout(leaveTimer.current), [])
+
+  // 맨 위 탑승권의 여행에 큰 이름·우표·도장·머리글을 맞춘다
+  const current = tickets[stackTop % ticketCount]
+  const dest = current.dest
+  // 바뀔 때마다 key가 바뀌어 교체 효과가 다시 재생된다
+  const currentKey = current.trip?.id ?? 'today'
 
   // 맨 위부터 겹쳐 보일 탑승권 (pos 0 = 맨 위)
   const visibleTickets = Array.from({ length: Math.min(STACK_VISIBLE, ticketCount) }, (_, pos) => ({
@@ -153,11 +151,14 @@ export function TravelHero({ trips = [], topInset = 84 }: Props) {
 
   return (
     <div ref={heroRef} className="travel-hero" aria-hidden="true">
-      <div className="scrapbook" style={{ top: topInset, transform: `translateX(-50%) scale(${scale})` }}>
+      <div
+        className={clsx('scrapbook', flipped && 'scrapbook--flipped')}
+        style={{ top: topInset, transform: `translateX(-50%) scale(${scale})` }}
+      >
         <p className="scrapbook__eyebrow">
-          {lead?.trip ? (
+          {current.trip ? (
             <>
-              NEXT STOP <span>{dest.ko} · {getTripStatusLabel(lead.trip)}</span>
+              NEXT STOP <span key={currentKey}>{dest.ko} · {getTripStatusLabel(current.trip)}</span>
             </>
           ) : (
             <>
@@ -166,12 +167,12 @@ export function TravelHero({ trips = [], topInset = 84 }: Props) {
           )}
         </p>
 
-        <p className="scrapbook__word" style={{ fontSize: getWordSize(dest.en) }}>
+        <p key={`word-${currentKey}`} className="scrapbook__word" style={{ fontSize: getWordSize(dest.en) }}>
           {dest.en}
         </p>
 
         {/* 그림 + 도시 이름이 들어간 우표 모양 스티커, 탑승권 옆에 비스듬히 */}
-        <div className="scrapbook__postage">
+        <div key={`postage-${currentKey}`} className="scrapbook__postage">
           <div className="scrapbook__postage-paper">
             <div className="scrapbook__postage-inner">
               <img src={dest.sticker} alt="" />
@@ -217,6 +218,11 @@ export function TravelHero({ trips = [], topInset = 84 }: Props) {
         </div>
         <span className="scrapbook__tape scrapbook__tape--ticket" />
         {trips.length > 1 && <span className="scrapbook__stack-count">내 여행 {trips.length}</span>}
+        {ticketCount > 1 && !flipped && (
+          <span className="scrapbook__hint">
+            <LuArrowUpLeft aria-hidden="true" />탭!
+          </span>
+        )}
 
         <svg className="scrapbook__route" viewBox="0 0 393 350" preserveAspectRatio="none">
           <path d="M 200 214 C 210 238, 200 254, 218 266" />
@@ -232,7 +238,7 @@ export function TravelHero({ trips = [], topInset = 84 }: Props) {
         </div>
         <span className="scrapbook__tape scrapbook__tape--passport" />
 
-        <div className="scrapbook__stamp">
+        <div key={`stamp-${currentKey}`} className="scrapbook__stamp">
           <b style={{ fontSize: getStampWordSize(dest.en) }}>{dest.en}</b>
           <i>JAPAN</i>
           <i>BON VOYAGE</i>

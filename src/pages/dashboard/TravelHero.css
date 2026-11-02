@@ -432,6 +432,28 @@
   transform: rotate(-4deg);
 }
 
+/* '탭!' 힌트 : 여러 장일 때, 등장 연출이 끝난 뒤 탑승권 옆에서 살짝 까딱인다 */
+.scrapbook__hint {
+  position: absolute;
+  top: 216px;
+  left: 222px;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-family: 'Arubi Pen', cursive;
+  font-size: 22px;
+  line-height: 1;
+  color: #d6336c;
+  transform: rotate(-5deg);
+  pointer-events: none;
+}
+
+.scrapbook__hint svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* ── 등장 연출 : 들어올 때 조각들이 차례로 붙는다 (약 3초, 한 번만) ─────────── */
 
 .scrapbook__word {
@@ -476,6 +498,30 @@
 
 .scrapbook__plane {
   animation: scrap-plane-pop 0.3s ease-out 3s both;
+}
+
+.scrapbook__hint {
+  animation:
+    scrap-fade-in 0.3s ease-out 3.2s both,
+    scrap-nudge 1.6s ease-in-out 3.5s infinite;
+}
+
+/* 탑승권을 넘긴 뒤 : 바뀐 조각(새로 그려짐)만 기다림 없이 짧게 다시 붙는다 */
+.scrapbook--flipped .scrapbook__word {
+  animation: scrap-word-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.scrapbook--flipped .scrapbook__eyebrow span {
+  display: inline-block;
+  animation: scrap-fade-in 0.4s ease-out both;
+}
+
+.scrapbook--flipped .scrapbook__postage {
+  animation: scrap-drop 0.5s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+
+.scrapbook--flipped .scrapbook__stamp {
+  animation: scrap-stamp-in 0.4s cubic-bezier(0.3, 1.4, 0.5, 1) 0.15s both;
 }
 
 /* 각 조각의 원래 기울기(transform)를 지키도록 from에 같은 회전을 둔다 */
@@ -524,6 +570,12 @@
   }
 }
 
+@keyframes scrap-nudge {
+  50% {
+    transform: rotate(-5deg) translate(-4px, -3px);
+  }
+}
+
 @keyframes scrap-plane-pop {
   from {
     opacity: 0;
@@ -543,7 +595,12 @@
   .scrapbook__stamp,
   .scrapbook__note,
   .scrapbook__route,
-  .scrapbook__plane {
+  .scrapbook__plane,
+  .scrapbook__hint,
+  .scrapbook--flipped .scrapbook__word,
+  .scrapbook--flipped .scrapbook__eyebrow span,
+  .scrapbook--flipped .scrapbook__postage,
+  .scrapbook--flipped .scrapbook__stamp {
     animation: none;
   }
 
