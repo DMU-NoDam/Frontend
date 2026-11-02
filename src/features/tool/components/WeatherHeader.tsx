@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { LuArrowRight, LuCloudSun, LuMapPin, LuMoon, LuSun } from 'react-icons/lu'
+import { LuCloudSun, LuMapPin, LuMoon, LuSun } from 'react-icons/lu'
 import { useDayWeather } from '../hooks/use-weather'
 import { getWeatherLabel } from '../lib/weather-code'
 import type { TripLocation } from '../lib/trip-location'
@@ -12,8 +12,6 @@ type Props = {
   // 날씨를 볼 날짜 (yyyy-MM-dd). 여행지의 오늘 날씨를 보여주므로 오늘 날짜
   date: string | undefined
   isTripsLoading: boolean
-  // 확정 여행이 없을 때 '내 여행 확정하기'를 누르면
-  onFindTrip: () => void
 }
 
 // 여행이 없을 때 빈 날씨 카드의 시간대 칸 (여행을 확정하면 무엇이 보일지 미리 보여준다)
@@ -33,7 +31,7 @@ function formatDateLabel(date: string): string {
   })
 }
 
-export function WeatherHeader({ location, tripSwitcher, date, isTripsLoading, onFindTrip }: Props) {
+export function WeatherHeader({ location, tripSwitcher, date, isTripsLoading }: Props) {
   const { day: today, current, isLoading, isError } = useDayWeather(location?.cityName, date)
 
   if (!location || !date) {
@@ -49,14 +47,9 @@ export function WeatherHeader({ location, tripSwitcher, date, isTripsLoading, on
     // 확정 여행이 없을 때: 하늘 위에 칸이 비어 있는 날씨 카드를 붙여 두고, 여행을 확정하면 채워진다고 알려준다
     return (
       <header className="weather-header weather-header--empty">
-        <div className="weather-empty__top">
-          <div>
-            <p className="weather-empty__eyebrow">TRAVEL KIT</p>
-            <p className="weather-empty__title">여행도구</p>
-          </div>
-          <button type="button" className="weather-empty__cta" onClick={onFindTrip}>
-            내 여행 확정하기 <LuArrowRight aria-hidden="true" />
-          </button>
+        <div>
+          <p className="weather-empty__eyebrow">TRAVEL KIT</p>
+          <p className="weather-empty__title">여행도구</p>
         </div>
 
         <div className="weather-empty__card">

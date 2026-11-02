@@ -117,7 +117,6 @@ export function TripToolPage() {
               }
               date={weatherDate}
               isTripsLoading={isTripsLoading}
-              onFindTrip={() => navigate('/trips')}
             />
             {WeatherScenePicker && (
               <Suspense fallback={null}>

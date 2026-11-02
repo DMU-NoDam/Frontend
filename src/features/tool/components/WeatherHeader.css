@@ -115,13 +115,6 @@
   text-shadow: none;
 }
 
-.weather-empty__top {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-}
-
 .weather-empty__eyebrow {
   font-size: 11px;
   font-weight: 800;
@@ -133,27 +126,6 @@
   font-size: 22px;
   font-weight: 800;
   line-height: 28px;
-}
-
-.weather-empty__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 36px;
-  padding: 0 14px;
-  border: none;
-  border-radius: 999px;
-  background: #5b1a37;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 4px 10px rgba(91, 26, 55, 0.25);
-  cursor: pointer;
-}
-
-.weather-empty__cta:focus-visible {
-  outline: 2px solid #ffffff;
-  outline-offset: 2px;
 }
 
 /* 하늘에 테이프로 붙인 종이 카드. 오른쪽은 비워 해와 구름이 보이게 한다 */
