@@ -135,17 +135,3 @@
   font-weight: 700;
   color: #c4aab6;
 }
-
-/* 다녀온 여행 : 사진과 글자를 한 톤 가라앉힌다 */
-.trip-card--past .trip-card__photo img {
-  filter: grayscale(0.7) brightness(0.95);
-}
-
-.trip-card--past .trip-card__route,
-.trip-card--past .trip-card__stub b {
-  color: #9b7d8b;
-}
-
-.trip-card--past .trip-card__status {
-  color: #9b7d8b;
-}

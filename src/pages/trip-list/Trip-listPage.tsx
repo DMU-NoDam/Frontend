@@ -6,6 +6,7 @@ import { HiPlus } from 'react-icons/hi2'
 import { LuSparkles } from 'react-icons/lu'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import { TripCard } from '@/features/trip/components/TripCard'
+import { PassportStamps } from '@/features/trip/components/PassportStamps'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import type { TripSummary } from '@/features/trip/types/trip-types'
@@ -41,7 +42,6 @@ export function TripListPage() {
   // 다가오는 여행은 출발이 가까운 순, 다녀온 여행은 최근에 다녀온 순
   const upcoming = trips.filter((t) => isUpcoming(t.endDate)).sort((a, b) => startTime(a) - startTime(b))
   const past = trips.filter((t) => !isUpcoming(t.endDate)).sort((a, b) => startTime(b) - startTime(a))
-  const filtered = tab === 'upcoming' ? upcoming : past
 
   return (
     <main className="trip-list-page">
@@ -92,7 +92,10 @@ export function TripListPage() {
             <span>여행 목록을 불러오지 못했어요.</span>
             <span>잠시 후 다시 시도해주세요.</span>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : tab === 'past' ? (
+          // 다녀온 여행 : 여권 사증 면에 도시 도장을 모은다. 도장을 누르면 그 여행 일정으로
+          <PassportStamps trips={past} onSelect={(tripId) => navigate(`/trips/${tripId}/detail`)} />
+        ) : upcoming.length === 0 ? (
           // 여행이 없을 때 : 행선지가 비어 있는(ICN → ?) 탑승권 그림 + 안내
           <div className="trip-list-page__empty">
             <div className="trip-list-page__empty-art" aria-hidden="true">
@@ -106,42 +109,32 @@ export function TripListPage() {
               <span className="trip-list-page__empty-tape" />
               <span className="trip-list-page__empty-pen">어디로 떠나볼까?</span>
             </div>
-            {tab === 'upcoming' ? (
-              <>
-                <h2 className="trip-list-page__empty-title">아직 떠날 여행이 없어요</h2>
-                <p className="trip-list-page__empty-text">가고 싶은 도시만 고르면 AI가 일정을 짜드려요</p>
-                <button
-                  type="button"
-                  className="trip-list-page__empty-btn"
-                  onClick={() => navigate('/trips/create')}
-                >
-                  <LuSparkles aria-hidden="true" />
-                  나만의 일정 만들기
-                </button>
-              </>
-            ) : (
-              <>
-                <h2 className="trip-list-page__empty-title">아직 다녀온 여행이 없어요</h2>
-                <p className="trip-list-page__empty-text">여행이 끝나면 여기에 모여요</p>
-              </>
-            )}
+            <h2 className="trip-list-page__empty-title">아직 떠날 여행이 없어요</h2>
+            <p className="trip-list-page__empty-text">가고 싶은 도시만 고르면 AI가 일정을 짜드려요</p>
+            <button
+              type="button"
+              className="trip-list-page__empty-btn"
+              onClick={() => navigate('/trips/create')}
+            >
+              <LuSparkles aria-hidden="true" />
+              나만의 일정 만들기
+            </button>
           </div>
         ) : (
           <motion.div
-            key={tab}
             className="trip-list-page__list"
             variants={listVariants}
             initial="hidden"
             animate="visible"
           >
-            {filtered.map((trip) => (
+            {upcoming.map((trip) => (
               <motion.div key={trip.id} variants={itemVariants}>
                 <button
                   type="button"
                   className="trip-list-page__card-button"
                   onClick={() => navigate(`/trips/${trip.id}/detail`)}
                 >
-                  <TripCard trip={trip} isPast={tab === 'past'} />
+                  <TripCard trip={trip} />
                 </button>
               </motion.div>
             ))}

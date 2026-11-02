@@ -5,7 +5,7 @@ import { getDdayLabel, isTripActive } from '../lib/trip-date'
 import type { TripSummary } from '../types/trip-types'
 import './TripCard.css'
 
-type Props = { trip: TripSummary; isPast?: boolean }
+type Props = { trip: TripSummary }
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -31,14 +31,13 @@ function getDepartureLabel(trip: TripSummary): string {
 
 // 여행 카드 : 홈 스크랩북과 같은 탑승권 모양.
 // 왼쪽 도시 사진 | 여행 이름 · ICN → 도착 공항 · 날짜 · D-day | 절취선 오른쪽에 출발일과 확정 여부
-export function TripCard({ trip, isPast = false }: Props) {
+export function TripCard({ trip }: Props) {
   const photo = getCityPhoto(trip)
   const destination = getTripDestination(trip)
-  const status = isPast ? '다녀옴' : trip.fixed ? '✓ 확정' : '확정 전'
-  const departure = isPast ? null : getDepartureLabel(trip)
+  const departure = getDepartureLabel(trip)
 
   return (
-    <article className={clsx('trip-card', isPast && 'trip-card--past')} aria-label={trip.name}>
+    <article className="trip-card" aria-label={trip.name}>
       <div className="trip-card__photo">
         {photo && <img src={photo} alt="" loading="lazy" decoding="async" />}
       </div>
@@ -58,18 +57,16 @@ export function TripCard({ trip, isPast = false }: Props) {
         <span className="trip-card__period">
           {formatDayWithWeekday(trip.startDate)} – {formatDayWithWeekday(trip.endDate)}
         </span>
-        {departure && (
-          <span className={clsx('trip-card__dday', departure === '오늘 출발' && 'trip-card__dday--today')}>
-            {departure}
-          </span>
-        )}
+        <span className={clsx('trip-card__dday', departure === '오늘 출발' && 'trip-card__dday--today')}>
+          {departure}
+        </span>
       </div>
 
       <div className="trip-card__stub">
         <small>DEP</small>
         <b>{formatMonthDay(trip.startDate)}</b>
-        <span className={clsx('trip-card__status', !trip.fixed && !isPast && 'trip-card__status--draft')}>
-          {status}
+        <span className={clsx('trip-card__status', !trip.fixed && 'trip-card__status--draft')}>
+          {trip.fixed ? '✓ 확정' : '확정 전'}
         </span>
       </div>
     </article>
