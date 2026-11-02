@@ -123,30 +123,74 @@
   display: none;
 }
 
-.trip-tool-page__empty {
-  display: flex;
-  flex-direction: column;
+/* 확정 여행이 없을 때 메모장·체크리스트 자리의 안내 카드 (.tool-card 모양 위에 가로 배치) */
+.trip-tool-page__intro {
+  flex-direction: row;
   align-items: center;
   gap: 12px;
-  padding: 24px 12px;
-  text-align: center;
 }
 
-.trip-tool-page__empty p {
+/* 메모 3D 아이콘 두 장을 살짝 겹쳐 놓는다 */
+.trip-tool-page__intro-icons {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.trip-tool-page__intro-icons img {
+  width: 40px;
+  height: 40px;
+  padding: 4px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.trip-tool-page__intro-icons img + img {
+  margin-left: -12px;
+  transform: rotate(8deg);
+}
+
+.trip-tool-page__intro-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.trip-tool-page__intro-text h2 {
   margin: 0;
   font-size: 13px;
-  line-height: 1.5;
-  color: #71727a;
+  font-weight: 700;
+  line-height: 18px;
+  color: #000000;
 }
 
-.trip-tool-page__empty button {
-  min-height: 40px;
-  padding: 0 20px;
+.trip-tool-page__intro-text p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: #71727a;
+  word-break: keep-all;
+}
+
+/* 환율 카드의 방향 전환 버튼처럼 연분홍 바탕 */
+.trip-tool-page__intro-btn {
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 12px;
   border: none;
-  border-radius: 12px;
-  background: #ff6f9f;
-  color: #ffffff;
-  font-size: 13px;
-  font-weight: 700;
+  border-radius: 8px;
+  background: #fff0f5;
+  color: #ff6f9f;
+  font-size: 12px;
+  font-weight: 800;
   cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.trip-tool-page__intro-btn:hover {
+  background: #ffe1ec;
+}
+
+.trip-tool-page__intro-btn:focus-visible {
+  outline: 2px solid #ff6f9f;
+  outline-offset: 2px;
 }

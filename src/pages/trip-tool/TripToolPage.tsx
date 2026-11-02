@@ -14,6 +14,8 @@ import { getTripLocation } from '@/features/tool/lib/trip-location'
 import { getWeatherScene, isWeatherScene, WEATHER_SCENE_TOP_COLOR } from '@/features/tool/lib/weather-scene'
 import type { WeatherScene as Scene } from '@/features/tool/lib/weather-scene'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
+import importantIcon from '@/assets/memo-icon/important.png'
+import shoppingIcon from '@/assets/memo-icon/shopping.png'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import './TripToolPage.css'
 
@@ -137,12 +139,20 @@ export function TripToolPage() {
               </>
             ) : (
               !isTripsLoading && (
-                <div className="trip-tool-page__empty">
-                  <p>확정된 여행이 있으면 메모장과 체크리스트를 쓸 수 있어요.</p>
-                  <button type="button" onClick={() => navigate('/trips')}>
-                    내 여행 보러 가기
+                // 메모장·체크리스트 자리: 다른 도구 카드와 같은 흰 카드 한 장으로 짧게 안내한다
+                <section className="tool-card trip-tool-page__intro" aria-labelledby="trip-tool-intro-title">
+                  <span className="trip-tool-page__intro-icons" aria-hidden="true">
+                    <img src={importantIcon} alt="" />
+                    <img src={shoppingIcon} alt="" />
+                  </span>
+                  <div className="trip-tool-page__intro-text">
+                    <h2 id="trip-tool-intro-title">메모장 · 체크리스트</h2>
+                    <p>여행을 확정하면 그 여행의 메모와 챙길 준비물을 적을 수 있어요</p>
+                  </div>
+                  <button type="button" className="trip-tool-page__intro-btn" onClick={() => navigate('/trips')}>
+                    내 여행
                   </button>
-                </div>
+                </section>
               )
             )}
           </div>
