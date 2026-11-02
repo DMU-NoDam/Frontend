@@ -118,14 +118,17 @@ export function TravelHero({ trips = [], topInset = 84 }: Props) {
   // ── 탑승권 넘기기 (눌렀을 때만) ──
   const [stackTop, setStackTop] = useState(0)
   const [leaving, setLeaving] = useState(false)
-  // 한 번이라도 넘겼으면 '탭' 힌트를 숨기고, 바뀌는 조각에 등장 연출 대신 짧은 교체 효과를 쓴다
+  // 한 번이라도 넘겼으면 바뀌는 조각에 등장 연출 대신 짧은 교체 효과를 쓴다
   const [flipped, setFlipped] = useState(false)
+  // '탭' 힌트는 누르는 즉시 숨긴다
+  const [hintDismissed, setHintDismissed] = useState(false)
   const leavingRef = useRef(false)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   const cycleStack = useCallback(() => {
     if (leavingRef.current || ticketCount < 2) return
     leavingRef.current = true
+    setHintDismissed(true)
     setLeaving(true)
     leaveTimer.current = setTimeout(() => {
       setStackTop((top) => (top + 1) % ticketCount)
@@ -218,7 +221,7 @@ export function TravelHero({ trips = [], topInset = 84 }: Props) {
         </div>
         <span className="scrapbook__tape scrapbook__tape--ticket" />
         {trips.length > 1 && <span className="scrapbook__stack-count">내 여행 {trips.length}</span>}
-        {ticketCount > 1 && !flipped && (
+        {ticketCount > 1 && !hintDismissed && (
           <span className="scrapbook__hint">
             <LuArrowUpLeft aria-hidden="true" />탭!
           </span>
