@@ -82,7 +82,7 @@ export function TripToolPage() {
   const sceneWeatherCode = currentWeather?.weatherCode ?? weather?.weatherCode
   const scene = previewScene ?? (sceneWeatherCode !== undefined ? getWeatherScene(sceneWeatherCode) : null)
   // 상태바 색을 배경 장면의 하늘 색과 이어지게 한다 (날씨가 없으면 기본 분홍)
-  useThemeColor(scene ? WEATHER_SCENE_TOP_COLOR[scene] : '#ff6f9f', '#ffffff')
+  useThemeColor(scene ? WEATHER_SCENE_TOP_COLOR[scene] : '#ff9ec0', '#ffffff')
 
   return (
     <main className="trip-tool-page">
@@ -90,7 +90,17 @@ export function TripToolPage() {
         collapsedPct={SHEET_COLLAPSED_PCT}
         expandedPct={SHEET_EXPANDED_PCT}
         mapContent={
-          scene ? <WeatherScene scene={scene} /> : <div className="trip-tool-page__hero" aria-hidden="true" />
+          scene ? (
+            <WeatherScene scene={scene} />
+          ) : (
+            // 날씨가 없을 때의 맑은 분홍 하늘 (해 + 천천히 흘러가는 구름)
+            <div className="trip-tool-page__hero" aria-hidden="true">
+              <span className="trip-tool-page__sun" />
+              <span className="trip-tool-page__cloud trip-tool-page__cloud--1" />
+              <span className="trip-tool-page__cloud trip-tool-page__cloud--2" />
+              <span className="trip-tool-page__cloud trip-tool-page__cloud--3" />
+            </div>
+          )
         }
         overlay={
           <>
@@ -107,6 +117,7 @@ export function TripToolPage() {
               }
               date={weatherDate}
               isTripsLoading={isTripsLoading}
+              onFindTrip={() => navigate('/trips')}
             />
             {WeatherScenePicker && (
               <Suspense fallback={null}>

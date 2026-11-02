@@ -1,5 +1,12 @@
 /* ── Weather header (여행도구 상단, 배경 위에 뜨는 날씨) ──────── */
 
+/* 손글씨 (Nanum Pen Script 부분 — 쓰는 한글만 들어 있다. 홈 TravelHero.css와 같은 파일) */
+@font-face {
+  font-family: 'Arubi Pen';
+  src: url('../../../assets/fonts/arubi-pen.woff') format('woff');
+  font-display: swap;
+}
+
 /* 밝은 하늘·햇빛·구름 위에서도 흰 글씨가 읽히도록
    글씨 바로 둘레의 얇은 그림자 + 넓게 퍼지는 옅은 그림자를 함께 준다 */
 .weather-header {
@@ -97,4 +104,171 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 1.5;
+}
+
+/* ── 확정 여행이 없을 때 : 칸이 비어 있는 날씨 카드 ──────────── */
+
+.weather-header--empty {
+  gap: 12px;
+  padding: 22px 24px 0;
+  color: #5b1a37;
+  text-shadow: none;
+}
+
+.weather-empty__top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weather-empty__eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  line-height: 16px;
+}
+
+.weather-empty__title {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 28px;
+}
+
+.weather-empty__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: #5b1a37;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(91, 26, 55, 0.25);
+  cursor: pointer;
+}
+
+.weather-empty__cta:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* 하늘에 테이프로 붙인 종이 카드. 오른쪽은 비워 해와 구름이 보이게 한다 */
+.weather-empty__card {
+  position: relative;
+  align-self: flex-start;
+  width: min(272px, 100%);
+  padding: 10px 14px 12px;
+  border-radius: 10px;
+  background: #fffaf3;
+  box-shadow: 0 8px 18px rgba(91, 26, 55, 0.14);
+  transform: rotate(-2deg);
+}
+
+.weather-empty__tape {
+  position: absolute;
+  top: -8px;
+  left: -10px;
+  width: 54px;
+  height: 16px;
+  background: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 111, 159, 0.75) 0 7px,
+    rgba(255, 255, 255, 0.75) 7px 14px
+  );
+  transform: rotate(-28deg);
+}
+
+.weather-empty__card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #b06b8a;
+}
+
+.weather-empty__city {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* 지금 기온 | 시간대 칸 을 한 줄로. 비어 있는 칸은 옅은 분홍으로 */
+.weather-empty__body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  color: #e3bccd;
+}
+
+.weather-empty__now {
+  display: flex;
+  flex-direction: column;
+  padding-right: 10px;
+  border-right: 1px dashed #f0d3df;
+}
+
+.weather-empty__temp {
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 40px;
+  letter-spacing: -0.02em;
+}
+
+.weather-empty__range {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b06b8a;
+  white-space: nowrap;
+}
+
+.weather-empty__slots {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.weather-empty__slots li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.weather-empty__slots span {
+  color: #b06b8a;
+  font-weight: 600;
+}
+
+.weather-empty__slots svg {
+  width: 18px;
+  height: 18px;
+}
+
+.weather-empty__slots b {
+  font-weight: 700;
+}
+
+/* 카드 아래에 비스듬히 적은 손글씨 */
+.weather-empty__pen {
+  padding-left: 92px;
+  font-family: 'Arubi Pen', cursive;
+  font-size: 21px;
+  line-height: 1;
+  color: #d6336c;
+  transform: rotate(-3deg);
+  white-space: nowrap;
 }
