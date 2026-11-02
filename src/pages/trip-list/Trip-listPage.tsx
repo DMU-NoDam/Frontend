@@ -6,6 +6,7 @@ import { LuSparkles } from 'react-icons/lu'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import { TripCard } from '@/features/trip/components/TripCard'
 import { PassportStamps } from '@/features/trip/components/PassportStamps'
+import type { PassportView } from '@/features/trip/components/PassportStamps'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import type { TripSummary } from '@/features/trip/types/trip-types'
@@ -37,16 +38,19 @@ export function TripListPage() {
   // 고른 탭은 주소(?tab=past)에 둔다. 여행 일정을 보고 뒤로 돌아와도 보던 탭이 그대로 남는다
   const [searchParams, setSearchParams] = useSearchParams()
   const tab: TabType = searchParams.get('tab') === 'past' ? 'past' : 'upcoming'
-  const setTab = (next: TabType) =>
+  // 다녀온 여행을 여권으로 볼지 목록으로 볼지도 주소(?view=list)에 둔다
+  const passportView: PassportView = searchParams.get('view') === 'list' ? 'list' : 'passport'
+  const updateParam = (key: string, value: string | null) =>
     setSearchParams(
       (prev) => {
         const params = new URLSearchParams(prev)
-        if (next === 'past') params.set('tab', 'past')
-        else params.delete('tab')
+        if (value === null) params.delete(key)
+        else params.set(key, value)
         return params
       },
       { replace: true },
     )
+  const setTab = (next: TabType) => updateParam('tab', next === 'past' ? 'past' : null)
   const navigate = useNavigate()
   const { data: trips = [], isLoading, isError } = useTrips()
 
@@ -104,8 +108,13 @@ export function TripListPage() {
             <span>잠시 후 다시 시도해주세요.</span>
           </div>
         ) : tab === 'past' ? (
-          // 다녀온 여행 : 여권 사증 면에 도시 도장을 모은다. 도장을 누르면 그 여행 일정으로
-          <PassportStamps trips={past} onSelect={(tripId) => navigate(`/trips/${tripId}/detail`)} />
+          // 다녀온 여행 : 여권 사증 면에 도시 도장을 모은다(목록으로도 볼 수 있다). 누르면 그 여행 일정으로
+          <PassportStamps
+            trips={past}
+            view={passportView}
+            onViewChange={(next) => updateParam('view', next === 'list' ? 'list' : null)}
+            onSelect={(tripId) => navigate(`/trips/${tripId}/detail`)}
+          />
         ) : upcoming.length === 0 ? (
           // 여행이 없을 때 : 행선지가 비어 있는(ICN → ?) 탑승권 그림 + 안내
           <div className="trip-list-page__empty">
