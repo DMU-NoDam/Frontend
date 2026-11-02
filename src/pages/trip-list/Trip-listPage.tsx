@@ -1,7 +1,6 @@
-import { useState } from 'react'
 import clsx from 'clsx'
 import { motion } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { HiPlus } from 'react-icons/hi2'
 import { LuSparkles } from 'react-icons/lu'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
@@ -35,7 +34,19 @@ const startTime = (trip: TripSummary) => new Date(trip.startDate).getTime()
 export function TripListPage() {
   // 상태바 색을 분홍 종이 배경의 위쪽 색과 잇는다
   useThemeColor('#ffd0e0', '#ffffff')
-  const [tab, setTab] = useState<TabType>('upcoming')
+  // 고른 탭은 주소(?tab=past)에 둔다. 여행 일정을 보고 뒤로 돌아와도 보던 탭이 그대로 남는다
+  const [searchParams, setSearchParams] = useSearchParams()
+  const tab: TabType = searchParams.get('tab') === 'past' ? 'past' : 'upcoming'
+  const setTab = (next: TabType) =>
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        if (next === 'past') params.set('tab', 'past')
+        else params.delete('tab')
+        return params
+      },
+      { replace: true },
+    )
   const navigate = useNavigate()
   const { data: trips = [], isLoading, isError } = useTrips()
 
