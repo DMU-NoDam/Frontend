@@ -44,9 +44,7 @@ export function TripCard({ trip, isPast = false }: Props) {
       </div>
 
       <div className="trip-card__main">
-        <span className="trip-card__name">
-          BOARDING PASS · <span>{trip.name}</span>
-        </span>
+        <span className="trip-card__name">{trip.name}</span>
         {destination?.airport ? (
           <span className="trip-card__route">
             ICN <span className="trip-card__arrow">→</span> {destination.airport}

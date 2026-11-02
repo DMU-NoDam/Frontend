@@ -8,22 +8,22 @@
 }
 
 /* 사진 | 본문 | 절취선 오른쪽 칸. 가운데 칸 글자가 길어도 절취선이 카드마다 같은 자리에 오도록
-   가운데를 minmax(0, 1fr)로 둔다 */
+   가운데를 minmax(0, 1fr)로 둔다. 좁은 화면에서는 사진 칸과 공항 글자가 함께 줄어든다 */
 .trip-card {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr) 78px;
+  grid-template-columns: clamp(80px, 26%, 104px) minmax(0, 1fr) 82px;
   width: 100%;
-  height: 104px;
+  height: 128px;
   overflow: hidden;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #fffaf3;
   /* 절취선 위아래를 반원으로 파낸다. 그림자는 마스크에 잘리므로 감싸는 쪽에서 drop-shadow로 준다 */
   -webkit-mask:
-    radial-gradient(circle 8px at calc(100% - 79px) 0, transparent 97%, #000 100%) top / 100% 51% no-repeat,
-    radial-gradient(circle 8px at calc(100% - 79px) 100%, transparent 97%, #000 100%) bottom / 100% 51% no-repeat;
+    radial-gradient(circle 8px at calc(100% - 83px) 0, transparent 97%, #000 100%) top / 100% 51% no-repeat,
+    radial-gradient(circle 8px at calc(100% - 83px) 100%, transparent 97%, #000 100%) bottom / 100% 51% no-repeat;
   mask:
-    radial-gradient(circle 8px at calc(100% - 79px) 0, transparent 97%, #000 100%) top / 100% 51% no-repeat,
-    radial-gradient(circle 8px at calc(100% - 79px) 100%, transparent 97%, #000 100%) bottom / 100% 51% no-repeat;
+    radial-gradient(circle 8px at calc(100% - 83px) 0, transparent 97%, #000 100%) top / 100% 51% no-repeat,
+    radial-gradient(circle 8px at calc(100% - 83px) 100%, transparent 97%, #000 100%) bottom / 100% 51% no-repeat;
 }
 
 /* 사진이 없는 도시는 분홍 바탕만 */
@@ -42,33 +42,27 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 1px;
+  gap: 2px;
   min-width: 0;
-  padding: 8px 12px;
+  padding: 10px 12px 10px 14px;
   border-right: 2px dashed #e7c7d3;
 }
 
 .trip-card__name {
   overflow: hidden;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 800;
-  letter-spacing: 0.18em;
-  line-height: 12px;
+  line-height: 16px;
   color: #b0607f;
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-/* 한글 여행 이름은 글자 사이를 띄우지 않는다 */
-.trip-card__name span {
-  letter-spacing: 0.02em;
-}
-
 .trip-card__route {
   overflow: hidden;
   font-family: 'Arubi Display', 'Impact', sans-serif;
-  font-size: 26px;
-  line-height: 30px;
+  font-size: clamp(24px, 7.4vw, 29px);
+  line-height: 34px;
   color: #5b1a37;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -82,22 +76,22 @@
 }
 
 .trip-card__arrow {
-  font-size: 18px;
+  font-size: 20px;
   color: #d6336c;
 }
 
 .trip-card__period {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  line-height: 15px;
+  line-height: 17px;
   color: #8a4766;
   white-space: nowrap;
 }
 
 .trip-card__dday {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
-  line-height: 15px;
+  line-height: 17px;
   color: #d6336c;
 }
 
@@ -115,7 +109,7 @@
 }
 
 .trip-card__stub small {
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.2em;
   color: #b0607f;
@@ -123,15 +117,15 @@
 
 .trip-card__stub b {
   font-family: 'Arubi Display', 'Impact', sans-serif;
-  font-size: 22px;
+  font-size: 25px;
   font-weight: 400;
   line-height: 1;
   color: #d6336c;
 }
 
 .trip-card__status {
-  margin-top: 5px;
-  font-size: 11px;
+  margin-top: 6px;
+  font-size: 12px;
   font-weight: 900;
   color: #5b1a37;
   white-space: nowrap;
