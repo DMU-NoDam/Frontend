@@ -3,10 +3,12 @@ import clsx from 'clsx'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { HiPlus } from 'react-icons/hi2'
+import { LuSparkles } from 'react-icons/lu'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import { TripCard } from '@/features/trip/components/TripCard'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
+import type { TripSummary } from '@/features/trip/types/trip-types'
 import './Trip-listPage.css'
 
 type TabType = 'upcoming' | 'past'
@@ -27,15 +29,19 @@ function isUpcoming(endDate: string): boolean {
   return new Date(endDate) >= today
 }
 
+const startTime = (trip: TripSummary) => new Date(trip.startDate).getTime()
+
 export function TripListPage() {
-  useThemeColor('#ffffff', '#ffffff')
+  // 상태바 색을 분홍 종이 배경의 위쪽 색과 잇는다
+  useThemeColor('#ffd0e0', '#ffffff')
   const [tab, setTab] = useState<TabType>('upcoming')
   const navigate = useNavigate()
   const { data: trips = [], isLoading, isError } = useTrips()
 
-  const filtered = trips.filter((t) =>
-    tab === 'upcoming' ? isUpcoming(t.endDate) : !isUpcoming(t.endDate),
-  )
+  // 다가오는 여행은 출발이 가까운 순, 다녀온 여행은 최근에 다녀온 순
+  const upcoming = trips.filter((t) => isUpcoming(t.endDate)).sort((a, b) => startTime(a) - startTime(b))
+  const past = trips.filter((t) => !isUpcoming(t.endDate)).sort((a, b) => startTime(b) - startTime(a))
+  const filtered = tab === 'upcoming' ? upcoming : past
 
   return (
     <main className="trip-list-page">
@@ -65,6 +71,11 @@ export function TripListPage() {
             onClick={() => setTab(t)}
           >
             {t === 'upcoming' ? '다가오는 여행' : '다녀온 여행'}
+            {!isLoading && !isError && (
+              <span className="trip-list-page__tab-count">
+                {t === 'upcoming' ? upcoming.length : past.length}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -82,12 +93,38 @@ export function TripListPage() {
             <span>잠시 후 다시 시도해주세요.</span>
           </div>
         ) : filtered.length === 0 ? (
+          // 여행이 없을 때 : 행선지가 비어 있는(ICN → ?) 탑승권 그림 + 안내
           <div className="trip-list-page__empty">
-            <span>
-              {tab === 'upcoming'
-                ? '새로운 여행을 만들어보세요 ✈️'
-                : '아직 다녀온 여행이 없어요✈️'}
-            </span>
+            <div className="trip-list-page__empty-art" aria-hidden="true">
+              <div className="trip-list-page__empty-ticket">
+                <div>
+                  <small>BOARDING PASS</small>
+                  <b>ICN → ?</b>
+                </div>
+                <span>?</span>
+              </div>
+              <span className="trip-list-page__empty-tape" />
+              <span className="trip-list-page__empty-pen">어디로 떠나볼까?</span>
+            </div>
+            {tab === 'upcoming' ? (
+              <>
+                <h2 className="trip-list-page__empty-title">아직 떠날 여행이 없어요</h2>
+                <p className="trip-list-page__empty-text">가고 싶은 도시만 고르면 AI가 일정을 짜드려요</p>
+                <button
+                  type="button"
+                  className="trip-list-page__empty-btn"
+                  onClick={() => navigate('/trips/create')}
+                >
+                  <LuSparkles aria-hidden="true" />
+                  나만의 일정 만들기
+                </button>
+              </>
+            ) : (
+              <>
+                <h2 className="trip-list-page__empty-title">아직 다녀온 여행이 없어요</h2>
+                <p className="trip-list-page__empty-text">여행이 끝나면 여기에 모여요</p>
+              </>
+            )}
           </div>
         ) : (
           <motion.div
