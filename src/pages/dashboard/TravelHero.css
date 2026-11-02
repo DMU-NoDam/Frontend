@@ -381,50 +381,6 @@
   transform: rotate(-4deg);
 }
 
-.scrapbook__checklist {
-  position: absolute;
-  top: 330px;
-  left: 200px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0;
-  font-family: 'Arubi Pen', cursive;
-  font-size: 23px;
-  line-height: 1;
-  white-space: nowrap;
-  color: #5b1a37;
-  transform: rotate(-3deg);
-}
-
-/* 손으로 그린 체크박스 : 살짝 비뚤어진 네모 */
-.scrapbook__check {
-  position: relative;
-  width: 15px;
-  height: 15px;
-  border: 2px solid #d6336c;
-  border-radius: 3px 5px 2px 4px;
-  transform: rotate(-6deg);
-}
-
-/* 두 번째 항목 앞은 조금 띄운다 */
-.scrapbook__check + .scrapbook__check {
-  margin-left: 8px;
-}
-
-/* 체크 표시 : 칸 밖으로 삐져나오게 */
-.scrapbook__check--done::after {
-  content: '';
-  position: absolute;
-  left: 2px;
-  top: -6px;
-  width: 8px;
-  height: 15px;
-  border-right: 2.5px solid #d6336c;
-  border-bottom: 2.5px solid #d6336c;
-  transform: rotate(40deg);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .scrapbook__word,
   .scrapbook__stamp,

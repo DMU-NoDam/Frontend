@@ -177,14 +177,6 @@ export function TravelHero({ trip, topInset = 84 }: Props) {
           <br />
           떠나볼까?
         </p>
-
-        {/* 손글씨 준비물 체크리스트 (여행도구 탭의 체크리스트와 같은 이야기) */}
-        <p className="scrapbook__checklist">
-          <span className="scrapbook__check scrapbook__check--done" />
-          여권
-          <span className="scrapbook__check" />
-          엔화 환전
-        </p>
       </div>
     </div>
   )
