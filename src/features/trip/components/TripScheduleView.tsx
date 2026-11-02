@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Reorder, useDragControls } from 'framer-motion'
-import { LuGripVertical, LuSparkles, LuTrash2 } from 'react-icons/lu'
+import { AnimatePresence, Reorder, motion, useDragControls, useReducedMotion } from 'framer-motion'
+import { LuGripVertical, LuPlus, LuSparkles, LuTrash2 } from 'react-icons/lu'
 import { sortPlansByOrder } from '../lib/plan-order'
 import type { PlacePlan, Transport } from '../types/plan-types'
 import './TripScheduleView.css'
+
+// 여닫는 동작에 쓰는 ease-out. 열릴 때 빠르게 나왔다가 끝에서 부드럽게 멈춘다
+const EASE_OUT = [0.33, 1, 0.68, 1] as const
 
 function formatDistance(meters: number): string {
   return meters >= 1000 ? `${(meters / 1000).toFixed(1)}km` : `${meters}m`
@@ -40,10 +43,13 @@ function TransportRow({
   transport,
   focused,
   onClick,
+  routeUnavailable,
 }: {
   transport: Transport
   focused?: boolean
   onClick?: () => void
+  // 이 구간의 경로를 끝내 얻지 못했다 — 지도에 아무것도 그려지지 않는 이유를 알려준다
+  routeUnavailable?: boolean
 }) {
   const focusedClass = focused ? ' trip-schedule-view__transport-row--focused' : ''
   const inner = (
@@ -51,6 +57,9 @@ function TransportRow({
       <div className="trip-schedule-view__transport-line" aria-hidden="true" />
       <span className="trip-schedule-view__transport-info">
         {formatDuration(transport.takeTime)} · {formatDistance(transport.totalDistanceMeters)}
+        {routeUnavailable && (
+          <span className="trip-schedule-view__transport-note"> · 지도에 표시할 경로가 없어요</span>
+        )}
       </span>
     </>
   )
@@ -75,7 +84,34 @@ function TransportRow({
 }
 
 // 아직 계산되지 않은 이동 구간. 자리는 이동 경로 줄과 같게 두고 상태만 다르게 보여준다.
-function TransportPendingRow() {
+//
+// 기다리는 창이 다 지나면 영구 로딩으로 남기지 않고 다시 시도할 수 있는 상태로 바꾼다 —
+// 외부 경로 API가 실패한 구간은 기다려도 채워지지 않는다.
+function TransportPendingRow({
+  timedOut,
+  onRetry,
+}: {
+  timedOut?: boolean
+  onRetry?: () => void
+}) {
+  if (timedOut) {
+    return (
+      <div className="trip-schedule-view__transport-row">
+        <div className="trip-schedule-view__transport-line" aria-hidden="true" />
+        <span className="trip-schedule-view__transport-info">이동 경로를 계산하지 못했어요</span>
+        {onRetry && (
+          <button
+            type="button"
+            className="trip-schedule-view__transport-retry"
+            onClick={onRetry}
+          >
+            다시 시도
+          </button>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="trip-schedule-view__transport-row" role="status">
       <div className="trip-schedule-view__transport-line" aria-hidden="true" />
@@ -186,30 +222,45 @@ function PlaceCard({
   return <div className={`trip-schedule-view__place-card${focusedClass}`}>{inner}</div>
 }
 
+// 선택한 카드 안쪽 아래에 들어가는 동작 줄. 같은 모양의 알약 세 개로 두고 글자색으로만
+// 역할을 구분한다 — 아이콘만 있는 버튼은 무엇을 하는 버튼인지 눌러보기 전까지 알 수 없다.
 function EditActions({
   onAIRecommend,
+  onAddPlace,
   onDelete,
 }: {
   onAIRecommend: () => void
+  onAddPlace?: () => void
   onDelete: () => void
 }) {
   return (
-    <div className="trip-schedule-view__edit-actions">
+    <div className="trip-schedule-view__edit-actions" role="group" aria-label="일정 편집">
       <button
         type="button"
-        className="trip-schedule-view__ai-btn"
+        className="trip-schedule-view__edit-action trip-schedule-view__edit-action--primary"
         onClick={onAIRecommend}
       >
-        <LuSparkles size={20} aria-hidden="true" />
-        AI 추천 장소 변경
+        <LuSparkles size={14} aria-hidden="true" />
+        장소 변경
       </button>
+      {onAddPlace && (
+        <button
+          type="button"
+          className="trip-schedule-view__edit-action"
+          onClick={onAddPlace}
+          title="이 장소 뒤에 장소 추가"
+        >
+          <LuPlus size={14} aria-hidden="true" />
+          뒤에 추가
+        </button>
+      )}
       <button
         type="button"
-        className="trip-schedule-view__delete-btn"
+        className="trip-schedule-view__edit-action trip-schedule-view__edit-action--danger"
         onClick={onDelete}
-        aria-label="일정 삭제"
       >
-        <LuTrash2 size={14} />
+        <LuTrash2 size={13} aria-hidden="true" />
+        삭제
       </button>
     </div>
   )
@@ -222,6 +273,7 @@ function ReorderableItem({
   focused,
   disabled,
   children,
+  actions,
   itemRef,
   onMoveByOffset,
   onDragStart,
@@ -231,12 +283,30 @@ function ReorderableItem({
   focused: boolean
   disabled: boolean
   children: React.ReactNode
+  // 동작 줄은 카드 본문과 같은 칸이 아니라 행 아래 전체 너비를 쓴다 — 손잡이 칸 앞에서
+  // 끊기면 행 오른쪽에 빈 띠가 남는다
+  actions?: React.ReactNode
   itemRef: (el: HTMLElement | null) => void
   onMoveByOffset: (offset: number) => void
   onDragStart: () => void
   onDragEnd: () => void
 }) {
   const controls = useDragControls()
+  const reducedMotion = useReducedMotion()
+
+  // 높이를 0 <-> auto로 여닫는다. 카드가 갑자기 커지거나 줄어드는 대신 줄이 밀려 내려오고,
+  // 테두리와 글자는 조금 더 빨리 사라져서 접히는 동안 선이 남아 보이지 않는다.
+  const openTransition = reducedMotion
+    ? { duration: 0 }
+    : {
+        height: { duration: 0.24, ease: EASE_OUT },
+        opacity: { duration: 0.16 },
+      }
+
+  // 아래 카드들이 같은 리듬으로 밀려 내려오게 layout 애니메이션의 길이를 맞춘다
+  const layoutTransition = reducedMotion
+    ? { duration: 0 }
+    : { duration: 0.24, ease: EASE_OUT }
 
   return (
     <Reorder.Item
@@ -244,6 +314,10 @@ function ReorderableItem({
       value={plan}
       dragListener={false}
       dragControls={controls}
+      // 위치만 애니메이션한다. 크기까지 맞추면(기본값 layout=true) 동작 줄이 열리는 동안
+      // 카드 내용이 한 번 눌렸다 펴지는 것처럼 보인다 — 높이는 안쪽 줄이 직접 가진다.
+      layout="position"
+      transition={{ layout: layoutTransition }}
       className="trip-schedule-view__item trip-schedule-view__item--no-transport trip-schedule-view__item--draggable"
       animate={{ scale: 1, boxShadow: '0 0px 0px rgba(0, 0, 0, 0)' }}
       whileDrag={{ scale: 1.02, zIndex: 1, boxShadow: '0 8px 20px rgba(0, 0, 0, 0.12)' }}
@@ -255,30 +329,46 @@ function ReorderableItem({
       <div
         className={`trip-schedule-view__drag-row${focused ? ' trip-schedule-view__drag-row--focused' : ''}`}
       >
-        <div className="trip-schedule-view__drag-content">{children}</div>
-        <button
-          type="button"
-          className="trip-schedule-view__drag-handle"
-          aria-label={`${plan.placeInfo.name} 순서 바꾸기`}
-          aria-disabled={disabled}
-          // 터치에서도 손잡이를 잡는 순간부터 드래그로 넘긴다
-          onPointerDown={(event) => {
-            // 앞선 순서 변경이 아직 저장 중이면 새 드래그를 받지 않는다 — 응답이 뒤바뀐
-            // 순서로 도착하면 화면이 한 단계 전 순서로 되돌아가 보인다
-            if (disabled) return
-            controls.start(event)
-          }}
-          // 드래그만 두면 키보드로는 순서를 바꿀 수 없다. 손잡이에 포커스한 채 위아래 방향키로
-          // 한 칸씩 옮긴다.
-          onKeyDown={(event) => {
-            const offset = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0
-            if (offset === 0 || disabled) return
-            event.preventDefault()
-            onMoveByOffset(offset)
-          }}
-        >
-          <LuGripVertical size={18} aria-hidden="true" />
-        </button>
+        <div className="trip-schedule-view__drag-main">
+          <div className="trip-schedule-view__drag-content">{children}</div>
+          <button
+            type="button"
+            className="trip-schedule-view__drag-handle"
+            aria-label={`${plan.placeInfo.name} 순서 바꾸기`}
+            aria-disabled={disabled}
+            // 터치에서도 손잡이를 잡는 순간부터 드래그로 넘긴다
+            onPointerDown={(event) => {
+              // 앞선 순서 변경이 아직 저장 중이면 새 드래그를 받지 않는다 — 응답이 뒤바뀐
+              // 순서로 도착하면 화면이 한 단계 전 순서로 되돌아가 보인다
+              if (disabled) return
+              controls.start(event)
+            }}
+            // 드래그만 두면 키보드로는 순서를 바꿀 수 없다. 손잡이에 포커스한 채 위아래 방향키로
+            // 한 칸씩 옮긴다.
+            onKeyDown={(event) => {
+              const offset = event.key === 'ArrowUp' ? -1 : event.key === 'ArrowDown' ? 1 : 0
+              if (offset === 0 || disabled) return
+              event.preventDefault()
+              onMoveByOffset(offset)
+            }}
+          >
+            <LuGripVertical size={18} aria-hidden="true" />
+          </button>
+        </div>
+        <AnimatePresence initial={false}>
+          {actions && (
+            <motion.div
+              key="actions"
+              className="trip-schedule-view__edit-actions-wrap"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={openTransition}
+            >
+              {actions}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </Reorder.Item>
   )
@@ -300,6 +390,8 @@ export type TripScheduleViewProps = {
   onEditCancel?: () => void
   onEditCardClick?: (plan: PlacePlan) => void
   onAIRecommendClick?: (plan: PlacePlan) => void
+  // 넘기면 편집 중 선택한 카드에 "다음에 장소 추가" 버튼이 생긴다
+  onAddPlaceClick?: (plan: PlacePlan) => void
   onDeletePlan?: (plan: PlacePlan) => void
   // 순서가 바뀌어 확정된 시점에 한 번 호출된다. 위치는 인덱스가 아니라 최종 목록에서의
   // 앞/뒤 이웃으로 알려준다 (백엔드 move-place가 그렇게 받는다).
@@ -310,6 +402,11 @@ export type TripScheduleViewProps = {
   }) => void
   // 서버가 끊긴 이동 구간을 다시 계산하는 중. 빈 구간에 "계산 중"을 보여준다
   isTransportPending?: boolean
+  // 기다리는 창이 다 지났다. 영구 로딩 대신 다시 시도할 수 있는 상태로 보여준다
+  isTransportTimedOut?: boolean
+  onRetryTransport?: () => void
+  // 선택한 이동 구간의 경로를 끝내 얻지 못했다
+  transportRouteUnavailable?: boolean
   // 저장 중에는 다음 순서 변경을 받지 않는다
   reorderDisabled?: boolean
   // 드래그를 시작/끝낼 때 알린다. 호출부는 드래그 중에 일정 재조회를 멈춘다
@@ -338,9 +435,13 @@ export function TripScheduleView({
   onEditCancel,
   onEditCardClick,
   onAIRecommendClick,
+  onAddPlaceClick,
   onDeletePlan,
   onReorderPlan,
   isTransportPending,
+  isTransportTimedOut,
+  onRetryTransport,
+  transportRouteUnavailable,
   reorderDisabled,
   onDragStateChange,
   resetOrderSignal,
@@ -563,6 +664,15 @@ export function TripScheduleView({
                   plan={plan}
                   focused={isFocusedPlan}
                   disabled={Boolean(reorderDisabled)}
+                  actions={
+                    showEditActions ? (
+                      <EditActions
+                        onAIRecommend={() => onAIRecommendClick(plan)}
+                        onAddPlace={onAddPlaceClick ? () => onAddPlaceClick(plan) : undefined}
+                        onDelete={() => onDeletePlan(plan)}
+                      />
+                    ) : undefined
+                  }
                   itemRef={registerItemRef(plan.id)}
                   onMoveByOffset={(offset) => movePlanByOffset(plan.id, offset)}
                   onDragStart={() => {
@@ -588,22 +698,12 @@ export function TripScheduleView({
                     notifyReorder(plan, after)
                   }}
                 >
-                  {showEditActions ? (
-                    <div className="trip-schedule-view__edit-card">
-                      <PlaceCard plan={plan} index={i} onClick={() => onEditCardClick?.(plan)} />
-                      <EditActions
-                        onAIRecommend={() => onAIRecommendClick(plan)}
-                        onDelete={() => onDeletePlan(plan)}
-                      />
-                    </div>
-                  ) : (
-                    <PlaceCard
-                      plan={plan}
-                      index={i}
-                      focused={isFocusedPlan}
-                      onClick={() => onEditCardClick?.(plan)}
-                    />
-                  )}
+                  <PlaceCard
+                    plan={plan}
+                    index={i}
+                    focused={isFocusedPlan}
+                    onClick={() => onEditCardClick?.(plan)}
+                  />
                 </ReorderableItem>
               )
             })}
@@ -627,10 +727,19 @@ export function TripScheduleView({
                   transport={plan.fromTransport}
                   focused={plan.fromTransport.id === focusedTransportId}
                   onClick={onTransportClick ? () => onTransportClick(plan.fromTransport!.id) : undefined}
+                  routeUnavailable={
+                    transportRouteUnavailable && plan.fromTransport.id === focusedTransportId
+                  }
                 />
               ) : (
                 // 하루의 마지막 일정은 나가는 구간이 없다 — 그 자리는 비워둔다
-                isTransportPending && i < plansForDay.length - 1 && <TransportPendingRow />
+                (isTransportPending || isTransportTimedOut) &&
+                i < plansForDay.length - 1 && (
+                  <TransportPendingRow
+                    timedOut={isTransportTimedOut}
+                    onRetry={onRetryTransport}
+                  />
+                )
               )}
             </div>
           ))

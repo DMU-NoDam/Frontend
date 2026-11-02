@@ -5,7 +5,32 @@ import type { PlaceItem } from '@/shared/components/PlaceSearch'
 import type { RecommendedPlaceItem } from '../types/plan-types'
 import './PlaceRecommendSheet.css'
 
+// change: 고른 장소로 이 일정을 교체한다 (change-place)
+// add: 이 일정 바로 다음에 고른 장소를 넣는다 (add-place)
+type RecommendMode = 'change' | 'add'
+
+const COPY: Record<RecommendMode, {
+  label: string
+  question: string
+  confirm: string
+  confirming: string
+}> = {
+  change: {
+    label: 'AI 대안 일정',
+    question: '대신',
+    confirm: '이 장소로 변경하기',
+    confirming: '변경 중...',
+  },
+  add: {
+    label: 'AI 추천 장소',
+    question: '다음에',
+    confirm: '이 장소 추가하기',
+    confirming: '추가 중...',
+  },
+}
+
 type Props = {
+  mode?: RecommendMode
   originalPlanName: string
   recommendations: RecommendedPlaceItem[]
   selectedIndex: number
@@ -18,6 +43,7 @@ type Props = {
 }
 
 export function PlaceRecommendSheet({
+  mode = 'change',
   originalPlanName,
   recommendations,
   selectedIndex,
@@ -29,6 +55,7 @@ export function PlaceRecommendSheet({
   countryCode,
 }: Props) {
   const selected = recommendations[selectedIndex]
+  const copy = COPY[mode]
 
   const mapItems: PlaceItem[] = selected
     ? [{ id: String(selected.place.id), name: selected.place.name, location: { lat: selected.place.lat, lng: selected.place.lon } }]
@@ -56,10 +83,10 @@ export function PlaceRecommendSheet({
         <div>
           <span className="place-recommend-sheet__label">
             <LuSparkles size={12} aria-hidden="true" />
-            AI 대안 일정
+            {copy.label}
           </span>
           <h1 className="place-recommend-sheet__title">
-            {originalPlanName} 대신<br />어디로 갈까요?
+            {originalPlanName} {copy.question}<br />어디로 갈까요?
           </h1>
         </div>
 
@@ -97,7 +124,7 @@ export function PlaceRecommendSheet({
           onClick={onConfirm}
           disabled={isConfirming || !selected}
         >
-          {isConfirming ? '변경 중...' : '이 장소로 변경하기'}
+          {isConfirming ? copy.confirming : copy.confirm}
         </button>
       </div>
     </motion.div>

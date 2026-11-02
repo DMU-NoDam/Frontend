@@ -21,6 +21,10 @@ const MESSAGE: Record<PlanEditErrorKind, string> = {
   unknown: '일정을 수정하지 못했어요. 잠시 후 다시 시도해 주세요.',
 }
 
+// 편집 대상 DatePlan / PlacePlan을 캐시에서 찾지 못해 요청을 아예 보내지 못한 경우.
+// 서버가 not-found로 거절한 것과 사용자에게는 같은 상황이라 문구도 같게 쓴다.
+export const PLAN_TARGET_MISSING_MESSAGE = MESSAGE['not-found']
+
 export function getPlanEditErrorKind(error: unknown): PlanEditErrorKind {
   if (!isAxiosError(error)) return 'unknown'
   const code = (error.response?.data as { code?: unknown } | undefined)?.code

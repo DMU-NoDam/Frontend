@@ -40,6 +40,16 @@ function usePlanEditMutation<TRequest>(
     // PLAN_EDIT_META: 이 요청이 날아가는 동안 상시 폴링을 멈추게 한다 (use-trip-plans).
     // 편집 전에 출발한 조회가 늦게 도착하면 방금 바꾼 순서가 한 번 되돌아가 보인다.
     meta: { ...PLAN_EDIT_META, ...meta },
+    onMutate: async () => {
+      if (!tripId) return
+      // 폴링을 끄는 것만으로는 이미 날아간 요청이 멈추지 않는다. 진행 중인 배경 조회를
+      // 실제로 취소해야 편집 응답 뒤에 낡은 일정이나 낡은 이동 구간이 도착하지 않는다.
+      await Promise.all([
+        queryClient.cancelQueries({ queryKey: tripKeys.plans(tripId) }),
+        queryClient.cancelQueries({ queryKey: tripKeys.planVersions(tripId) }),
+        queryClient.cancelQueries({ queryKey: tripKeys.placePlanTransports(tripId) }),
+      ])
+    },
     onSuccess: (updated: DatePlan) => {
       if (!tripId) return
       replaceDatePlan(queryClient, tripId, updated)
@@ -55,8 +65,9 @@ function usePlanEditMutation<TRequest>(
   })
 }
 
+// 추천 장소를 골라 추가하는 경로다. change-place와 같은 흐름이라 전체 화면 로딩도 같이 둔다.
 export const useAddPlace = (tripId: string | undefined) =>
-  usePlanEditMutation<AddPlaceRequest>(tripId, planApi.addPlace)
+  usePlanEditMutation<AddPlaceRequest>(tripId, planApi.addPlace, { globalLoading: true })
 
 // 기존 useReplacePlacePlan을 대체한다. 전체 화면 로딩도 그대로 유지한다.
 export const useChangePlace = (tripId: string | undefined) =>

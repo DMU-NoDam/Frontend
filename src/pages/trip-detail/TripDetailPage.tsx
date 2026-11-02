@@ -6,9 +6,10 @@ import { useTripPlans } from '@/features/trip/hooks/use-trip-plans'
 import { useUpdateTripFixed } from '@/features/trip/hooks/use-update-trip-fixed'
 import { useUpdateTrip } from '@/features/trip/hooks/use-update-trip'
 import { useRecommendPlace } from '@/features/trip/hooks/use-recommend-place'
-import { useChangePlace, useMovePlace, useRemovePlace } from '@/features/trip/hooks/use-plan-edit'
-import { getPlanEditErrorMessage } from '@/features/trip/lib/plan-error'
-import { findEditTarget } from '@/features/trip/lib/plan-target'
+import { useAddPlace, useChangePlace, useMovePlace, useRemovePlace } from '@/features/trip/hooks/use-plan-edit'
+import { useTransportRouteDetail } from '@/features/trip/hooks/use-transport-route-detail'
+import { PLAN_TARGET_MISSING_MESSAGE, getPlanEditErrorMessage } from '@/features/trip/lib/plan-error'
+import { findEditTarget, findInsertPositionAfter } from '@/features/trip/lib/plan-target'
 import { groupPlansByTheme } from '@/features/trip/api/plan-mapper'
 import { TripMapSheet, MapPlaceholder } from '@/features/trip/components/TripMapSheet'
 import { TripRouteMap } from '@/features/trip/components/TripRouteMap'
@@ -43,6 +44,7 @@ export function TripDetailPage() {
   const updateTripMutation      = useUpdateTrip()
   const recommendMutation       = useRecommendPlace()
   const changeMutation          = useChangePlace(tripId)
+  const addMutation             = useAddPlace(tripId)
   const removeMutation          = useRemovePlace(tripId)
   const moveMutation            = useMovePlace(tripId)
 
@@ -63,10 +65,18 @@ export function TripDetailPage() {
     isLoading: isPlansLoading,
     isError: isPlansError,
     isTransportPending,
+    isTransportTimedOut,
+    retryTransport,
   } = useTripPlans(
     trip?.tripThemeType ? tripId : undefined,
-    // live: 다른 멤버의 편집을 알려주는 수단이 없어서 주기적으로 다시 읽는다
-    { live: true, pausePolling: editMode && isReordering, refreshKey: plansRequestSeq },
+    {
+      // live: 다른 멤버의 편집을 알려주는 수단이 없어서 주기적으로 version을 확인한다.
+      // liveTheme: 화면에 그리는 확정 테마만 확인한다 (전체 조회는 모든 테마를 준다)
+      live: true,
+      liveTheme: trip?.tripThemeType ?? undefined,
+      pausePolling: editMode && isReordering,
+      refreshKey: plansRequestSeq,
+    },
   )
 
   const selectedPlans: PlacePlan[] = useMemo(() => {
@@ -116,6 +126,8 @@ export function TripDetailPage() {
   const [recommendations, setRecommendations]             = useState<RecommendedPlaceItem[]>([])
   const [selectedRecommendIndex, setSelectedRecommendIndex] = useState(0)
   const [recommendTarget, setRecommendTarget]             = useState<PlacePlan | null>(null)
+  // 추천 시트를 교체(change-place)로 쓸지 추가(add-place)로 쓸지
+  const [recommendMode, setRecommendMode]                 = useState<'change' | 'add'>('change')
   const [conflictFixedTrips, setConflictFixedTrips]       = useState<TripSummary[]>([])
   const [conflictError, setConflictError]                 = useState<string | null>(null)
   const [planEditError, setPlanEditError]                 = useState<string | null>(null)
@@ -130,6 +142,14 @@ export function TripDetailPage() {
         : (dayTabDates[0] ?? null),
     [userSelectedDate, dayTabDates],
   )
+  // 선택한 이동 구간의 경로가 비어 있을 때만 상세를 조회한다. 평소에는 전체 조회 응답에
+  // routeInfo가 들어 있어서 요청이 나가지 않는다.
+  const { isRouteUnavailable } = useTransportRouteDetail({
+    tripId,
+    datePlans: plans?.datePlans,
+    transportId: editMode ? null : focusedTransportId,
+  })
+
   const detailsPlan = !editMode && !isPlansStatusShown
     ? selectedPlans.find((plan) => plan.id === detailsPlanId && plan.date === selectedDate) ?? null
     : null
@@ -228,6 +248,7 @@ export function TripDetailPage() {
       setShowRecommendSheet(false)
       setRecommendations([])
       setRecommendTarget(null)
+      setRecommendMode('change')
     } else {
       // 편집 버튼: 현재 trip 값으로 input 초기화 후 편집 모드 진입
       setNameInput(trip?.name ?? '')
@@ -252,6 +273,7 @@ export function TripDetailPage() {
     setShowRecommendSheet(false)
     setRecommendations([])
     setRecommendTarget(null)
+    setRecommendMode('change')
   }
 
   const handleDateChange = (date: string) => {
@@ -270,8 +292,12 @@ export function TripDetailPage() {
     setEditingPlanId((prev) => (prev === plan.id ? null : plan.id))
   }
 
-  const handleAIRecommendClick = (plan: PlacePlan) => {
+  // 추천 장소 목록을 받아 시트를 연다. 교체와 추가가 같은 추천 API를 쓴다 —
+  // add-place의 placeId는 백엔드 내부 숫자 id이고, 지금 그 id를 주는 계약은 이 추천 응답뿐이다.
+  const openRecommendSheet = (plan: PlacePlan, mode: 'change' | 'add') => {
     setRecommendTarget(plan)
+    setRecommendMode(mode)
+    setPlanEditError(null)
     recommendMutation.mutate(
       {
         placePlanId: plan.id,
@@ -290,6 +316,10 @@ export function TripDetailPage() {
       },
     )
   }
+
+  const handleAIRecommendClick = (plan: PlacePlan) => openRecommendSheet(plan, 'change')
+
+  const handleAddPlaceClick = (plan: PlacePlan) => openRecommendSheet(plan, 'add')
 
   const handleDeletePlan = (plan: PlacePlan) => {
     // 편집은 DatePlan 단위다 — 이 일정이 속한 DatePlan의 id와 version을 함께 보낸다
@@ -336,16 +366,49 @@ export function TripDetailPage() {
 
   const handleRecommendConfirm = () => {
     if (!recommendTarget || !recommendations[selectedRecommendIndex]) return
-    const target = findEditTarget(plans?.datePlans, recommendTarget.datePlanId)
-    if (!target) return
+    if (changeMutation.isPending || addMutation.isPending) return
 
+    // 편집은 DatePlan 단위다 — 방금 읽은 version을 그대로 실어 보낸다
+    const target = findEditTarget(plans?.datePlans, recommendTarget.datePlanId)
+    if (!target) {
+      setPlanEditError(PLAN_TARGET_MISSING_MESSAGE)
+      return
+    }
+
+    const placeId = recommendations[selectedRecommendIndex].place.id
     setPlanEditError(null)
+
+    // 실패해도 시트를 닫지 않는다 — 추천 목록은 60초짜리 AI 호출로 받아온 것이라
+    // 버리면 다시 기다려야 한다. 오류만 시트 안에 띄우고 사용자가 판단하게 둔다.
+    const onError = (error: unknown) => setPlanEditError(getPlanEditErrorMessage(error))
+
+    if (recommendMode === 'add') {
+      const position = findInsertPositionAfter(plans?.datePlans, recommendTarget)
+      if (!position) {
+        setPlanEditError(PLAN_TARGET_MISSING_MESSAGE)
+        return
+      }
+
+      addMutation.mutate(
+        { ...target, ...position, placeId },
+        {
+          onSuccess: () => {
+            // 추가 뒤에도 편집 모드는 유지한다 — 이어서 더 넣거나 순서를 고칠 수 있다.
+            // 새로 끊긴 이동 구간은 useTripPlans의 대기 목록에 자동으로 들어간다.
+            setShowRecommendSheet(false)
+            setRecommendations([])
+            setRecommendTarget(null)
+            setRecommendMode('change')
+            setEditingPlanId(null)
+          },
+          onError,
+        },
+      )
+      return
+    }
+
     changeMutation.mutate(
-      {
-        ...target,
-        placePlanId: recommendTarget.id,
-        placeId: recommendations[selectedRecommendIndex].place.id,
-      },
+      { ...target, placePlanId: recommendTarget.id, placeId },
       {
         onSuccess: () => {
           setShowRecommendSheet(false)
@@ -354,9 +417,7 @@ export function TripDetailPage() {
           setEditingPlanId(null)
           setEditMode(false)
         },
-        // 실패해도 시트를 닫지 않는다 — 추천 목록은 60초짜리 AI 호출로 받아온 것이라
-        // 버리면 다시 기다려야 한다. 오류만 시트 안에 띄우고 사용자가 판단하게 둔다.
-        onError: (error) => setPlanEditError(getPlanEditErrorMessage(error)),
+        onError,
       },
     )
   }
@@ -541,9 +602,13 @@ export function TripDetailPage() {
               onEditCancel={handleEditCancel}
               onEditCardClick={handleEditCardClick}
               onAIRecommendClick={handleAIRecommendClick}
+              onAddPlaceClick={handleAddPlaceClick}
               onDeletePlan={handleDeletePlan}
               onReorderPlan={handleReorderPlan}
               isTransportPending={isTransportPending}
+              isTransportTimedOut={isTransportTimedOut}
+              onRetryTransport={retryTransport}
+              transportRouteUnavailable={isRouteUnavailable}
               reorderDisabled={moveMutation.isPending}
               onDragStateChange={setIsReordering}
               resetOrderSignal={orderResetSignal}
@@ -563,13 +628,19 @@ export function TripDetailPage() {
 
       {showRecommendSheet && recommendTarget && (
         <PlaceRecommendSheet
+          mode={recommendMode}
           originalPlanName={recommendTarget.placeInfo.name}
           recommendations={recommendations}
           selectedIndex={selectedRecommendIndex}
           onSelect={setSelectedRecommendIndex}
-          onBack={() => { setShowRecommendSheet(false); setRecommendations([]); setPlanEditError(null) }}
+          onBack={() => {
+            setShowRecommendSheet(false)
+            setRecommendations([])
+            setRecommendMode('change')
+            setPlanEditError(null)
+          }}
           onConfirm={handleRecommendConfirm}
-          isConfirming={changeMutation.isPending}
+          isConfirming={changeMutation.isPending || addMutation.isPending}
           errorMessage={planEditError}
         />
       )}
