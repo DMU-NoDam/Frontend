@@ -1,142 +1,157 @@
-/* ── Trip Card ──────────────────────────────────────────────── */
+/* ── Trip Card (탑승권) ─────────────────────────────────────── */
 
+/* 탑승권의 큰 글자 (Anton 부분 — 영문 대문자·숫자만 들어 있다. 홈 TravelHero.css와 같은 파일) */
+@font-face {
+  font-family: 'Arubi Display';
+  src: url('../../../assets/fonts/arubi-display.woff') format('woff');
+  font-display: swap;
+}
+
+/* 사진 | 본문 | 절취선 오른쪽 칸. 가운데 칸 글자가 길어도 절취선이 카드마다 같은 자리에 오도록
+   가운데를 minmax(0, 1fr)로 둔다 */
 .trip-card {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 78px;
   width: 100%;
-  height: 160px;
-  border-radius: 20px;
-  position: relative;
+  height: 104px;
   overflow: hidden;
-  flex-shrink: 0;
-  cursor: pointer;
+  border-radius: 10px;
+  background: #fffaf3;
+  /* 절취선 위아래를 반원으로 파낸다. 그림자는 마스크에 잘리므로 감싸는 쪽에서 drop-shadow로 준다 */
+  -webkit-mask:
+    radial-gradient(circle 8px at calc(100% - 79px) 0, transparent 97%, #000 100%) top / 100% 51% no-repeat,
+    radial-gradient(circle 8px at calc(100% - 79px) 100%, transparent 97%, #000 100%) bottom / 100% 51% no-repeat;
+  mask:
+    radial-gradient(circle 8px at calc(100% - 79px) 0, transparent 97%, #000 100%) top / 100% 51% no-repeat,
+    radial-gradient(circle 8px at calc(100% - 79px) 100%, transparent 97%, #000 100%) bottom / 100% 51% no-repeat;
 }
 
-/* gradient presets — assigned by data-variant */
-.trip-card[data-variant="0"] { background: linear-gradient(160deg, #0d1b4b 0%, #1565c0 55%, #283593 100%); }
-.trip-card[data-variant="1"] { background: linear-gradient(160deg, #1a0030 0%, #6a1b9a 55%, #1565c0 100%); }
-.trip-card[data-variant="2"] { background: linear-gradient(160deg, #002620 0%, #00695c 55%, #00897b 100%); }
-.trip-card[data-variant="3"] { background: linear-gradient(160deg, #1b2400 0%, #33691e 55%, #1565c0 100%); }
-.trip-card[data-variant="4"] { background: linear-gradient(160deg, #1a1000 0%, #e65100 40%, #4a148c 100%); }
-
-/* 다녀온 여행 — 회색 배경 */
-.trip-card--past {
-  background: linear-gradient(160deg, #3a3d47 0%, #6b6e7a 55%, #4a4d58 100%);
-}
-
-.trip-card--past .trip-card__dday,
-.trip-card--past .trip-card__status {
-  background: #8f9098;
-}
-
-/* 도시 사진 배경 */
+/* 사진이 없는 도시는 분홍 바탕만 */
 .trip-card__photo {
-  position: absolute;
-  inset: 0;
+  background: linear-gradient(160deg, #ffb3cc, #ff8fb3);
+}
+
+.trip-card__photo img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* 다녀온 여행 — 사진도 회색으로 */
-.trip-card--past .trip-card__photo {
-  filter: grayscale(1) brightness(0.85);
-}
-
-.trip-card__overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0) 20%,
-    rgba(0, 0, 0, 0.55) 100%
-  );
-  pointer-events: none;
-}
-
-/* 사진 위에서는 아래쪽 글씨가 묻히지 않도록 조금 더 진하게 */
-.trip-card--photo .trip-card__overlay {
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.05) 0%,
-    rgba(0, 0, 0, 0.15) 40%,
-    rgba(0, 0, 0, 0.65) 100%
-  );
-}
-
-.trip-card__badges {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  z-index: 1;
-}
-
-.trip-card__dday,
-.trip-card__status {
-  background: #ff6f9f;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 900;
-  line-height: 1;
-  border-radius: 20px;
-  padding: 6px 11px;
-  white-space: nowrap;
-}
-
-.trip-card__status {
-  background: rgba(255, 255, 255, 0.22);
-  border: 1px solid rgba(255, 255, 255, 0.34);
-}
-
-.trip-card__status--draft {
-  background: #f59e0b;
-}
-
-.trip-card__body {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0 16px 14px;
+.trip-card__main {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  z-index: 1;
-}
-
-.trip-card__title-row {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.trip-card__site {
-  font-size: 24px;
-  font-weight: 900;
-  color: #ffffff;
-  line-height: 1;
+  justify-content: center;
+  gap: 1px;
+  min-width: 0;
+  padding: 8px 12px;
+  border-right: 2px dashed #e7c7d3;
 }
 
 .trip-card__name {
-  font-size: 14px;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1;
-}
-
-.trip-card__meta {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-}
-
-.trip-card__meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+  overflow: hidden;
   font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  line-height: 12px;
+  color: #b0607f;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 한글 여행 이름은 글자 사이를 띄우지 않는다 */
+.trip-card__name span {
+  letter-spacing: 0.02em;
+}
+
+.trip-card__route {
+  overflow: hidden;
+  font-family: 'Arubi Display', 'Impact', sans-serif;
+  font-size: 26px;
+  line-height: 30px;
+  color: #5b1a37;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 공항 코드 대신 한글 도시 이름을 적을 때 */
+.trip-card__route--city {
+  font-family: inherit;
+  font-size: 20px;
   font-weight: 900;
-  color: #ffffff;
+}
+
+.trip-card__arrow {
+  font-size: 18px;
+  color: #d6336c;
+}
+
+.trip-card__period {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 15px;
+  color: #8a4766;
+  white-space: nowrap;
+}
+
+.trip-card__dday {
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 15px;
+  color: #d6336c;
+}
+
+.trip-card__dday--today {
+  color: #ff3d7f;
+}
+
+/* 오른쪽 칸 : DEP · 출발일 · 확정 여부 */
+.trip-card__stub {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.trip-card__stub small {
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  color: #b0607f;
+}
+
+.trip-card__stub b {
+  font-family: 'Arubi Display', 'Impact', sans-serif;
+  font-size: 22px;
+  font-weight: 400;
   line-height: 1;
+  color: #d6336c;
+}
+
+.trip-card__status {
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #5b1a37;
+  white-space: nowrap;
+}
+
+.trip-card__status--draft {
+  font-weight: 700;
+  color: #c4aab6;
+}
+
+/* 다녀온 여행 : 사진과 글자를 한 톤 가라앉힌다 */
+.trip-card--past .trip-card__photo img {
+  filter: grayscale(0.7) brightness(0.95);
+}
+
+.trip-card--past .trip-card__route,
+.trip-card--past .trip-card__stub b {
+  color: #9b7d8b;
+}
+
+.trip-card--past .trip-card__status {
+  color: #9b7d8b;
 }
