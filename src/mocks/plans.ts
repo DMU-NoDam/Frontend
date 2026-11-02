@@ -1,4 +1,4 @@
-import type { AddPlaceRequest, ChangePlaceRequest, DatePlan, MovePlaceRequest, PlaceInfo, PlacePlan, PlacePlanPatch, PlanListResponse, RecommendedPlaceItem, RemovePlaceRequest, RouteInfo, Transport, TripThemeType } from '@/features/trip/types/plan-types'
+import type { AddPlaceRequest, ChangePlaceRequest, DatePlan, MovePlaceRequest, PlaceInfo, PlacePlan, PlacePlanPatch, PlacePlanTransport, PlanListResponse, RecommendedPlaceItem, RemovePlaceRequest, RouteInfo, Transport, TripThemeType } from '@/features/trip/types/plan-types'
 
 // ── helpers ──────────────────────────────────────────────────
 
@@ -263,6 +263,83 @@ const MOCK_PLANS: Record<string, PlanListResponse> = {
 
 export const mockGetPlans = (tripId: string): Promise<PlanListResponse> =>
   Promise.resolve(MOCK_PLANS[tripId] ?? { message: 'success', datePlans: [] })
+
+const allMockDatePlans = (): DatePlan[] =>
+  Object.values(MOCK_PLANS).flatMap((response) => response.datePlans)
+
+// 실서버는 편집 기록이 없는 DatePlan과 모르는 id 모두 0을 준다 (BehaviourDBAdapter)
+export const mockGetDatePlanVersion = (datePlanId: number): Promise<number> =>
+  Promise.resolve(allMockDatePlans().find((d) => d.id === datePlanId)?.version ?? 0)
+
+// 비동기 경로 계산을 흉내 낸다: 끊긴 구간을 처음 물어볼 때 채워서 돌려준다.
+// 실서버는 별도 스레드가 채우지만 mock에는 그 스레드가 없어서, 이렇게 하지 않으면
+// mock 모드에서 편집 뒤 구간이 영원히 "계산 중"으로 남는다.
+let nextMockTransportId = 7000
+
+const fillMockLeg = (datePlan: DatePlan, from: PlacePlan, to: PlacePlan): Transport => {
+  // 실서버의 TransportPlan은 routeInfo가 필수 컬럼이라 항상 경로를 들고 온다.
+  // 두 장소를 직선으로 잇는 한 구간으로 같은 형태를 맞춘다.
+  const routeInfo: RouteInfo = {
+    totalDistanceMeters: 1500,
+    totalDurationSeconds: 900,
+    steps: [{
+      method: 'WALK',
+      path: [
+        { lat: from.placeInfo.lat, lng: from.placeInfo.lon },
+        { lat: to.placeInfo.lat, lng: to.placeInfo.lon },
+      ],
+    }],
+  }
+
+  const filled: Transport = transport(
+    nextMockTransportId++,
+    from.endTime,
+    to.startTime,
+    900,
+    1500,
+    from.id,
+    to.id,
+    routeInfo,
+  )
+
+  datePlan.plans = datePlan.plans.map((plan) =>
+    plan.id === from.id ? { ...plan, fromTransport: filled } : plan,
+  )
+
+  return filled
+}
+
+// 앞뒤 구간만 돌려준다. 앞 구간은 "앞 장소에서 나가는" 구간이므로 앞 장소의 fromTransport다.
+export const mockGetPlacePlanTransport = (
+  datePlanId: number,
+  placePlanId: number,
+): Promise<PlacePlanTransport> => {
+  const datePlan = findMockDatePlan(datePlanId)
+  const plans = [...datePlan.plans].sort((a, b) => a.orderIndex - b.orderIndex)
+  const index = plans.findIndex((plan) => plan.id === placePlanId)
+  if (index < 0) throw new Error(`[mock] placePlanId=${placePlanId} 를 찾을 수 없습니다`)
+
+  const previous = plans[index - 1]
+  const next = plans[index + 1]
+
+  return Promise.resolve({
+    placePlanId,
+    previousTransport: previous
+      ? previous.fromTransport ?? fillMockLeg(datePlan, previous, plans[index])
+      : null,
+    nextTransport: next
+      ? plans[index].fromTransport ?? fillMockLeg(datePlan, plans[index], next)
+      : null,
+  })
+}
+
+export const mockGetTransportPlanDetail = (transportPlanId: number): Promise<Transport | null> => {
+  for (const datePlan of allMockDatePlans())
+    for (const plan of datePlan.plans)
+      if (plan.fromTransport?.id === transportPlanId) return Promise.resolve(plan.fromTransport)
+
+  return Promise.resolve(null)
+}
 
 const MOCK_RECOMMEND_PLACES: RecommendedPlaceItem[] = [
   { place: BKK.orTorKor,    travelDurationSeconds: 900,  travelDistanceMeters: 1200, startTime: '14:30:00', endTime: '17:00:00' },

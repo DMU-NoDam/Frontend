@@ -141,6 +141,43 @@ export type RawPlanListResponse = {
   body: RawDatePlan[]
 }
 
+// ── 변경 감지용 조회 (polling) ────────────────────────────────
+
+// GET /plan/api/{datePlanId}/version
+// 편집 이력이 없으면 백엔드 adapter가 0으로 맞춰 주지만 (BehaviourDBAdapter.selectLatestVersion),
+// 컨트롤러 반환 타입이 Long이라 계약상 null이 올 수 있다. 받는 쪽에서 0으로 정규화한다 —
+// null을 "모름"으로 두면 캐시의 0과 영원히 달라 보여서 전체 조회가 끝없이 돈다.
+export type DatePlanVersionResponse = {
+  message: string
+  body: number | null
+}
+
+// GET /plan/api/{datePlanId}/place-plan/{placePlanId}/transport
+// previousTransport: 앞 장소 -> 이 장소, nextTransport: 이 장소 -> 뒤 장소.
+// 둘 다 "없거나 아직 계산 전"이면 null이다 (첫 장소의 previous, 마지막 장소의 next는 정상적으로 null).
+export type RawPlacePlanTransport = {
+  placePlanId: number
+  previousTransport: RawTransport | null
+  nextTransport: RawTransport | null
+}
+
+export type PlacePlanTransportResponse = {
+  message: string
+  body: RawPlacePlanTransport
+}
+
+export type PlacePlanTransport = {
+  placePlanId: number
+  previousTransport: Transport | null
+  nextTransport: Transport | null
+}
+
+// GET /plan/api/transport-plan/{transportPlanId}
+export type TransportPlanDetailResponse = {
+  message: string
+  body: RawTransport | null
+}
+
 export type TripThemeConfirmResponse = {
   message: string
   body: null

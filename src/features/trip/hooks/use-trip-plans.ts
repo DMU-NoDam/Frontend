@@ -1,39 +1,27 @@
 import { isCancelledError, useIsMutating, useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { planApi } from '../api/plan-api'
 import { isPlanEditMeta } from '../lib/plan-edit-meta'
-import {
-  TRANSPORT_POLL_INTERVAL_MS,
-  TRANSPORT_POLL_WINDOW_MS,
-  hasPendingTransport,
-} from '../lib/plan-transport'
 import { tripKeys } from '../query/trip-keys'
-import type { DatePlan } from '../types/plan-types'
+import type { TripThemeType } from '../types/plan-types'
+import { usePendingTransportWatch } from './use-pending-transport-watch'
+import { usePlanVersionWatch } from './use-plan-version-watch'
 
-// 다른 멤버의 편집을 서버가 알려주는 수단이 없어서(WebSocket/SSE 없음), 주기적으로 다시 읽는
-// 것이 같이 편집하는 것처럼 보이게 하는 유일한 방법이다. 응답에 경로 polygon까지 들어 있어
-// 가볍지 않으니 간격을 더 좁히지는 않는다.
-const LIVE_POLL_INTERVAL_MS = 5000
+// 다른 멤버의 편집은 DatePlan의 version으로 감지한다(usePlanVersionWatch). 전체 조회는
+// version으로 알 수 없는 변경 — 새 DatePlan 추가·삭제 — 를 줍는 느린 재동기화만 담당한다.
+const LIVE_RESYNC_INTERVAL_MS = 60000
 
-// 편집이 일어나면 그 DatePlan의 version이 오른다. 경로가 채워지는 것만으로는 version이
-// 바뀌지 않으므로, 이 값은 "기다리는 중인 작업"을 가리키는 식별자가 된다.
-const signatureOf = (datePlans: DatePlan[]) =>
-  datePlans.map((d) => `${d.id}:${d.version}`).join(',')
-
-// 아직 채워지지 않은 구간이 있고, 그 작업을 포기하지 않았다면 기다리는 중이다.
-const isWaitingForTransport = (
-  datePlans: DatePlan[] | undefined,
-  pausePolling: boolean,
-  abandonedSignature: string | null,
-) =>
-  !pausePolling &&
-  Boolean(datePlans && hasPendingTransport(datePlans)) &&
-  abandonedSignature !== (datePlans ? signatureOf(datePlans) : '')
+// 앱으로 돌아왔을 때의 재조회를 이 간격 안에 중복 실행하지 않는다 (focus와
+// visibilitychange가 거의 동시에 오고, 탭을 빠르게 왕복할 수도 있다)
+const RETURN_RESYNC_THROTTLE_MS = 3000
 
 type Options = {
-  // 켜면 다른 멤버의 편집을 따라잡기 위해 주기적으로 다시 읽는다. 같이 편집하는 화면(상세)
-  // 에서만 켠다 — 혼자 보는 화면에서는 무거운 응답을 주기적으로 받을 이유가 없다.
+  // 켜면 다른 멤버의 편집을 따라잡기 위해 주기적으로 version을 확인하고, 느린 주기로
+  // 전체 일정을 다시 읽는다. 같이 편집하는 화면(상세)에서만 켠다.
   live?: boolean
+  // live일 때 지켜볼 테마. 화면에 그리는 테마만 확인하면 요청 수가 날짜 수만큼으로 줄어든다.
+  // 생략하면 받아온 모든 DatePlan을 확인한다.
+  liveTheme?: TripThemeType
   // 드래그하는 동안 멈춘다. 끌고 있는 도중에 목록이 새로 오면 프레임이 끊긴다.
   // (순서가 되돌아가는 것은 TripScheduleView가 반영을 미뤄서 막는다)
   pausePolling?: boolean
@@ -48,15 +36,13 @@ type FreshResult = { key: string; ok: boolean }
 
 export const useTripPlans = (
   tripId: string | undefined,
-  { live, pausePolling, refreshKey }: Options = {},
+  { live, liveTheme, pausePolling, refreshKey }: Options = {},
 ) => {
-  // 창이 닫히도록 안 채워진 작업의 signature. 외부 경로 API가 실패했을 가능성이 크므로
-  // 그 작업에 대해서는 더 묻지 않는다. 편집이 새로 일어나면 signature가 달라져 다시 기다린다.
-  const [abandonedSignature, setAbandonedSignature] = useState<string | null>(null)
   const [freshResult, setFreshResult] = useState<FreshResult | null>(null)
 
   // 내 편집이 날아가는 동안에도 멈춘다. 먼저 출발한 조회의 낡은 응답이 편집 응답 뒤에
-  // 도착하면 화면이 편집 전 상태로 한 번 되돌아간다.
+  // 도착하면 화면이 편집 전 상태로 한 번 되돌아간다. (이미 날아간 요청은 편집 mutation의
+  // onMutate가 취소한다 — 폴링을 끄는 것만으로는 멈추지 않는다)
   const isPlanEditing = useIsMutating({
     predicate: (mutation) => isPlanEditMeta(mutation.options.meta),
   }) > 0
@@ -67,20 +53,12 @@ export const useTripPlans = (
 
   const query = useQuery({
     queryKey: tripKeys.plans(tripId ?? ''),
-    queryFn: () => planApi.getPlans(tripId!),
+    queryFn: ({ signal }) => planApi.getPlans(tripId!, signal),
     enabled: Boolean(tripId),
     meta: { globalLoading: true },
     // 진입 조회는 아래 effect가 직접 한다. 여기서도 하면 캐시가 있을 때 요청이 두 번 나간다
     ...(isFreshMode && { refetchOnMount: false }),
-    // 캐시 상태에서 직접 판단한다 — 아래 isTransportPending을 참조하면 순환이 된다
-    refetchInterval: (q) => {
-      if (paused) return false
-      // 끊긴 이동 구간이 채워지기를 기다리는 중이면 그 간격을 따른다
-      if (isWaitingForTransport(q.state.data?.datePlans, paused, abandonedSignature)) {
-        return TRANSPORT_POLL_INTERVAL_MS
-      }
-      return live ? LIVE_POLL_INTERVAL_MS : false
-    },
+    refetchInterval: live && !paused ? LIVE_RESYNC_INTERVAL_MS : false,
   })
 
   const { refetch } = query
@@ -114,22 +92,83 @@ export const useTripPlans = (
   const hideData = isFreshPending || isFreshFailed
 
   const datePlans = query.data?.datePlans
-  const signature = datePlans ? signatureOf(datePlans) : ''
-  const isTransportPending = isWaitingForTransport(datePlans, paused, abandonedSignature)
 
-  // 창이 다 지나면 포기한다. 그 전에 구간이 채워지면 isTransportPending이 꺼지면서 타이머도 정리된다.
+  // 화면에 그리는 테마만 지켜본다. 상세 페이지는 확정 테마 하나만 보여주는데, 전체 조회는
+  // 모든 테마의 DatePlan을 주기 때문에 그냥 두면 확인 요청이 몇 배로 늘어난다.
+  const watchedDatePlans = useMemo(
+    () => (liveTheme ? datePlans?.filter((datePlan) => datePlan.theme === liveTheme) : datePlans),
+    [datePlans, liveTheme],
+  )
+
+  // 이미 돌고 있는 조회가 있으면 그것을 기다린다 — 같은 변경으로 요청을 겹쳐 보내지 않는다
+  const resync = useCallback(() => {
+    void refetch({ cancelRefetch: false })
+  }, [refetch])
+
+  usePlanVersionWatch({
+    tripId,
+    datePlans: watchedDatePlans,
+    enabled: Boolean(live) && !paused && !hideData,
+    onChanged: resync,
+  })
+
+  // 경로 계산 완료는 version을 올리지 않으므로 version 확인으로는 알 수 없다. 비어 있는
+  // 구간만 따로 물어본다. (live가 아닌 화면도 이 구간은 채워져야 이동 시간이 맞는다)
+  const transport = usePendingTransportWatch({
+    tripId,
+    datePlans: watchedDatePlans,
+    enabled: !paused && !hideData,
+  })
+
+  // 다시 시도: 기다리는 창을 새로 열고, 전체 일정도 한 번 다시 읽는다. 서버는 이미 계산을
+  // 끝냈는데 반영만 놓쳤을 수 있고(늦게 도착해 버려진 응답 등), 그 경우 전체 조회로 복구된다.
+  const { retry: retryTransportWatch } = transport
+  const retryTransport = useCallback(() => {
+    retryTransportWatch()
+    void refetch({ cancelRefetch: false })
+  }, [retryTransportWatch, refetch])
+
+  // 앱으로 돌아왔을 때 한 번 다시 읽는다. 배경에 있는 동안은 타이머가 느려지거나 멈춰서
+  // version 확인이 돌지 않고, 그 사이의 DatePlan 추가·삭제는 version으로도 알 수 없다.
+  // (전역 refetchOnWindowFocus는 꺼져 있어서 여기서 직접 처리한다)
+  const pausedRef = useRef(paused)
   useEffect(() => {
-    if (!isTransportPending) return
+    pausedRef.current = paused
+  }, [paused])
 
-    const timer = setTimeout(() => setAbandonedSignature(signature), TRANSPORT_POLL_WINDOW_MS)
-    return () => clearTimeout(timer)
-  }, [isTransportPending, signature])
+  useEffect(() => {
+    if (!live || !tripId) return
+
+    let lastResyncAt = 0
+    const handleReturn = () => {
+      if (document.visibilityState !== 'visible') return
+      if (pausedRef.current) return
+
+      const now = Date.now()
+      if (now - lastResyncAt < RETURN_RESYNC_THROTTLE_MS) return
+      lastResyncAt = now
+
+      void refetch({ cancelRefetch: false })
+    }
+
+    document.addEventListener('visibilitychange', handleReturn)
+    window.addEventListener('focus', handleReturn)
+    return () => {
+      document.removeEventListener('visibilitychange', handleReturn)
+      window.removeEventListener('focus', handleReturn)
+    }
+  }, [live, tripId, refetch])
 
   return {
     ...query,
     data: hideData ? undefined : query.data,
     isLoading: isFreshPending || query.isLoading,
-    isError: isFreshFailed || (!isFreshPending && query.isError),
-    isTransportPending: !hideData && isTransportPending,
+    // 배경 재동기화가 실패해도 이미 보여주고 있는 일정을 숨기지 않는다. 보여줄 것이 없을
+    // 때(첫 조회 실패)와 Day 전환·재시도가 실패했을 때만 오류 화면으로 간다.
+    isError: isFreshFailed || (!isFreshPending && query.isError && query.data === undefined),
+    // 계산을 기다리는 중. 창이 지나면 꺼지고 isTransportTimedOut이 켜진다
+    isTransportPending: !hideData && transport.isPending && !transport.isTimedOut,
+    isTransportTimedOut: !hideData && transport.isTimedOut,
+    retryTransport,
   }
 }

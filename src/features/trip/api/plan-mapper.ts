@@ -2,9 +2,11 @@ import type {
   DatePlan,
   PlacePlan,
   PlanListBody,
+  PlacePlanTransport,
   PlanListResponse,
   PlanThemeCard,
   RawDatePlan,
+  RawPlacePlanTransport,
   RawPlacePlan,
   RawPlanListResponse,
   RawRecommendedPlaceItem,
@@ -89,7 +91,7 @@ function mapRouteInfo(raw: RawRouteInfo | null): RouteInfo | null {
   }
 }
 
-function mapTransport(raw: RawTransport): Transport {
+export function mapTransport(raw: RawTransport): Transport {
   return {
     id: raw.id,
     startTime: raw.startTime,
@@ -100,6 +102,15 @@ function mapTransport(raw: RawTransport): Transport {
     toPlacePlanId: raw.toPlacePlanId,
     transportPlanId: raw.transportPlanId,
     routeInfo: mapRouteInfo(raw.routeInfo),
+  }
+}
+
+// 장소 앞뒤 이동 조회의 응답. 전체 조회와 같은 RawTransport 형태라 mapTransport를 그대로 쓴다.
+export function mapPlacePlanTransport(raw: RawPlacePlanTransport): PlacePlanTransport {
+  return {
+    placePlanId: raw.placePlanId,
+    previousTransport: raw.previousTransport ? mapTransport(raw.previousTransport) : null,
+    nextTransport: raw.nextTransport ? mapTransport(raw.nextTransport) : null,
   }
 }
 

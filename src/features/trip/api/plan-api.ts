@@ -1,4 +1,14 @@
-import { mockAddPlace, mockChangePlace, mockGetPlans, mockMovePlace, mockRecommendPlace, mockRemovePlace } from '@/mocks/plans'
+import {
+  mockAddPlace,
+  mockChangePlace,
+  mockGetDatePlanVersion,
+  mockGetPlacePlanTransport,
+  mockGetPlans,
+  mockGetTransportPlanDetail,
+  mockMovePlace,
+  mockRecommendPlace,
+  mockRemovePlace,
+} from '@/mocks/plans'
 import { mockConfirmTheme } from '@/mocks/trips'
 import { apiClient } from '@/shared/api/client'
 import type {
@@ -6,7 +16,10 @@ import type {
   ChangePlaceRequest,
   DatePlan,
   DatePlanResponse,
+  DatePlanVersionResponse,
   MovePlaceRequest,
+  PlacePlanTransport,
+  PlacePlanTransportResponse,
   PlanEditTarget,
   RemovePlaceRequest,
   PlanListResponse,
@@ -14,19 +27,71 @@ import type {
   RecommendedPlaceItem,
   RecommendPlaceRequest,
   RecommendPlaceResponse,
+  Transport,
+  TransportPlanDetailResponse,
   TripThemeConfirmResponse,
   TripThemeType,
 } from '../types/plan-types'
-import { mapDatePlan, mapPlanListResponse, mapRecommendedPlaceItems } from './plan-mapper'
+import {
+  mapDatePlan,
+  mapPlacePlanTransport,
+  mapPlanListResponse,
+  mapRecommendedPlaceItems,
+  mapTransport,
+} from './plan-mapper'
 
 const useMockPlans = import.meta.env.VITE_USE_MOCK_TRIPS === 'true'
 
-const getPlans = async (tripId: string): Promise<PlanListResponse> => {
+// signal: react-query가 넘겨주는 것을 그대로 axios에 전달한다. 폴링을 끄는 것만으로는 이미
+// 날아간 요청이 멈추지 않아서, 편집 직전에 query를 취소해도 낡은 응답이 뒤늦게 도착한다.
+const getPlans = async (tripId: string, signal?: AbortSignal): Promise<PlanListResponse> => {
   if (useMockPlans) {
     return mockGetPlans(tripId)
   }
-  const { data } = await apiClient.get<RawPlanListResponse>(`/plan/api/${tripId}`)
+  const { data } = await apiClient.get<RawPlanListResponse>(`/plan/api/${tripId}`, { signal })
   return mapPlanListResponse(data)
+}
+
+// 일정 변경 감지용. 응답은 그 DatePlan에 적용된 편집 횟수뿐이라 전체 조회보다 훨씬 가볍다.
+// null(기록 없음)은 0으로 맞춘다 — 그래야 캐시의 초기 version 0과 같아져 무한 재조회가 없다.
+const getDatePlanVersion = async (datePlanId: number, signal?: AbortSignal): Promise<number> => {
+  if (useMockPlans) return mockGetDatePlanVersion(datePlanId)
+
+  const { data } = await apiClient.get<DatePlanVersionResponse>(
+    `/plan/api/${datePlanId}/version`,
+    { signal },
+  )
+  return data.body ?? 0
+}
+
+// 계산 중인 이동 구간 확인용. 한 장소의 앞뒤 구간만 내려온다 (경로 polygon 포함).
+const getPlacePlanTransport = async (
+  datePlanId: number,
+  placePlanId: number,
+  signal?: AbortSignal,
+): Promise<PlacePlanTransport> => {
+  if (useMockPlans) return mockGetPlacePlanTransport(datePlanId, placePlanId)
+
+  const { data } = await apiClient.get<PlacePlanTransportResponse>(
+    `/plan/api/${datePlanId}/place-plan/${placePlanId}/transport`,
+    { signal },
+  )
+  return mapPlacePlanTransport(data.body)
+}
+
+// 이동 구간 하나의 상세. 전체 조회와 앞뒤 구간 조회에 이미 routeInfo가 들어 있으므로,
+// 어떤 이유로든 경로가 빠진 구간을 골랐을 때만 쓰는 보조 경로다.
+const getTransportPlanDetail = async (
+  transportPlanId: number,
+  signal?: AbortSignal,
+): Promise<Transport | null> => {
+  if (useMockPlans) return mockGetTransportPlanDetail(transportPlanId)
+
+  const { data } = await apiClient.get<TransportPlanDetailResponse>(
+    `/plan/api/transport-plan/${transportPlanId}`,
+    { signal },
+  )
+  return data.body ? mapTransport(data.body) : null
 }
 
 const confirmTheme = async (
@@ -103,6 +168,9 @@ const removePlace = async (req: RemovePlaceRequest): Promise<DatePlan> => {
 
 export const planApi = {
   getPlans,
+  getDatePlanVersion,
+  getPlacePlanTransport,
+  getTransportPlanDetail,
   confirmTheme,
   recommendPlace,
   addPlace,
