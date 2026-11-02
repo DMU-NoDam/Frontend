@@ -9,6 +9,13 @@ import nahaSticker from '@/assets/city-sticker/jp-naha.svg'
 import osakaSticker from '@/assets/city-sticker/jp-osaka.svg'
 import sapporoSticker from '@/assets/city-sticker/jp-sapporo.svg'
 import tokyoSticker from '@/assets/city-sticker/jp-tokyo.svg'
+import fukuokaStamp from '@/assets/city-stamp/jp-fukuoka.png'
+import kyotoStamp from '@/assets/city-stamp/jp-kyoto.png'
+import nagoyaStamp from '@/assets/city-stamp/jp-nagoya.png'
+import nahaStamp from '@/assets/city-stamp/jp-naha.png'
+import osakaStamp from '@/assets/city-stamp/jp-osaka.png'
+import sapporoStamp from '@/assets/city-stamp/jp-sapporo.png'
+import tokyoStamp from '@/assets/city-stamp/jp-tokyo.png'
 import { getTripStatusLabel } from '@/features/trip/lib/trip-date'
 import type { TripSummary } from '@/features/trip/types/trip-types'
 import './TravelHero.css'
@@ -26,18 +33,20 @@ type Destination = {
   airport: string
   // 그 도시의 랜드마크·음식 스티커 (Microsoft Fluent Emoji Flat, MIT — src/assets/city-sticker)
   sticker: string
+  // 그 도시 도장 그림 (배경을 지운 PNG — src/assets/city-stamp). 없으면 글자로 그린 도장을 찍는다
+  stamp?: string
 }
 
 // 스티커가 있는 도시 (교토는 공항이 없어 간사이공항으로 들어간다)
 const DESTINATIONS: Destination[] = [
-  { code: 'jp-tokyo', en: 'TOKYO', ko: '도쿄', airport: 'NRT', sticker: tokyoSticker }, // 도쿄타워
-  { code: 'jp-osaka', en: 'OSAKA', ko: '오사카', airport: 'KIX', sticker: osakaSticker }, // 오사카성
-  { code: 'jp-sapporo', en: 'SAPPORO', ko: '삿포로', airport: 'CTS', sticker: sapporoSticker }, // 눈축제 눈사람
-  { code: 'jp-fukuoka', en: 'FUKUOKA', ko: '후쿠오카', airport: 'FUK', sticker: fukuokaSticker }, // 하카타 라멘
-  { code: 'jp-naha', en: 'NAHA', ko: '나하', airport: 'OKA', sticker: nahaSticker }, // 히비스커스
-  { code: 'jp-nagoya', en: 'NAGOYA', ko: '나고야', airport: 'NGO', sticker: nagoyaSticker }, // 새우튀김
+  { code: 'jp-tokyo', en: 'TOKYO', ko: '도쿄', airport: 'NRT', sticker: tokyoSticker, stamp: tokyoStamp }, // 도쿄타워
+  { code: 'jp-osaka', en: 'OSAKA', ko: '오사카', airport: 'KIX', sticker: osakaSticker, stamp: osakaStamp }, // 오사카성
+  { code: 'jp-sapporo', en: 'SAPPORO', ko: '삿포로', airport: 'CTS', sticker: sapporoSticker, stamp: sapporoStamp }, // 눈축제 눈사람
+  { code: 'jp-fukuoka', en: 'FUKUOKA', ko: '후쿠오카', airport: 'FUK', sticker: fukuokaSticker, stamp: fukuokaStamp }, // 하카타 라멘
+  { code: 'jp-naha', en: 'NAHA', ko: '나하', airport: 'OKA', sticker: nahaSticker, stamp: nahaStamp }, // 히비스커스
+  { code: 'jp-nagoya', en: 'NAGOYA', ko: '나고야', airport: 'NGO', sticker: nagoyaSticker, stamp: nagoyaStamp }, // 새우튀김
   { code: 'jp-hiroshima', en: 'HIROSHIMA', ko: '히로시마', airport: 'HIJ', sticker: hiroshimaSticker }, // 도리이
-  { code: 'jp-kyoto', en: 'KYOTO', ko: '교토', airport: 'KIX', sticker: kyotoSticker }, // 말차
+  { code: 'jp-kyoto', en: 'KYOTO', ko: '교토', airport: 'KIX', sticker: kyotoSticker, stamp: kyotoStamp }, // 말차
 ]
 
 // 오늘의 도시: 날짜가 같으면 같은 도시, 다음 날이면 다음 도시
@@ -241,11 +250,20 @@ export function TravelHero({ trips = [], topInset = 84 }: Props) {
         </div>
         <span className="scrapbook__tape scrapbook__tape--passport" />
 
-        <div key={`stamp-${currentKey}`} className="scrapbook__stamp">
-          <b style={{ fontSize: getStampWordSize(dest.en) }}>{dest.en}</b>
-          <i>JAPAN</i>
-          <i>BON VOYAGE</i>
-        </div>
+        {dest.stamp ? (
+          <img
+            key={`stamp-${currentKey}`}
+            className="scrapbook__stamp scrapbook__stamp--image"
+            src={dest.stamp}
+            alt=""
+          />
+        ) : (
+          <div key={`stamp-${currentKey}`} className="scrapbook__stamp">
+            <b style={{ fontSize: getStampWordSize(dest.en) }}>{dest.en}</b>
+            <i>JAPAN</i>
+            <i>BON VOYAGE</i>
+          </div>
+        )}
 
         <p className="scrapbook__note">
           어디로

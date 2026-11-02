@@ -175,6 +175,19 @@
   letter-spacing: 0.16em;
 }
 
+/* 도시 도장 그림 : 글자 도장과 같은 자리·기울기로, 테두리와 얼룩 마스크 없이 그림만 찍는다 */
+.scrapbook__stamp--image {
+  top: 246px;
+  left: 52px;
+  width: 98px;
+  height: 98px;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 /* 쾅 찍히는 느낌 */
 @keyframes scrap-stamp-in {
   from {
