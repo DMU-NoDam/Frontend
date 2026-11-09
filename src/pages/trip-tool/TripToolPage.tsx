@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTrips } from '@/features/trip/hooks/use-trips'
 import { getUpcomingFixedTrips, isTripActive } from '@/features/trip/lib/trip-date'
@@ -12,21 +12,11 @@ import { WeatherScene } from '@/features/tool/components/weather-scene/WeatherSc
 import { useDayWeather } from '@/features/tool/hooks/use-weather'
 import { getTripLocation } from '@/features/tool/lib/trip-location'
 import { getWeatherScene, isWeatherScene, WEATHER_SCENE_TOP_COLOR } from '@/features/tool/lib/weather-scene'
-import type { WeatherScene as Scene } from '@/features/tool/lib/weather-scene'
 import { useThemeColor } from '@/shared/hooks/use-theme-color'
 import importantIcon from '@/assets/memo-icon/important.png'
 import shoppingIcon from '@/assets/memo-icon/shopping.png'
 import { TabBar } from '@/shared/ui/tab-bar/TabBar'
 import './TripToolPage.css'
-
-// 개발용 날씨 장면 선택기. 개발 서버에서만 불러와서 빌드에는 코드와 CSS가 포함되지 않는다
-const WeatherScenePicker = import.meta.env.DEV
-  ? lazy(() =>
-      import('@/features/tool/components/weather-scene/WeatherScenePicker').then((m) => ({
-        default: m.WeatherScenePicker,
-      })),
-    )
-  : null
 
 // Figma: 시트가 화면의 2/3 정도를 덮고 위에 날씨가 보인다
 const SHEET_COLLAPSED_PCT = 64
@@ -78,7 +68,6 @@ export function TripToolPage() {
   // 개발용 장면 미리보기: /tools?scene=rain 처럼 주소로 장면을 고정한다 (빌드에서는 무시)
   const sceneParam = searchParams.get('scene')
   const previewScene = import.meta.env.DEV && isWeatherScene(sceneParam) ? sceneParam : null
-  const setPreviewScene = (next: Scene | null) => updateSearchParam('scene', next)
 
   // 배경 장면도 헤더와 같이 지금 날씨 기준 (없으면 하루 예보)
   const sceneWeatherCode = currentWeather?.weatherCode ?? weather?.weatherCode
@@ -105,27 +94,20 @@ export function TripToolPage() {
           )
         }
         overlay={
-          <>
-            <WeatherHeader
-              location={location}
-              tripSwitcher={
-                trip && (
-                  <TripSwitcher
-                    trips={upcomingTrips}
-                    selected={trip}
-                    onSelect={(tripId) => updateSearchParam('trip', tripId)}
-                  />
-                )
-              }
-              date={weatherDate}
-              isTripsLoading={isTripsLoading}
-            />
-            {WeatherScenePicker && (
-              <Suspense fallback={null}>
-                <WeatherScenePicker value={previewScene} onChange={setPreviewScene} />
-              </Suspense>
-            )}
-          </>
+          <WeatherHeader
+            location={location}
+            tripSwitcher={
+              trip && (
+                <TripSwitcher
+                  trips={upcomingTrips}
+                  selected={trip}
+                  onSelect={(tripId) => updateSearchParam('trip', tripId)}
+                />
+              )
+            }
+            date={weatherDate}
+            isTripsLoading={isTripsLoading}
+          />
         }
         sheetContent={() => (
           <div className="trip-tool-page__cards">
