@@ -1,42 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import type { DatePlan, PlacePlan } from '../types/plan-types'
+import { datePlan, placePlan } from '../testing/plan-fixtures'
 import { sortPlansByOrder } from './plan-order'
 import { findEditTarget, findInsertPositionAfter } from './plan-target'
-
-function placePlan(id: number, datePlanId: number, orderIndex: number, startTime = '09:00:00'): PlacePlan {
-  return {
-    id,
-    datePlanId,
-    orderIndex,
-    date: '2026-12-01',
-    startTime,
-    endTime: '10:00:00',
-    placeInfo: {
-      id: id * 100,
-      regionId: 1,
-      placeType: '관광지',
-      googleId: `google-${id}`,
-      name: `place-${id}`,
-      address: 'tokyo',
-      priceType: null,
-      lon: 139.7,
-      lat: 35.6,
-    },
-    fromTransport: null,
-  }
-}
-
-function datePlan(id: number, version: number, plans: PlacePlan[]): DatePlan {
-  return { id, date: '2026-12-01', theme: 'FOOD', version, plans }
-}
 
 describe('sortPlansByOrder', () => {
   it('startTime 이 아니라 orderIndex 순서', () => {
     // 순서를 바꾼 직후 : startTime 은 아직 옛 순서
     const plans = [
-      placePlan(1, 10, 300, '09:00:00'),
-      placePlan(2, 10, 100, '12:00:00'),
-      placePlan(3, 10, 200, '15:00:00'),
+      placePlan(1, 10, 300, { startTime: '09:00:00' }),
+      placePlan(2, 10, 100, { startTime: '12:00:00' }),
+      placePlan(3, 10, 200, { startTime: '15:00:00' }),
     ]
 
     expect(sortPlansByOrder(plans).map((p) => p.id)).toEqual([2, 3, 1])
