@@ -32,6 +32,7 @@ const AIRPORT_BY_CITY: Record<string, string> = {
   'jp-takayama': 'NGO',
   'jp-shirakawago': 'NGO',
   'jp-shizuoka': 'FSZ',
+  'jp-matsumoto': 'MMJ',
   // 홋카이도
   'jp-sapporo': 'CTS',
   'jp-otaru': 'CTS',
